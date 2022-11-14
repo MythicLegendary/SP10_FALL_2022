@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "jslint": "^0.12.1",
-    "rhino": "^5.5.8"
+    "pre-commit": "^1.2.2",
+    "rhino": "^5.5.8",
+    "standard": "^17.0.0"
   }
 }
