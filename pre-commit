@@ -1,0 +1,28 @@
+#!/bin/sh
+# Pre-commit hook passing files through jslint
+#
+# This ensures that all js, html and json files are valid and conform
+# to expectations.
+
+ROOT_DIR=$(git rev-parse --show-toplevel)
+JSLINT="\"${ROOT_DIR}/node_modules/.bin/jslint\" "
+
+INDEXJS="\"C:\Users\David Shilliday\Desktop\Senior Design Repo\src\index.js\""
+	
+    if node $JSLINT $INDEXJS 2>&1 | grep 'No errors found' ; then
+        echo "jslint passed for index.js"
+        exit 0
+    else
+        node $JSLINT $INDEXJS
+        exit 1
+    fi  
+
+INDEXHTML="\"C:\Users\David Shilliday\Desktop\Senior Design Repo\src\index.html\""
+	
+    if node $JSLINT $INDEXHTML 2>&1 | grep 'No errors found' ; then
+        echo "jslint passed for index.js"
+        exit 0
+    else
+        node $JSLINT $INDEXHTML
+        exit 1
+    fi  
