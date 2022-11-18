@@ -4,5 +4,6 @@
     "pre-commit": "^1.2.2",
     "rhino": "^5.5.8",
     "standard": "^17.0.0"
-  }
+  },
+  "name": "Senior Design Project"
 }
