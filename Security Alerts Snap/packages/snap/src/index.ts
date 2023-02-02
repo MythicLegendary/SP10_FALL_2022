@@ -1,7 +1,10 @@
-import { OnRpcRequestHandler, OnCronjobHandler} from '@metamask/snap-types';
+import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from '@metamask/snap-types';
 import detectEthereumProvider from '@metamask/detect-provider';
+import { hasProperty, isObject, Json } from '@metamask/utils';
+import { ethers } from "ethers";
 
 declare var window: any
+declare var recentTransaction: boolean
 
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -17,6 +20,22 @@ async function getFees() {
 	return response.text();
 }
 
+async function isUnlocked() {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+    let unlocked;
+
+    try {
+        const accounts = await provider.listAccounts();
+
+        unlocked = accounts.length > 0;
+    } catch (e) {
+        unlocked = false;
+    }
+
+    return unlocked;
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -28,6 +47,8 @@ async function getFees() {
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_confirm` call failed.
  */
+
+
 export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
   switch (request.method) {
     case 'hello':
@@ -48,24 +69,52 @@ export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
   }
 };
 
+export const onTransaction: OnTransactionHandler = async ({ transaction }) => {
+	const insights: {type: string, params?: Json} = { type: 'Unknown Transaction' }
+	recentTransaction = true;
+	if(!isObject(transaction) || !hasProperty(transaction, 'data') || typeof transaction.data !== 'string')
+		{
+			console.warn('Unknown transaction type.');
+		}
+
+return { insights: {dummy: "dummy"}};
+
+
+};
+
 export const onCronjob: OnCronjobHandler = async({ request }) => {
 	console.log("The event did get called!");
 	switch (request.method) {
 		case 'checkUnlocked':
-			var promiseLock = window.ethereum._metamask.isUnlocked()
-			if(promiseLock){
 			
+			
+			if(await isUnlocked())
+			{
 			return wallet.request({
-				method: 'snap_notify',
+				method: 'snap_confirm',
 				params: [
 					{
-						type: 'inApp',
-						message: "It looks like you've left your wallet open. Make sure to lock it when not in use!",
+						prompt: "Unlocked wallet Detected!",
+						description: "It looks like you've left your wallet open. Make sure to lock it when not in use!",
 					}
 
 				]
 			});
-		}
+			}
+		case "checkUnlockedAfterTransaction":
+			if(await isUnlocked() && recentTransaction)
+			{
+				return wallet.request({
+					method: 'snap_confirm',
+					params: [
+						{
+							prompt: "Unlocked wallet Detected!",
+							description: "Make sure to close your wallet after transactions!",
+						}
+	
+					]
+				});
+			} else{ recentTransaction = false;}
 			default:
 				throw new Error('Chronological method not found.');
 
