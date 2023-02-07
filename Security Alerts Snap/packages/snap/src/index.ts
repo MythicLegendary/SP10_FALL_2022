@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 import  web3  from "web3";
 
 declare var recentTransaction: boolean
+recentTransaction = false;
 
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -23,9 +24,19 @@ async function getFees() {
 
 
 async function isUnlocked() {
-    
-	console.log(window.ethereum);
-	return true;
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+    let unlocked;
+
+    try {
+        const accounts = await provider.listAccounts();
+
+        unlocked = accounts.length > 0;
+    } catch (e) {
+        unlocked = false;
+    }
+
+    return unlocked;
 }
 
 /**
@@ -78,7 +89,7 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 	console.log("The event did get called!");
 	switch (request.method) {
 		case 'checkUnlocked':
-			isUnlocked();
+			if(await isUnlocked() && !recentTransaction){
 			return wallet.request({
 				method: 'snap_confirm',
 				params: [
@@ -89,10 +100,9 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 
 				]
 			});
-		break;
-		case "checkUnlockedAfterTransaction":
-			isUnlocked();
-			
+		} else if(await isUnlocked() && recentTransaction)
+		
+			{
 				return wallet.request({
 					method: 'snap_confirm',
 					params: [
@@ -103,6 +113,11 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 	
 					]
 				});
+			}
+		else
+		{
+			recentTransaction = false;
+		}
 			
 		break;
 			default:

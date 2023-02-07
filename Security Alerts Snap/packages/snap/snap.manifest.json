@@ -23,18 +23,9 @@
     "endowment:cronjob": {
       "jobs": [
         {
-          "expression": "* * * * *",
+          "expression": "*/59 * * * *",
           "request": {
             "method": "checkUnlocked",
-            "params": {
-              "param1": "parameter"
-            }
-          }
-        },
-        {
-          "expression": "*/2 * * * *",
-          "request": {
-            "method": "checkUnlockedAfterTransaction",
             "params": {
               "param1": "parameter"
             }
