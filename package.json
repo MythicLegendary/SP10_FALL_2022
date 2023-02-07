@@ -5,7 +5,7 @@
     "rhino": "^5.5.8",
     "standard": "^17.0.0"
   },
-  "name": "Senior Design Project",
+  "name": "SeniorDesignProject",
   "scripts": {
     "build": "node src/index.js",
     "test": "node src/test.js"

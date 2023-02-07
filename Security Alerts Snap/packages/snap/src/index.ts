@@ -2,8 +2,8 @@ import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from '@met
 import detectEthereumProvider from '@metamask/detect-provider';
 import { hasProperty, isObject, Json } from '@metamask/utils';
 import { ethers } from "ethers";
+import  web3  from "web3";
 
-declare var window: any
 declare var recentTransaction: boolean
 
 /**
@@ -20,20 +20,12 @@ async function getFees() {
 	return response.text();
 }
 
+
+
 async function isUnlocked() {
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-    let unlocked;
-
-    try {
-        const accounts = await provider.listAccounts();
-
-        unlocked = accounts.length > 0;
-    } catch (e) {
-        unlocked = false;
-    }
-
-    return unlocked;
+    
+	console.log(window.ethereum);
+	return true;
 }
 
 /**
@@ -48,7 +40,7 @@ async function isUnlocked() {
  * @throws If the `snap_confirm` call failed.
  */
 
-
+//async?
 export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
   switch (request.method) {
     case 'hello':
@@ -86,10 +78,7 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 	console.log("The event did get called!");
 	switch (request.method) {
 		case 'checkUnlocked':
-			
-			
-			if(await isUnlocked())
-			{
+			isUnlocked();
 			return wallet.request({
 				method: 'snap_confirm',
 				params: [
@@ -100,10 +89,10 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 
 				]
 			});
-			}
+		break;
 		case "checkUnlockedAfterTransaction":
-			if(await isUnlocked() && recentTransaction)
-			{
+			isUnlocked();
+			
 				return wallet.request({
 					method: 'snap_confirm',
 					params: [
@@ -114,7 +103,8 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 	
 					]
 				});
-			} else{ recentTransaction = false;}
+			
+		break;
 			default:
 				throw new Error('Chronological method not found.');
 
