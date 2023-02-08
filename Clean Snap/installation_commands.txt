@@ -14,5 +14,8 @@ Additionally, a conflict exists created by the actual MetaMask snap template cre
 that we're importing is the correct one. To do so, manually set the "import" statment on line 1 of index.ts to the path in your directory leading to
 @metamask/snap-types inside of Clean Snap/node_modules.
 
+Note that ethers is a little busted since they changed how all of the import setup works recently. Will need to find
+an intuitive way to chec isUnlocked easily. Ask Professor about it this week! (2/8/2023)
+
 
 
