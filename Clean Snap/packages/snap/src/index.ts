@@ -42,3 +42,27 @@ export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
       throw new Error('Method not found.');
   }
 };
+
+export const onCronjob: OnCronjobHandler = async({ request }) => {
+	console.log("The event did get called!");
+	switch (request.method) {
+		case 'checkUnlocked':
+			
+			return wallet.request({
+				method: 'snap_confirm',
+				params: [
+					{
+						prompt: "Unlocked wallet Detected!",
+						description: "It looks like you've left your wallet open. Make sure to lock it when not in use!",
+					}
+
+				]
+			});
+		
+			
+		break;
+			default:
+				throw new Error('Chronological method not found.');
+
+	}
+};
