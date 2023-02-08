@@ -1435,6 +1435,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/regjsgen@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@babel/regjsgen@npm:0.8.0"
+  checksum: 89c338fee774770e5a487382170711014d49a68eb281e74f2b5eac88f38300a4ad545516a7786a8dd5702e9cf009c94c2f582d200f077ac5decd74c56b973730
+  languageName: node
+  linkType: hard
+
 "@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.15.4, @babel/runtime@npm:^7.18.0, @babel/runtime@npm:^7.20.7, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.9.2":
   version: 7.20.13
   resolution: "@babel/runtime@npm:7.20.13"
@@ -1655,6 +1662,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ethersproject/basex@npm:^5.7.0":
+  version: 5.7.0
+  resolution: "@ethersproject/basex@npm:5.7.0"
+  dependencies:
+    "@ethersproject/bytes": ^5.7.0
+    "@ethersproject/properties": ^5.7.0
+  checksum: 326087b7e1f3787b5fe6cd1cf2b4b5abfafbc355a45e88e22e5e9d6c845b613ffc5301d629b28d5c4d5e2bfe9ec424e6782c804956dff79be05f0098cb5817de
+  languageName: node
+  linkType: hard
+
 "@ethersproject/bignumber@npm:^5.7.0":
   version: 5.7.0
   resolution: "@ethersproject/bignumber@npm:5.7.0"
@@ -1736,6 +1753,44 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ethersproject/providers@npm:^5.7.2":
+  version: 5.7.2
+  resolution: "@ethersproject/providers@npm:5.7.2"
+  dependencies:
+    "@ethersproject/abstract-provider": ^5.7.0
+    "@ethersproject/abstract-signer": ^5.7.0
+    "@ethersproject/address": ^5.7.0
+    "@ethersproject/base64": ^5.7.0
+    "@ethersproject/basex": ^5.7.0
+    "@ethersproject/bignumber": ^5.7.0
+    "@ethersproject/bytes": ^5.7.0
+    "@ethersproject/constants": ^5.7.0
+    "@ethersproject/hash": ^5.7.0
+    "@ethersproject/logger": ^5.7.0
+    "@ethersproject/networks": ^5.7.0
+    "@ethersproject/properties": ^5.7.0
+    "@ethersproject/random": ^5.7.0
+    "@ethersproject/rlp": ^5.7.0
+    "@ethersproject/sha2": ^5.7.0
+    "@ethersproject/strings": ^5.7.0
+    "@ethersproject/transactions": ^5.7.0
+    "@ethersproject/web": ^5.7.0
+    bech32: 1.1.4
+    ws: 7.4.6
+  checksum: 1754c731a5ca6782ae9677f4a9cd8b6246c4ef21a966c9a01b133750f3c578431ec43ec254e699969c4a0f87e84463ded50f96b415600aabd37d2056aee58c19
+  languageName: node
+  linkType: hard
+
+"@ethersproject/random@npm:^5.7.0":
+  version: 5.7.0
+  resolution: "@ethersproject/random@npm:5.7.0"
+  dependencies:
+    "@ethersproject/bytes": ^5.7.0
+    "@ethersproject/logger": ^5.7.0
+  checksum: 017829c91cff6c76470852855108115b0b52c611b6be817ed1948d56ba42d6677803ec2012aa5ae298a7660024156a64c11fcf544e235e239ab3f89f0fff7345
+  languageName: node
+  linkType: hard
+
 "@ethersproject/rlp@npm:^5.7.0":
   version: 5.7.0
   resolution: "@ethersproject/rlp@npm:5.7.0"
@@ -1743,6 +1798,17 @@ __metadata:
     "@ethersproject/bytes": ^5.7.0
     "@ethersproject/logger": ^5.7.0
   checksum: bce165b0f7e68e4d091c9d3cf47b247cac33252df77a095ca4281d32d5eeaaa3695d9bc06b2b057c5015353a68df89f13a4a54a72e888e4beeabbe56b15dda6e
+  languageName: node
+  linkType: hard
+
+"@ethersproject/sha2@npm:^5.7.0":
+  version: 5.7.0
+  resolution: "@ethersproject/sha2@npm:5.7.0"
+  dependencies:
+    "@ethersproject/bytes": ^5.7.0
+    "@ethersproject/logger": ^5.7.0
+    hash.js: 1.1.7
+  checksum: 09321057c022effbff4cc2d9b9558228690b5dd916329d75c4b1ffe32ba3d24b480a367a7cc92d0f0c0b1c896814d03351ae4630e2f1f7160be2bcfbde435dbc
   languageName: node
   linkType: hard
 
@@ -2687,6 +2753,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metamask/template-snap-monorepo@workspace:."
   dependencies:
+    "@ethersproject/abstract-provider": ^5.7.0
+    "@ethersproject/providers": ^5.7.2
     "@metamask/detect-provider": ^2.0.0
     "@metamask/eslint-config": ^10.0.0
     "@metamask/eslint-config-jest": ^10.0.0
@@ -5440,6 +5508,13 @@ __metadata:
   dependencies:
     tweetnacl: ^0.14.3
   checksum: 4edfc9fe7d07019609ccf797a2af28351736e9d012c8402a07120c4453a3b789a15f2ee1530dc49eee8f7eb9379331a8dd4b3766042b9e502f74a68e7f662291
+  languageName: node
+  linkType: hard
+
+"bech32@npm:1.1.4":
+  version: 1.1.4
+  resolution: "bech32@npm:1.1.4"
+  checksum: 0e98db619191548390d6f09ff68b0253ba7ae6a55db93dfdbb070ba234c1fd3308c0606fbcc95fad50437227b10011e2698b89f0181f6e7f845c499bd14d0f4b
   languageName: node
   linkType: hard
 
@@ -15101,16 +15176,16 @@ __metadata:
   linkType: hard
 
 "regexpu-core@npm:^5.2.1":
-  version: 5.2.2
-  resolution: "regexpu-core@npm:5.2.2"
+  version: 5.3.0
+  resolution: "regexpu-core@npm:5.3.0"
   dependencies:
+    "@babel/regjsgen": ^0.8.0
     regenerate: ^1.4.2
     regenerate-unicode-properties: ^10.1.0
-    regjsgen: ^0.7.1
     regjsparser: ^0.9.1
     unicode-match-property-ecmascript: ^2.0.0
     unicode-match-property-value-ecmascript: ^2.1.0
-  checksum: 87c56815e20d213848d38f6b047ba52f0d632f36e791b777f59327e8d350c0743b27cc25feab64c0eadc9fe9959dde6b1261af71108a9371b72c8c26beda05ef
+  checksum: f3c7921543ebda919c53fdbbf3a9cebbecbf8ad65b30e423d7eaef35484e08cbc919f9e8334f4693a72206f583d4f2b48d4415483f6e6e8c81f0046e3a23c66f
   languageName: node
   linkType: hard
 
@@ -15129,13 +15204,6 @@ __metadata:
   dependencies:
     rc: ^1.2.8
   checksum: bcea86c84a0dbb66467b53187fadebfea79017cddfb4a45cf27530d7275e49082fe9f44301976eb0164c438e395684bcf3dae4819b36ff9d1640d8cc60c73df9
-  languageName: node
-  linkType: hard
-
-"regjsgen@npm:^0.7.1":
-  version: 0.7.1
-  resolution: "regjsgen@npm:0.7.1"
-  checksum: 7cac399921c58db8e16454869283ff66871531180218064fa938ac05c11c2976792a00706c3c78bbc625e1d793ca373065ea90564e06189a751a7b4ae33acadc
   languageName: node
   linkType: hard
 
@@ -18193,6 +18261,21 @@ __metadata:
     imurmurhash: ^0.1.4
     signal-exit: ^3.0.7
   checksum: 6ee16b195572386cb1c905f9d29808f77f4de2fd063d74a6f1ab6b566363832d8906a493b764ee715e57ab497271d5fc91642a913724960e8e845adf504a9837
+  languageName: node
+  linkType: hard
+
+"ws@npm:7.4.6":
+  version: 7.4.6
+  resolution: "ws@npm:7.4.6"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ^5.0.2
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 3a990b32ed08c72070d5e8913e14dfcd831919205be52a3ff0b4cdd998c8d554f167c9df3841605cde8b11d607768cacab3e823c58c96a5c08c987e093eb767a
   languageName: node
   linkType: hard
 

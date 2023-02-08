@@ -18,6 +18,10 @@ class CheckTransaction
 
 }
 
+async function isUnlocked() {
+  return true;
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -52,6 +56,7 @@ export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
 };
 
 export const onTransaction: OnTransactionHandler = async ({ transaction }) => {
+  CheckTransaction.wasATransactionMade = true;
 	const insights: {type: string, params?: Json} = { type: 'Unknown Transaction' }
 	if(!isObject(transaction) || !hasProperty(transaction, 'data') || typeof transaction.data !== 'string')
 		{
@@ -67,7 +72,7 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 	console.log("The event did get called!");
 	switch (request.method) {
 		case 'checkUnlocked':
-		if(!CheckTransaction.wasATransactionMade)
+		if(!CheckTransaction.wasATransactionMade && await isUnlocked())
     {
 			return wallet.request({
 				method: 'snap_confirm',
@@ -79,6 +84,23 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 
 				]
 			});
+    }
+    else if(CheckTransaction.wasATransactionMade && await isUnlocked())
+    {
+      return wallet.request({
+        method: 'snap_confirm',
+        params: [
+          {
+            prompt: "Unlocked wallet Detected!",
+            description: "Make sure to close your wallet after transactions!",
+          }
+
+        ]
+      });
+    }
+    else
+    {
+      CheckTransaction.wasATransactionMade = false;
     }
 			
 		break;
