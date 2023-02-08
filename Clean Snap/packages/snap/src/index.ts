@@ -12,6 +12,12 @@ import  web3  from "web3";
 const getMessage = (originString: string): string =>
   `Hello, ${originString}!`;
 
+class CheckTransaction
+{
+  static wasATransactionMade: boolean = false;
+
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -23,6 +29,8 @@ const getMessage = (originString: string): string =>
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_confirm` call failed.
  */
+
+
 export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
   switch (request.method) {
     case 'hello':
@@ -43,11 +51,24 @@ export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
   }
 };
 
+export const onTransaction: OnTransactionHandler = async ({ transaction }) => {
+	const insights: {type: string, params?: Json} = { type: 'Unknown Transaction' }
+	if(!isObject(transaction) || !hasProperty(transaction, 'data') || typeof transaction.data !== 'string')
+		{
+			console.warn('Unknown transaction type.');
+		}
+
+return { insights: {dummy: "dummy"}};
+
+
+};
+
 export const onCronjob: OnCronjobHandler = async({ request }) => {
 	console.log("The event did get called!");
 	switch (request.method) {
 		case 'checkUnlocked':
-			
+		if(!CheckTransaction.wasATransactionMade)
+    {
 			return wallet.request({
 				method: 'snap_confirm',
 				params: [
@@ -58,7 +79,7 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 
 				]
 			});
-		
+    }
 			
 		break;
 			default:
