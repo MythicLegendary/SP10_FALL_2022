@@ -18,7 +18,21 @@
     }
   },
   "initialPermissions": {
-    "snap_confirm": {}
+    "snap_confirm": {},
+    "endowment:network-access": {},
+    "endowment:cronjob": {
+      "jobs": [
+        {
+          "expression": "* * * * *",
+          "request": {
+            "method": "checkUnlocked",
+            "params": {
+              "param1": "parameter"
+            }
+          }
+        }
+      ]
+    }
   },
   "manifestVersion": "0.1"
 }
