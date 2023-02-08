@@ -6,7 +6,7 @@ import { OnRpcRequestHandler } from '@metamask/snap-types';
  * @param originString - The origin string.
  * @returns A message based on the origin.
  */
-export const getMessage = (originString: string): string =>
+const getMessage = (originString: string): string =>
   `Hello, ${originString}!`;
 
 /**
