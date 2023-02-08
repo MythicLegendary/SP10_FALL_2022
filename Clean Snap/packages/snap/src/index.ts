@@ -1,5 +1,8 @@
-import { OnRpcRequestHandler } from '@metamask/snap-types';
-
+import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from 'C:/Users/David Shilliday/Desktop/Snap github/Clean Snap/node_modules/@metamask/snap-types';
+import detectEthereumProvider from '@metamask/detect-provider';
+import { hasProperty, isObject, Json } from '@metamask/utils';
+import { ethers } from "ethers";
+import  web3  from "web3";
 /**
  * Get a message from the origin. For demonstration purposes only.
  *

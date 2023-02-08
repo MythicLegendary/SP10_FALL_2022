@@ -48,6 +48,10 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "@metamask/snaps-cli": "^0.28.0"
+    "@metamask/detect-provider": "^2.0.0",
+    "@metamask/snap-types": "^0.23.0",
+    "@metamask/snaps-cli": "^0.28.0",
+    "ethers": "^6.0.2",
+    "web3": "^1.8.2"
   }
 }
