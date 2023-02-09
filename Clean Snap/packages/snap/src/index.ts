@@ -69,11 +69,13 @@ return { insights: {dummy: "dummy"}};
 };
 
 export const onCronjob: OnCronjobHandler = async({ request }) => {
-	console.log("The event did get called!");
+	console.log("Unlocked Job Handler Invoked.");
 	switch (request.method) {
 		case 'checkUnlocked':
+      console.log("Checking if wallet unlocked-periodic");
 		if(!CheckTransaction.wasATransactionMade && await isUnlocked())
     {
+      console.log("Alerting user...");
 			return wallet.request({
 				method: 'snap_confirm',
 				params: [
