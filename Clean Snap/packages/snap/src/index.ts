@@ -23,9 +23,9 @@ async function isUnlocked() {
   return true;
 }
 
-function walletUnlocked()  {
+async function walletUnlocked()  {
   
-  return wallet._metamask.isUnlocked;
+  return await wallet._metamask.isUnlocked();
 
 }
 
@@ -80,12 +80,12 @@ return { insights: {dummy: "dummy"}};
 export const onCronjob: OnCronjobHandler = async({ request }) => {
 	console.log("Unlocked Job Handler Invoked.");
   
-  
+  let unlockedCheck = await walletUnlocked();
   
 	switch (request.method) {
 		case 'checkUnlocked':
       console.log("Checking if wallet unlocked-periodic");
-		if(!CheckTransaction.wasATransactionMade && walletUnlocked())
+		if(!CheckTransaction.wasATransactionMade && unlockedCheck)
     {
       console.log("Alerting user...");
 			return wallet.request({
@@ -99,7 +99,7 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 				]
 			});
     }
-    else if(CheckTransaction.wasATransactionMade && walletUnlocked())
+    else if(CheckTransaction.wasATransactionMade && unlockedCheck)
     {
       return wallet.request({
         method: 'snap_confirm',
