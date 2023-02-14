@@ -1,7 +1,8 @@
-import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from 'C:/Users/David Shilliday/Desktop/Snap github/Clean Snap/node_modules/@metamask/snap-types';
+import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from 'C:/Users/David Shilliday/Desktop/Repo/Clean Snap/node_modules/@metamask/snap-types';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { hasProperty, isObject, Json } from '@metamask/utils';
 import { ethers } from "ethers";
+import { Web3Provider } from "@ethersproject/providers";
 import  web3  from "web3";
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -22,6 +23,12 @@ async function isUnlocked() {
   return true;
 }
 
+function walletUnlocked()  {
+  
+  return wallet._metamask.isUnlocked;
+
+}
+
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -36,7 +43,9 @@ async function isUnlocked() {
 
 
 export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
+
   switch (request.method) {
+    
     case 'hello':
       return wallet.request({
         method: 'snap_confirm',
@@ -70,10 +79,13 @@ return { insights: {dummy: "dummy"}};
 
 export const onCronjob: OnCronjobHandler = async({ request }) => {
 	console.log("Unlocked Job Handler Invoked.");
+  
+  
+  
 	switch (request.method) {
 		case 'checkUnlocked':
       console.log("Checking if wallet unlocked-periodic");
-		if(!CheckTransaction.wasATransactionMade && await isUnlocked())
+		if(!CheckTransaction.wasATransactionMade && walletUnlocked())
     {
       console.log("Alerting user...");
 			return wallet.request({
@@ -87,7 +99,7 @@ export const onCronjob: OnCronjobHandler = async({ request }) => {
 				]
 			});
     }
-    else if(CheckTransaction.wasATransactionMade && await isUnlocked())
+    else if(CheckTransaction.wasATransactionMade && walletUnlocked())
     {
       return wallet.request({
         method: 'snap_confirm',
