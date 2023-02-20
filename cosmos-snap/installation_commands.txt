@@ -1,0 +1,8 @@
+npm install @metamask/key-tree
+npm install secp256k1
+npm install bech32
+npm install ripemd160
+npm i --save-dev @types/ripemd160
+npm install sha256
+
+All of these were installed in the cosmos-snap folder.

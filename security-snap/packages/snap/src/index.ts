@@ -1,4 +1,4 @@
-import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from 'C:/Users/David Shilliday/Desktop/Repo/Clean Snap/node_modules/@metamask/snap-types';
+import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from 'C:/Users/David Shilliday/Desktop/Cosmos Repo/security-snap/node_modules/@metamask/snap-types';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { hasProperty, isObject, Json } from '@metamask/utils';
 import { ethers } from "ethers";
