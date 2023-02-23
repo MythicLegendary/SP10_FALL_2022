@@ -5,5 +5,5 @@ npm install ripemd160
 npm i --save-dev @types/ripemd160
 npm install sha256
 npm i --save-dev @types/sha256
-
+npm update babel
 All of these were installed in the cosmos-snap folder.
