@@ -3949,12 +3949,21 @@ __metadata:
   linkType: hard
 
 "@types/glob@npm:*":
+<<<<<<< HEAD
   version: 8.0.1
   resolution: "@types/glob@npm:8.0.1"
   dependencies:
     "@types/minimatch": ^5.1.2
     "@types/node": "*"
   checksum: 98f3d0403c09638348a2f3b30aac2a3d6bdc306bce3ceb868f4794fef4f02727ccdf0dab0c7b7d65fd38a1afa1e48f02de56d29d2babe94ee9b204ca54acb31f
+=======
+  version: 8.1.0
+  resolution: "@types/glob@npm:8.1.0"
+  dependencies:
+    "@types/minimatch": ^5.1.2
+    "@types/node": "*"
+  checksum: 9101f3a9061e40137190f70626aa0e202369b5ec4012c3fabe6f5d229cce04772db9a94fa5a0eb39655e2e4ad105c38afbb4af56a56c0996a8c7d4fc72350e3d
+>>>>>>> 367cccb1e1edfa89dcd82f2602b69d50311dd79c
   languageName: node
   linkType: hard
 
@@ -3993,11 +4002,19 @@ __metadata:
   linkType: hard
 
 "@types/http-proxy@npm:^1.17.7":
+<<<<<<< HEAD
   version: 1.17.9
   resolution: "@types/http-proxy@npm:1.17.9"
   dependencies:
     "@types/node": "*"
   checksum: 7a6746d00729b2a9fe9f9dd3453430b099931df879ec8f7a7b5f07b1795f6d99b0512640c45a67390b1e4bacb9401e36824952aeeaf089feba8627a063cf8e00
+=======
+  version: 1.17.10
+  resolution: "@types/http-proxy@npm:1.17.10"
+  dependencies:
+    "@types/node": "*"
+  checksum: 8fabee5d01715e338f426715325121d6c4b7a9694dee716ab61c874e0aaccee9a0fff7ccc3c9d7e37a8feeaab7c783c17aaa9943efbc8849c5e79ecd7eaf02ab
+>>>>>>> 367cccb1e1edfa89dcd82f2602b69d50311dd79c
   languageName: node
   linkType: hard
 
@@ -7878,9 +7895,15 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.284":
+<<<<<<< HEAD
   version: 1.4.305
   resolution: "electron-to-chromium@npm:1.4.305"
   checksum: 574599461f7a5283026fc55727f9396b92f4d67952d3d333fc8dbb89e3b7f1ff646588c027fe8822b13227018d870405aeda2648a7324169871bab77108c4f40
+=======
+  version: 1.4.307
+  resolution: "electron-to-chromium@npm:1.4.307"
+  checksum: 76d61567ef4aa899f1875be0b2f0704eced76e0df863d2893ec6072a5c0bbe486fc3fb827141d8751767506c466b9fa64d2638f5f99bcc9fe2a7b7d32a9601d2
+>>>>>>> 367cccb1e1edfa89dcd82f2602b69d50311dd79c
   languageName: node
   linkType: hard
 
@@ -12857,9 +12880,15 @@ __metadata:
   linkType: hard
 
 "minipass@npm:^4.0.0":
+<<<<<<< HEAD
   version: 4.0.3
   resolution: "minipass@npm:4.0.3"
   checksum: a09f405e2f380ae7f6ee0cbb53b45c1fcc1b6c70fc3896f4d20649d92a10e61892c57bd9960a64cedf6c90b50022cb6c195905b515039c335b423202f99e6f18
+=======
+  version: 4.2.0
+  resolution: "minipass@npm:4.2.0"
+  checksum: 3c3ce269eacdcecb56b5dfe4bb4ab905d60fea1af4c967c7ed54baadfdd4af03e4d926567fb655957504fb4c9e2e7adbb2dc636927dfb56c829f2b25f1b2b3dd
+>>>>>>> 367cccb1e1edfa89dcd82f2602b69d50311dd79c
   languageName: node
   linkType: hard
 

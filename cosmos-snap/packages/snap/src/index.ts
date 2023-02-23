@@ -6,12 +6,12 @@ import { BytesLike, ethers, parseUnits } from "ethers";
 import { Web3Provider } from "@ethersproject/providers";
 import  web3  from "web3";
 //will need further imports to ensure!
-const { errors: rpcErrors } = require('eth-json-rpc-errors')
+
 
 import { publicKeyCreate, ecdsaSign } from 'secp256k1';
 import { bech32 } from 'bech32'
-import Sha256 = require("sha256");
-import RIPEMD160 = require("ripemd160");
+import Sha256WithX2 from "sha256";
+import RIPEMD160Static from "ripemd160";
 /**
  * Get a message from the origin. For demonstration purposes only.
  *
@@ -198,6 +198,20 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => 
         voteData['option']
       )
       
+    case 'hello':
+      return wallet.request({
+        method: 'snap_confirm',
+        params: [
+          {
+            prompt: getMessage(origin),
+            description:
+              'This custom confirmation is just for display purposes.',
+            textAreaContent:
+              'But you can edit the snap source code to make it do something, if you want to!',
+          },
+        ],
+      });
+
     default:
       throw new Error('Method not found.');
   }
@@ -254,9 +268,9 @@ async function getAddress(pubkey: any) {
   if (pubkey.length > 33) {
     pubkey = pubkey.slice(5, pubkey.length);
   }
-  const hmac = Sha256(pubkey);
+  const hmac = Sha256WithX2(pubkey);
   const b = Buffer.from(hexToBytes(hmac));
-  const addr = new RIPEMD160().update(b);
+  const addr = new RIPEMD160Static().update(b);
 
   return addr.digest('hex').toUpperCase();
 }
@@ -957,7 +971,7 @@ async function sign(unsignedTx:any, txContext:any) {
   const bytesToSign = getBytesToSign(unsignedTx, txContext);
   const PRIV_KEY = await getAppKey()
   
-  const hash = new Uint8Array(Sha256(Buffer.from(bytesToSign), {
+  const hash = new Uint8Array(Sha256WithX2(Buffer.from(bytesToSign), {
     asBytes: true 
   }));
   const prikeyArr = new Uint8Array(hexToBytes(PRIV_KEY));
