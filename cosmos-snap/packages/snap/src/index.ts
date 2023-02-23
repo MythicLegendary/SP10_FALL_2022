@@ -47,15 +47,15 @@ updatePluginState({
 
 export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
   let pubKey, account;
-  console.log("Snap RPC Handler invoked");
+  console.log("COSMOS-SNAP: Snap RPC Handler invoked");
 
   switch (request.method) {
     case 'getSnapState':
-      console.log("Geting the Snap Plugin State.");
+      console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
       return getPluginState();
 
     case 'setConfig':
-      console.log("Attempting to update configuration.");
+      console.log("COSMOS-SNAP: Attempting to update configuration.");
       updatePluginState({
         ...getPluginState(),
         nodeUrl: request[0]['nodeUrl'],
@@ -67,32 +67,32 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       return getPluginState();
 
     case 'getAccount':
-      console.log("Getting the public key.");
+      console.log("COSMOS-SNAP: Getting the public key.");
       pubKey = await getPubKey();
       return getAccount(pubKey);
     
     case 'getAccountInfo':
-      console.log("Getting Account Info.");
+      console.log("COSMOS-SNAP: Getting Account Info.");
       pubKey = await getPubKey();
       account = getAccount(pubKey);
       return await getAccountInfo(account);
 
     case 'getStatus':
-      console.log("Getting status.");
+      console.log("COSMOS-SNAP: Getting status.");
       return getStatus();
     
     case 'getBandwidth':
-      console.log("Getting bandwidth.");
+      console.log("COSMOS-SNAP: Getting bandwidth.");
       pubKey = await getPubKey()
       account = getAccount(pubKey)
       return await getAccountBandwidth(account)
     
     case 'getIndexStats':
-        console.log("Getting index stats.");
+        console.log("COSMOS-SNAP: Getting index stats.");
         return await getIndexStats()
     
     case 'getRewards':
-      console.log("Getting rewards.");
+      console.log("COSMOS-SNAP: Getting rewards.");
       pubKey = await getPubKey()
       account = getAccount(pubKey)
       return await getRewards(account)
@@ -105,7 +105,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
         )
     
     case 'createSend':
-      console.log("Creating Send Transaction.");
+      console.log("COSMOS-SNAP: Creating Send Transaction.");
       let sendData = request.params[0]
       return await createSendTx(
         sendData['subjectTo'],
@@ -113,7 +113,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       )
 
     case 'createMultiSend':
-        console.log("Creating Multi Send Transaction.");
+        console.log("COSMOS-SNAP: Creating Multi Send Transaction.");
         let multiSendData = request.params[0]
         return await createMultiSendTx(
           multiSendData['inputs'],
@@ -121,7 +121,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
         )
 
     case 'createDelegate':
-      console.log("Creating Delegate.");
+      console.log("COSMOS-SNAP: Creating Delegate.");
       let delegateData = request.params[0]
       return await createDelegateTx(
         delegateData['validatorTo'],
@@ -129,7 +129,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       )
 
     case 'createRedelegate':
-      console.log("Creating Redelegate");
+      console.log("COSMOS-SNAP: Creating Redelegate");
       let redelegateData = request.params[0]
       return await createRedelegateTx(
         redelegateData['validatorFrom'],
@@ -138,7 +138,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       )
 
     case 'createUndelegate':
-      console.log("Creating Undelegate");
+      console.log("COSMOS-SNAP: Creating Undelegate");
       let undelegateData = request.params[0]
       return await createUndelegateTx(
         undelegateData['validatorFrom'],
@@ -146,14 +146,14 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       )
 
     case 'createWithdrawDelegationReward':
-      console.log("Creating Withdrawal Delegation Reward");
+      console.log("COSMOS-SNAP: Creating Withdrawal Delegation Reward");
       let withdrawDelegationReward = request.params[0]
       return await createWithdrawDelegationRewardTx(
         withdrawDelegationReward['rewards']
       )
 
     case 'createTextProposal':
-      console.log("Creating Text Proposal");
+      console.log("COSMOS-SNAP: Creating Text Proposal");
       let textProposalData = request.params[0]
       return await createTextProposalTx(
         textProposalData['title'],
@@ -162,7 +162,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       )
 
     case 'createCommunityPoolSpend':
-      console.log("Creating Community Pool Spend.");
+      console.log("COSMOS-SNAP: Creating Community Pool Spend.");
       let communitySpendProposalData = request.params[0]
       return await createCommunityPoolSpendProposalTx(
         communitySpendProposalData['title'],
@@ -173,7 +173,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       )
 
     case 'createParamsChangeProposal':
-      console.log("Create Params Change Proposal.");
+      console.log("COSMOS-SNAP: Create Params Change Proposal.");
       let paramsChangeProposalData = request.params[0]
       return await createParamsChangeProposalTx(
         paramsChangeProposalData['title'],
@@ -183,7 +183,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       )
       
     case 'createDeposit':
-      console.log("Create Deposit.");
+      console.log("COSMOS-SNAP: Create Deposit.");
       let depositData = request.params[0]
       return await createDepositTx(
         depositData['proposalId'],
@@ -191,7 +191,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       )
       
     case 'createVote':
-      console.log("Creating Vote.");
+      console.log("COSMOS-SNAP: Creating Vote.");
       let voteData = request.params[0]
       return await createVoteTx(
         voteData['proposalId'],
@@ -221,9 +221,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
 
 async function getPluginState()
 {
-  return await wallet.request({
+    return await wallet.request({
     method: 'snap_manageState',
-    params: {operation: 'get'},
+    params: ['get'],
   });
 }
 
@@ -231,7 +231,7 @@ async function updatePluginState(state: unknown)
 {
   return await wallet.request({
   method: 'snap_manageState',
-  params: {operation: 'update', newState: state},
+  params: ['update', state],
     });
 }
 
