@@ -1,4 +1,4 @@
-import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from 'C:/Users/David Shilliday/Desktop/Cosmos Repo/cosmos-snap/node_modules/@metamask/snap-types';
+import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from '../../../node_modules/@metamask/snap-types';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { JsonBIP44CoinTypeNode } from "@metamask/key-tree";
 import { hasProperty, isObject, Json } from '@metamask/utils';
@@ -45,7 +45,7 @@ updatePluginState({
  */
 
 
-export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request }) => {
+export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
   let pubKey, account;
   console.log("Snap RPC Handler invoked");
 
