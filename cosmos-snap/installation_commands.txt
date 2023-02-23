@@ -4,5 +4,6 @@ npm install bech32
 npm install ripemd160
 npm i --save-dev @types/ripemd160
 npm install sha256
+npm i --save-dev @types/sha256
 
 All of these were installed in the cosmos-snap folder.
