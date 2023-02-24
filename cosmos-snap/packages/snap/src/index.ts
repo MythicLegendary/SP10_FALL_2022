@@ -56,15 +56,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
 
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
-      updatePluginState({
-        ...getPluginState(),
-        nodeUrl: request[0]['nodeUrl'],
-        denom: request[0]['denom'],
-        prefix: request[0]['prefix'],
-        memo: request[0]['memo'],
-        gas: request[0]['gas'],
+      await updatePluginState({
+        ...await getPluginState(),
+        nodeUrl: request.params[0]['nodeUrl'],
+        denom: request.params[0]['denom'],
+        prefix: request.params[0]['prefix'],
+        memo: request.params[0]['memo'],
+        gas: request.params[0]['gas'],
       })
-      return getPluginState();
+      return await getPluginState();
 
     case 'getAccount':
       console.log("COSMOS-SNAP: Getting the public key.");
