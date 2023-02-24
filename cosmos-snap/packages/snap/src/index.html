@@ -1,0 +1,619 @@
+<!doctype html>
+
+<html>
+
+  </head>
+    <title> SP10 Cosmos Snap</title>
+  </head>
+
+  <body>
+    <h1>cyb snap</h1>
+
+    <button class="connect">Connect</button>
+    <p>
+      <button class="account">Get Account</button>
+      <span class="addAccount"></span>
+    </p>
+
+    <p>
+      <input class="config_node_url" placeholder="from" value="https://atom.getblock.io" />
+      <input class="config_denom" placeholder="from" value="uatom" />
+      <input class="config_prefix" placeholder="from" value="cosmos" />
+      <input class="config_memo" placeholder="from" value="SP-10-2022" />
+      <input class="config_gas" placeholder="from" value=200000 />
+      <button class="snapState">Get Snap State</button>
+      <button class="setConfig">Set Config</button>
+      <span class="addSnapState"></span>
+    </p>
+
+    <p>
+      <button class="accountInfo">Get Account Info</button>
+      <span class="addAccountInfo"></span>
+    </p>
+
+    <p>
+      <button class="status">Get Network Status</button>
+      <span class="addStatus"></span>
+    </p>
+
+    <p>
+      <button class="bandwidth">Get Bandwidth</button>
+      <span class="addBandwidth"></span>
+    </p>
+
+    <p>
+      <button class="indexStats">Get Index Stats</button>
+      <span class="addIndexStats"></span>
+    </p>
+
+    <p>
+      <button class="rewards">Get Delegation Rewards</button>
+      <span class="addRewards"></span>
+    </p>
+
+    <p>
+      <input class="object_from" placeholder="from" />
+      <input class="object_to" placeholder="to" />
+      <button class="cyberlink">Create cyberlink!</button>
+      <span class="addCyberlink"></span>
+    </p>
+
+    <p>
+      <input class="send_to" placeholder="to" />
+      <input class="send_amount" placeholder="amount" />
+      <button class="send">Create send!</button>
+      <span class="addSend"></span>
+    </p>
+
+    <p>
+      <input class="multisend_inputs" placeholder="inputs" />
+      <input class="multisend_outputs" placeholder="outputs" />
+      <button class="multiSend">Create multi send</button>
+      <span class="addMultiSend"></span>
+    </p>
+
+    <p>
+      <input class="delegate_validator_to" placeholder="to" />
+      <input class="delegate_amount" placeholder="amount" />
+      <button class="delegate">Delegate</button>
+      <span class="addDelegate"></span>
+    </p>
+
+    <p>
+      <input class="redelegate_validator_from" placeholder="from" />
+      <input class="redelegate_validator_to" placeholder="to" />
+      <input class="redelegate_amount" placeholder="amount" />
+      <button class="redelegate">Redelegate</button>
+      <span class="addRedelegate"></span>
+    </p>
+
+    <p>
+      <input class="undelegate_validator_from" placeholder="from" />
+      <input class="undelegate_amount" placeholder="amount" />
+      <button class="undelegate">Undelegate</button>
+      <span class="addUndelegate"></span>
+    </p>
+
+    <p>
+      <input class="withdraw_delegation_rewards" placeholder="rewards" />
+      <button class="withdrawDelegationReward">Withdraw Delegation Reward</button>
+      <span class="addWithdrawDelegationReward"></span>
+    </p>
+
+    <p>
+      <input class="text_proposal_title" placeholder="title" />
+      <input class="text_proposal_description" placeholder="description" />
+      <input class="text_proposal_deposit" placeholder="deposit" />
+      <button class="textProposal">Create Text proposal</button>
+      <span class="addTextProposal"></span>
+    </p>
+
+    <p>
+      <input class="community_pool_spend_title" placeholder="title" />
+      <input class="community_pool_spend_description" placeholder="description" />
+      <input class="community_pool_spend_recipient" placeholder="recipient" />
+      <input class="community_pool_spend_deposit" placeholder="deposit" />
+      <input class="community_pool_spend_amount" placeholder="amount" />
+      <button class="communityPoolSpend">Create Community Pool Spend</button>
+      <span class="addCommunityPoolSpend"></span>
+    </p>
+
+    <p>
+      <input class="params_change_title" placeholder="title" />
+      <input class="params_change_description" placeholder="description" />
+      <input class="params_change_changes" placeholder="changes" />
+      <input class="params_change_deposit" placeholder="deposit" />
+      <button class="paramsChange">Create Params Change</button>
+      <span class="addParamsChange"></span>
+    </p>
+
+    <p>
+      <input class="proposal_deposit_id" placeholder="id" />
+      <input class="proposal_deposit_amount" placeholder="amount" />
+      <button class="deposit">Create Voting Deposit</button>
+      <span class="addDeposit"></span>
+    </p>
+
+    <p>
+      <input class="proposal_vote_id" placeholder="id" />
+      <input class="proposal_vote_option" placeholder="option" />
+      <button class="vote">Create Vote</button>
+      <span class="addVote"></span>
+    </p>
+   
+  </body>
+
+  <script>
+
+    const snapId = new URL('package.json', window.location.href).toString()
+
+    const addSnapState = document.querySelector('span.addSnapState')
+    const snapStateButton = document.querySelector('button.snapState')
+    const setConfigButton = document.querySelector('button.setConfig')
+
+    const connectButton = document.querySelector('button.connect')
+
+    const addAccount = document.querySelector('span.addAccount')
+    const accountButton = document.querySelector('button.account')
+    
+    const addAccountInfo = document.querySelector('span.addAccountInfo')
+    const accountInfoButton = document.querySelector('button.accountInfo')
+
+    const addStatus = document.querySelector('span.addStatus')
+    const statusButton = document.querySelector('button.status')
+
+    const addBandwidth = document.querySelector('span.addBandwidth')
+    const bandwidthButton = document.querySelector('button.bandwidth')
+
+    const addIndexStats = document.querySelector('span.addIndexStats')
+    const indexStatsButton = document.querySelector('button.indexStats')
+
+    const addRewards = document.querySelector('span.addRewards')
+    const rewardsButton = document.querySelector('button.rewards')
+
+    const addCyberlink = document.querySelector('span.addCyberlink')
+    const cyberlinkButton = document.querySelector('button.cyberlink')
+
+    const addSend = document.querySelector('span.addSend')
+    const sendButton = document.querySelector('button.send')
+
+    const addMultiSend = document.querySelector('span.addMultiSend')
+    const multiSendButton = document.querySelector('button.multiSend')
+
+    const addDelegate = document.querySelector('span.addDelegate')
+    const delegateButton = document.querySelector('button.delegate')
+
+    const addRedelegate = document.querySelector('span.addRedelegate')
+    const redelegateButton = document.querySelector('button.redelegate')
+
+    const addUndelegate = document.querySelector('span.addUndelegate')
+    const undelegateButton = document.querySelector('button.undelegate')
+
+    const addWithdrawDelegationReward = document.querySelector('span.addWithdrawDelegationReward')
+    const withdrawDelegationRewardButton = document.querySelector('button.withdrawDelegationReward')
+
+    const addTextProposal = document.querySelector('span.addTextProposal')
+    const textProposalButton = document.querySelector('button.textProposal')
+
+    const addCommunityPoolSpend = document.querySelector('span.addCommunityPoolSpend')
+    const communityPoolSpendButton = document.querySelector('button.communityPoolSpend')
+
+    const addParamsChange = document.querySelector('span.addParamsChange')
+    const paramsChangeButton = document.querySelector('button.paramsChange')
+
+    const addDeposit = document.querySelector('span.addDeposit')
+    const depositButton = document.querySelector('button.deposit')
+
+    const addVote = document.querySelector('span.addVote')
+    const voteButton = document.querySelector('button.vote')
+
+    //----------------------------------------------------------
+
+    connectButton.addEventListener('click', connect)
+    
+    snapStateButton.addEventListener('click', getSnapState)
+    setConfigButton.addEventListener('click', setConfig)
+
+    accountButton.addEventListener('click', getAccount)
+    accountInfoButton.addEventListener('click', getAccountInfo)
+    statusButton.addEventListener('click', getStatus)
+    bandwidthButton.addEventListener('click', getBandwidth)
+    indexStatsButton.addEventListener('click', getIndexStats)
+    rewardsButton.addEventListener('click', getRewards)
+    
+    cyberlinkButton.addEventListener('click', createCyberlink)
+    sendButton.addEventListener('click', createSend)
+    multiSendButton.addEventListener('click', createMultiSend)
+
+    delegateButton.addEventListener('click', createDelegate)
+    redelegateButton.addEventListener('click', createRedelegate)
+    undelegateButton.addEventListener('click', createUndelegate)
+    withdrawDelegationRewardButton.addEventListener('click', createWithdrawDelegationReward)
+
+    textProposalButton.addEventListener('click', createTextProposal)
+    communityPoolSpendButton.addEventListener('click', createCommunityPoolSpend)
+    paramsChangeButton.addEventListener('click', createParamsChangeProposal)
+    depositButton.addEventListener('click', createDeposit)
+    voteButton.addEventListener('click', createVote)
+
+
+    //----------------------------------------------------------
+
+    async function connect () {
+      await ethereum.send({
+        method: 'wallet_enable',
+        params: [{
+          wallet_plugin: { [snapId]: {} },
+        }]
+      })
+    }
+
+    //----------------------------------------------------------
+
+    async function getSnapState () {
+      try {
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'getSnapState'
+          }]
+        })
+        addSnapState.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addSnapState.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function setConfig () {
+      try {
+        let data = {}
+        data['nodeUrl'] = document.querySelector('.config_node_url').value
+        data['denom'] = document.querySelector('.config_denom').value
+        data['prefix'] = document.querySelector('.config_prefix').value
+        data['memo'] = document.querySelector('.config_memo').value
+        data['gas'] = document.querySelector('.config_gas').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'setConfig',
+            params: [data]
+          }]
+        })
+        addSnapState.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addSnapState.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function getAccount () {
+      try {
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'getAccount'
+          }]
+        })
+        addAccount.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addAccount.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function getAccountInfo () {
+      try {
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'getAccountInfo'
+          }]
+        })
+        addAccountInfo.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addAccountInfo.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function getStatus () {
+      try {
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'getStatus'
+          }]
+        })
+        addStatus.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addStatus.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function getBandwidth () {
+      try {
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'getBandwidth'
+          }]
+        })
+        addBandwidth.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addBandwidth.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function getIndexStats () {
+      try {
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'getIndexStats'
+          }]
+        })
+        addIndexStats.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addIndexStats.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function getRewards () {
+      try {
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'getRewards'
+          }]
+        })
+        addRewards.innerText = JSON.stringify(response)
+        document.querySelector('.withdraw_delegation_rewards').value = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addRewards.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    //----------------------------------------------------------
+
+    async function createCyberlink () {
+      try {
+        let data = {}
+        data['objectFrom'] = document.querySelector('.object_from').value
+        data['objectTo'] = document.querySelector('.object_to').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createCyberlink',
+            params: [data],
+          }]
+        })
+        addCyberlink.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addCyberlink.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createSend () {
+      try {
+        let data = {}
+        data['subjectTo'] = document.querySelector('.send_to').value
+        data['amount'] = document.querySelector('.send_amount').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createSend',
+            params: [data]
+          }]
+        })
+        addSend.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addSend.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createMultiSend () {
+      try {
+        let data = {}
+        data['inputs'] = document.querySelector('.multisend_inputs').value
+        data['outputs'] = document.querySelector('.multisend_outputs').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createMultiSend',
+            params: [data]
+          }]
+        })
+        addMultiSend.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addMultiSend.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createDelegate () {
+      try {
+        let data = {}
+        data['validatorTo'] = document.querySelector('.delegate_validator_to').value
+        data['amount'] = document.querySelector('.delegate_amount').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createDelegate',
+            params: [data]
+          }]
+        })
+        addDelegate.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addDelegate.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createRedelegate () {
+      try {
+        let data = {}
+        data['validatorFrom'] = document.querySelector('.redelegate_validator_from').value
+        data['validatorTo'] = document.querySelector('.redelegate_validator_to').value
+        data['amount'] = document.querySelector('.redelegate_amount').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createRedelegate',
+            params: [data]
+          }]
+        })
+        addRedelegate.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addRedelegate.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createUndelegate () {
+      try {
+        let data = {}
+        data['validatorFrom'] = document.querySelector('.undelegate_validator_from').value
+        data['amount'] = document.querySelector('.undelegate_amount').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createUndelegate',
+            params: [data]
+          }]
+        })
+        addUndelegate.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addUndelegate.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createWithdrawDelegationReward () {
+      try {
+        let data = {}
+        data['rewards'] = document.querySelector('.withdraw_delegation_rewards').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createWithdrawDelegationReward',
+            params: [data]
+          }]
+        })
+        addWithdrawDelegationReward.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addWithdrawDelegationReward.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createTextProposal () {
+      try {
+        let data = {}
+        data['title'] = document.querySelector('.text_proposal_title').value
+        data['description'] = document.querySelector('.text_proposal_description').value
+        data['deposit'] = document.querySelector('.text_proposal_deposit').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createTextProposal',
+            params: [data]
+          }]
+        })
+        addTextProposal.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addTextProposal.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createCommunityPoolSpend () {
+      try {
+        let data = {}
+        data['title'] = document.querySelector('.community_pool_spend_title').value
+        data['description'] = document.querySelector('.community_pool_spend_description').value
+        data['recipient'] = document.querySelector('.community_pool_spend_recipient').value
+        data['deposit'] = document.querySelector('.community_pool_spend_deposit').value
+        data['amount'] = document.querySelector('.community_pool_spend_amount').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createCommunityPoolSpend',
+            params: [data]
+          }]
+        })
+        addCommunityPoolSpend.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addCommunityPoolSpend.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createParamsChangeProposal () {
+      try {
+        let data = {}
+        data['title'] = document.querySelector('.params_change_title').value
+        data['description'] = document.querySelector('.params_change_description').value
+        data['changes'] = document.querySelector('.params_change_changes').value
+        data['deposit'] = document.querySelector('.params_change_deposit').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createParamsChangeProposal',
+            params: [data]
+          }]
+        })
+        addParamsChange.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addParamsChange.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createDeposit () {
+      try {
+        let data = {}
+        data['proposalId'] = document.querySelector('.proposal_deposit_id').value
+        data['amount'] = document.querySelector('.proposal_deposit_amount').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createDeposit',
+            params: [data]
+          }]
+        })
+        addDeposit.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addDeposit.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+    async function createVote () {
+      try {
+        let data = {}
+        data['proposalId'] = document.querySelector('.proposal_vote_id').value
+        data['option'] = document.querySelector('.proposal_vote_option').value
+        const response = await ethereum.send({
+          method: 'wallet_invokePlugin',
+          params: [snapId, {
+            method: 'createVote',
+            params: [data]
+          }]
+        })
+        addVote.innerText = JSON.stringify(response)
+      } catch (err) {
+        console.error(err)
+        addVote.innerText = `Problem happened: ' ${JSON.stringify(err)}`
+      }
+    }
+
+  </script>
+
+</html>
