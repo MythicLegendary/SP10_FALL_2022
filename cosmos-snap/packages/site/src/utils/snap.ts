@@ -61,12 +61,35 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
  */
 
 export const sendHello = async () => {
+
   await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: [
       defaultSnapOrigin,
       {
-        method: 'hello',
+        method: 'hello'
+      },
+    ],
+  });
+};
+
+/**
+ * Invoke the "setConfig" method from the cosmos snap.
+ */
+export const sendSetConfig = async () => {
+  let data : any = {}
+  data['nodeUrl'] = "https://random.getblock.io";
+  data['denom'] = "urand";
+  data['prefix'] = "cosmos";
+  data['memo'] = "SP-10-2023";
+  data['gas'] = 0;
+  const response : unknown = await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'setConfig',
+        params: [data]
       },
     ],
   });
