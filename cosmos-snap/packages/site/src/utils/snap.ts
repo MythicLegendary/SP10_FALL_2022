@@ -59,7 +59,6 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
 /**
  * Invoke the "hello" method from the example snap.
  */
-
 export const sendHello = async () => {
 
   await window.ethereum.request({
@@ -90,6 +89,23 @@ export const sendSetConfig = async () => {
       {
         method: 'setConfig',
         params: [data]
+      },
+    ],
+  });
+};
+
+/**
+ * Invoke the "getAccounts" method from the cosmos snap.
+ */
+
+export const sendGetAccount = async () => {
+
+  await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'getAccount'
       },
     ],
   });
