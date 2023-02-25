@@ -7,9 +7,9 @@ import { Web3Provider } from "@ethersproject/providers";
 import  web3  from "web3";
 //will need further imports to ensure!
 
-
 import { publicKeyCreate, ecdsaSign } from 'secp256k1';
 import { bech32 } from 'bech32'
+import {Buffer} from 'buffer';''
 import Sha256WithX2 from "sha256";
 import RIPEMD160Static from "ripemd160";
 /**
@@ -67,9 +67,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       return await getPluginState();
 
     case 'getAccount':
-      console.log("COSMOS-SNAP: Getting the public key.");
+      console.log("COSMOS-SNAP: Getting the account associated with the public key.");
       pubKey = await getPubKey();
-      return getAccount(pubKey);
+      return await getAccount(pubKey);
     
     case 'getAccountInfo':
       console.log("COSMOS-SNAP: Getting Account Info.");
@@ -246,8 +246,7 @@ async function getAppKey()
     },
   })) as JsonBIP44CoinTypeNode;
 
-  return bip44Node.privateKey;
-
+  return bip44Node.privateKey?.slice(0, 63);
 }
 
 //----------------------------------------------------------
@@ -259,8 +258,8 @@ async function getPubKey () {
 }
 
 async function getAccount (pubkey: any) {
-  const currentPluginState : any = getPluginState()
-  const address = getAddress(hexToBytes(pubkey))
+  const currentPluginState : any = await getPluginState()
+  const address = await getAddress(hexToBytes(pubkey))
   return toBech32(currentPluginState.prefix, address)
 }
 
@@ -276,7 +275,7 @@ async function getAddress(pubkey: any) {
 }
 
 async function getStatus() {
-  const currentPluginState : any = getPluginState();
+  const currentPluginState : any = await getPluginState();
   try {
     const response = await fetch(`${currentPluginState.nodeUrl}/api/status`, {
       method: 'GET',
@@ -295,7 +294,7 @@ async function getStatus() {
 }
 
 async function getAccountInfo(address: any) {
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
   try {
     const response = await fetch(`${currentPluginState.nodeUrl}/api/account?address="${address}"`, {
       method: 'GET',
@@ -326,7 +325,7 @@ async function getAccountInfo(address: any) {
 }
 
 async function getAccountBandwidth(address : any) {
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
   try {
     const bandwidth = {
       remained: 0,
@@ -354,7 +353,7 @@ async function getAccountBandwidth(address : any) {
 }
 
 async function getIndexStats() {
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
   try {
     const response = await fetch(`${currentPluginState.nodeUrl}/api/index_stats`, {
       method: 'GET',
@@ -373,7 +372,7 @@ async function getIndexStats() {
 }
 
 async function getRewards(address: any) {
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
   try {
     const response = await fetch(`${currentPluginState.nodeUrl}/lcd/distribution/delegators/${address}/rewards`, {
       method: 'GET',
@@ -416,7 +415,7 @@ function createSend(txContext : any, recipient : any, amount : any, denom :any) 
 
 async function createSendTx(subjectTo : any, amount :  any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createSend(
     txContext,
@@ -434,7 +433,7 @@ async function createTxContext() {
   const account = getAccount(pubKey)
   const accountInfo = await getAccountInfo(account)
 
-  const currentPluginState : any = getPluginState();
+  const currentPluginState : any = await getPluginState();
 
   const txContext = {
     accountNumber: accountInfo.account_number,
@@ -508,7 +507,7 @@ async function txSubmit(signedTx : any) {
     tx: signedTx.value,
     mode: 'sync',
   };
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
   const url = `${currentPluginState.nodeUrl}/lcd/txs`;
   const response = await fetch(url, {
     method: 'POST',
@@ -542,7 +541,7 @@ function createMultiSend(txContext : any, inputs : any, outputs : any, denom : a
 
 async function createMultiSendTx(inputs : any, outputs : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createMultiSend(
     txContext,
@@ -575,7 +574,7 @@ function createCyberlink(txContext : any, objectFrom : any, objectTo : any, deno
 
 async function createCyberlinkTx (objectFrom :any, objectTo : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createCyberlink(
     txContext,
@@ -611,7 +610,7 @@ function createDelegate(txContext : any, validatorBech32 : any, amount : any, de
 
 async function createDelegateTx(validatorTo : any, amount : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createDelegate(
     txContext,
@@ -648,7 +647,7 @@ function createRedelegate(txContext : any, validatorSourceBech32 : any, validato
 
 async function  createRedelegateTx(validatorFrom : any, validatorTo : any, amount : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createRedelegate(
     txContext,
@@ -685,7 +684,7 @@ function createUndelegate(txContext : any, validatorBech32 : any, amount : any, 
 
 async function createUndelegateTx(validatorFrom : any, amount : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createUndelegate(
     txContext,
@@ -718,7 +717,7 @@ function createWithdrawDelegationReward(txContext : any, rewards : any, denom : 
 
 async function createWithdrawDelegationRewardTx(rewards : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createWithdrawDelegationReward(
     txContext,
@@ -759,7 +758,7 @@ function createTextProposal(txContext : any, title : any, description : any, dep
 
 async function createTextProposalTx(title : any, description : any, deposit : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createTextProposal(
     txContext,
@@ -807,7 +806,7 @@ function createCommunityPoolSpendProposal(txContext : any, title: any, descripti
 
 async function createCommunityPoolSpendProposalTx(title : any, description : any, recipient : any, deposit : any, amount : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createCommunityPoolSpendProposal(
     txContext,
@@ -853,7 +852,7 @@ function createParamsChangeProposal(txContext: any, title: any, description: any
 
 async function createParamsChangeProposalTx(title : any, description : any, changes : any, deposit : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createParamsChangeProposal(
     txContext,
@@ -891,7 +890,7 @@ function createDeposit(txContext : any, proposalId : any, amount : any, denom : 
 
 async function createDepositTx(proposalId : any, amount : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createDeposit(
     txContext,
@@ -924,7 +923,7 @@ function createVote(txContext :any, proposalId : any, option : any, denom : any)
 
 async function createVoteTx(proposalId : any, option : any) {
   const txContext = await createTxContext()
-  const currentPluginState : any = getPluginState()
+  const currentPluginState : any = await getPluginState()
 
   const tx = await createVote(
     txContext,

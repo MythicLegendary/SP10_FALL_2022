@@ -94,6 +94,7 @@ export const sendSetConfig = async () => {
 };
 
 /**
+<<<<<<< HEAD
  * This is a common method to send snap JSON RPC requests.
  * Later there will be a different method for each request.
  */
@@ -115,4 +116,22 @@ export const sendSetConfig = async () => {
 };
 
 
+=======
+ * Invoke the "getAccounts" method from the cosmos snap.
+ */
+
+export const sendGetAccount = async () => {
+
+  await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'getAccount'
+      },
+    ],
+  });
+};
+
+>>>>>>> aa91a377 (COSMOS-SNAP: Fixed bugs for getAccount method.)
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');
