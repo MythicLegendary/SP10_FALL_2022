@@ -45,10 +45,9 @@ updatePluginState({
  */
 
 
-export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
+export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {origin : string, request : any}) => {
   let pubKey, account;
   console.log("COSMOS-SNAP: Snap RPC Handler invoked");
-
   switch (request.method) {
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
@@ -74,7 +73,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
     case 'getAccountInfo':
       console.log("COSMOS-SNAP: Getting Account Info.");
       pubKey = await getPubKey();
-      account = getAccount(pubKey);
+      account = await getAccount(pubKey);
       return await getAccountInfo(account);
 
     case 'getStatus':

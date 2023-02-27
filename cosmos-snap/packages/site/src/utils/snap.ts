@@ -74,7 +74,7 @@ async function sendHello() {
 /**
  * Invoke the "setConfig" method from the cosmos snap.
  */
-export const sendSetConfig = async () => {
+async function sendSetConfig() {
   let data : any = {}
   data['nodeUrl'] = "https://random.getblock.io";
   data['denom'] = "urand";
@@ -94,7 +94,38 @@ export const sendSetConfig = async () => {
 };
 
 /**
-<<<<<<< HEAD
+ * Invoke the "getAccounts" method from the cosmos snap.
+ */
+async function sendGetAccount() {
+
+  await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'getAccount'
+      },
+    ],
+  });
+};
+
+/**
+ * Invoke the "getAccountInfo" method from the cosmos snap.
+ */
+async function sendGetAccountInfo() {
+
+  await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'getAccountInfo'
+      },
+    ],
+  });
+};
+
+/**
  * This is a common method to send snap JSON RPC requests.
  * Later there will be a different method for each request.
  */
@@ -115,23 +146,4 @@ export const sendSetConfig = async () => {
   }
 };
 
-
-=======
- * Invoke the "getAccounts" method from the cosmos snap.
- */
-
-export const sendGetAccount = async () => {
-
-  await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'getAccount'
-      },
-    ],
-  });
-};
-
->>>>>>> aa91a377 (COSMOS-SNAP: Fixed bugs for getAccount method.)
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');
