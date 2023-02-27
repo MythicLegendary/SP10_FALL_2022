@@ -5,14 +5,15 @@ import {
   connectSnap,
   getSnap,
   sendHello,
+  sendSnapRPC,
   shouldDisplayReconnectButton,
 } from '../utils';
 import {
   ConnectButton,
   InstallFlaskButton,
   ReconnectButton,
-  SendHelloButton,
-  Card,
+  SubmitButton,
+  Card
 } from '../components';
 
 const Container = styled.div`
@@ -117,9 +118,10 @@ const Index = () => {
     }
   };
 
-  const handleSendHelloClick = async () => {
+  const handleButtonClick = async () => {
     try {
-      await sendHello();
+      // await sendHello();
+      await sendSnapRPC('hello', null);
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -129,10 +131,10 @@ const Index = () => {
   return (
     <Container>
       <Heading>
-        Welcome to <Span>template-snap</Span>
+        COSMOS SNAP <Span>DEV MODE</Span>
       </Heading>
       <Subtitle>
-        Get started by editing <code>src/index.ts</code>
+        Edit this site at <code>src/pages/index.tsx</code>
       </Subtitle>
       <CardContainer>
         {state.error && (
@@ -146,6 +148,7 @@ const Index = () => {
               title: 'Install',
               description:
                 'Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.',
+              inputs:[],
               button: <InstallFlaskButton />,
             }}
             fullWidth
@@ -157,6 +160,7 @@ const Index = () => {
               title: 'Connect',
               description:
                 'Get started by connecting to and installing the example snap.',
+              inputs:[],
               button: (
                 <ConnectButton
                   onClick={handleConnectClick}
@@ -173,6 +177,7 @@ const Index = () => {
               title: 'Reconnect',
               description:
                 'While connected to a local running snap this button will always be displayed in order to update the snap if a change is made.',
+              inputs:[],
               button: (
                 <ReconnectButton
                   onClick={handleConnectClick}
@@ -185,12 +190,13 @@ const Index = () => {
         )}
         <Card
           content={{
-            title: 'Send Hello message',
+            title: 'SEND HELLO',
             description:
               'Display a custom message within a confirmation screen in MetaMask.',
+            inputs:[],
             button: (
-              <SendHelloButton
-                onClick={handleSendHelloClick}
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -202,14 +208,52 @@ const Index = () => {
             !shouldDisplayReconnectButton(state.installedSnap)
           }
         />
-        <Notice>
-          <p>
-            Please note that the <b>snap.manifest.json</b> and{' '}
-            <b>package.json</b> must be located in the server root directory and
-            the bundle must be hosted at the location specified by the location
-            field.
-          </p>
-        </Notice>
+        <Card
+          content={{
+            title: 'GET SNAP STATE',
+            description:
+              '',
+            inputs:[],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('getSnapState', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'SET SNAP CONFIG',
+            description:
+              '',
+            inputs:[
+              "https://atom.getblock.io",
+              "uatom",
+              "cosmos",
+              "SP-10-2022",
+              "200000"
+            ],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('setConfig', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
       </CardContainer>
     </Container>
   );

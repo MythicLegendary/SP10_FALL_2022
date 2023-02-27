@@ -5,7 +5,8 @@ type CardProps = {
   content: {
     title?: string;
     description: ReactNode;
-    button?: ReactNode;
+    inputs: string[];
+    button: ReactNode;
   };
   disabled?: boolean;
   fullWidth?: boolean;
@@ -41,19 +42,30 @@ const Title = styled.h2`
 `;
 
 const Description = styled.div`
-  margin-top: 2.4rem;
-  margin-bottom: 2.4rem;
+  margin-top: 5px;
+  margin-bottom: 5px;
 `;
 
 export const Card = ({ content, disabled = false, fullWidth }: CardProps) => {
-  const { title, description, button } = content;
   return (
     <CardWrapper fullWidth={fullWidth} disabled={disabled}>
-      {title && (
-        <Title>{title}</Title>
+      {content.title && (
+        <Title>{content.title}</Title>
       )}
-      <Description>{description}</Description>
-      {button}
+      <Description>{content.description}</Description>
+
+      {/* Display a list of input fields (it's messy but works :/ - blame Abhijay ) */
+        (
+          ()=>{
+            let inputs = [];
+            for(let i = 0; i < content.inputs.length; i++) {
+              inputs.push(<input placeholder={content.inputs[i]}></input>);
+            }
+            return inputs;
+          }
+        )()
+      }
+      {content.button}
     </CardWrapper>
   );
 };

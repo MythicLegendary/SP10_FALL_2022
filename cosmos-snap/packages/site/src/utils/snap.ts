@@ -72,4 +72,26 @@ export const sendHello = async () => {
   });
 };
 
+/**
+ * This is a common method to send snap JSON RPC requests.
+ * Later there will be a different method for each request.
+ */
+
+ export const sendSnapRPC = async (methodName:string, payload:any) => {
+  console.log('[',methodName,'] >>> SENDING >>>', payload);
+  try {
+    let res = await window.ethereum.request({
+      method: 'wallet_invokeSnap',
+      params: [
+        defaultSnapOrigin,
+        {
+          method: methodName,
+        },
+      ],
+    });
+    console.log('[',methodName,'] <<< RECEIVING <<<', res);
+  } catch (e) {}
+};
+
+
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');
