@@ -216,7 +216,7 @@ const Index = () => {
             inputs:[],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('getSnapState', null)}}
+                onClick={()=>{sendSnapRPC('hello', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -242,7 +242,347 @@ const Index = () => {
             ],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('setConfig', null)}}
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'GET ACCOUNT INFO',
+            description:
+              '',
+            inputs:[],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'GET NETWORK STATUS',
+            description:
+              '',
+            inputs:[],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'GET BANDWIDTH',
+            description:
+              '',
+            inputs:[],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'GET INDEX STATS',
+            description:
+              '',
+            inputs:[],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'GET REWARDS',
+            description:
+              '',
+            inputs:[],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Cyberlink',
+            description:
+              '',
+            inputs:['from', 'to'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Send',
+            description:
+              '',
+            inputs:['to', 'amount'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create MultiSend',
+            description:
+              '',
+            inputs:['inputs', 'outputs'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Delegate',
+            description:
+              '',
+            inputs:['to', 'amount'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Redelegate',
+            description:
+              '',
+            inputs:['from', 'to', 'amount'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Undelegate',
+            description:
+              '',
+            inputs:['from', 'amount'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Withdraw Delegation Reward',
+            description:
+              '',
+            inputs:['rewards'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Text Proposal',
+            description:
+              '',
+            inputs:['title','description','deposit'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Community Pool Spend',
+            description:
+              '',
+            inputs:['title','description','recipient','deposit','amount'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Params Change',
+            description:
+              '',
+            inputs:['title','description','changes','deposit'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Deposit',
+            description:
+              '',
+            inputs:['id','amount'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Vote',
+            description:
+              '',
+            inputs:['id','option'],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('hello', null)}}
                 disabled={!state.installedSnap}
               />
             ),
