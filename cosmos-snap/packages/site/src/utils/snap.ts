@@ -60,7 +60,7 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
  * Invoke the "hello" method from the example snap.
  */
 
-export const sendHello = async () => {
+async function sendHello() {
   await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: [
@@ -79,18 +79,18 @@ export const sendHello = async () => {
 
  export const sendSnapRPC = async (methodName:string, payload:any) => {
   console.log('[',methodName,'] >>> SENDING >>>', payload);
+  let response : any = {}
   try {
-    let res = await window.ethereum.request({
-      method: 'wallet_invokeSnap',
-      params: [
-        defaultSnapOrigin,
-        {
-          method: methodName,
-        },
-      ],
-    });
-    console.log('[',methodName,'] <<< RECEIVING <<<', res);
-  } catch (e) {}
+    switch(methodName) {
+      default : {
+        response = await sendHello();
+      }
+    }
+    console.log('[',methodName,'] <<< RECEIVING <<<', response);
+  }
+  catch(e) {
+    console.log("RUNTIME ERROR: " + e);
+  }
 };
 
 

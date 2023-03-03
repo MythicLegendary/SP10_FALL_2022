@@ -118,16 +118,6 @@ const Index = () => {
     }
   };
 
-  const handleButtonClick = async () => {
-    try {
-      // await sendHello();
-      await sendSnapRPC('hello', null);
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
   return (
     <Container>
       <Heading>
@@ -216,7 +206,7 @@ const Index = () => {
             inputs:[],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('getSnapState', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -242,7 +232,7 @@ const Index = () => {
             ],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('setConfig', {url: "", denom: "", prefix: "", memo: "", gas: ""})}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -262,7 +252,7 @@ const Index = () => {
             inputs:[],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('getAccountInfo', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -282,7 +272,7 @@ const Index = () => {
             inputs:[],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('getNetworkStatus', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -302,7 +292,7 @@ const Index = () => {
             inputs:[],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('getBandwidth', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -322,7 +312,7 @@ const Index = () => {
             inputs:[],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('getIndexStats', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -342,27 +332,7 @@ const Index = () => {
             inputs:[],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
-            title: 'Create Cyberlink',
-            description:
-              '',
-            inputs:['from', 'to'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('getRewards', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -382,7 +352,7 @@ const Index = () => {
             inputs:['to', 'amount'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createSend', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -402,7 +372,7 @@ const Index = () => {
             inputs:['inputs', 'outputs'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createMultiSend', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -422,7 +392,7 @@ const Index = () => {
             inputs:['to', 'amount'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createDelegate', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -442,7 +412,7 @@ const Index = () => {
             inputs:['from', 'to', 'amount'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createRedelegate', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -462,7 +432,7 @@ const Index = () => {
             inputs:['from', 'amount'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createUndelegate', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -482,7 +452,7 @@ const Index = () => {
             inputs:['rewards'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('withdrawDelegationReward', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -502,7 +472,7 @@ const Index = () => {
             inputs:['title','description','deposit'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createTextProposal', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -522,7 +492,7 @@ const Index = () => {
             inputs:['title','description','recipient','deposit','amount'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createCommunityPoolSpend', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -542,7 +512,7 @@ const Index = () => {
             inputs:['title','description','changes','deposit'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createParamsChange', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -562,7 +532,7 @@ const Index = () => {
             inputs:['id','amount'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createDeposit', null)}}
                 disabled={!state.installedSnap}
               />
             ),
@@ -582,7 +552,7 @@ const Index = () => {
             inputs:['id','option'],
             button: (
               <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
+                onClick={()=>{sendSnapRPC('createVote', null)}}
                 disabled={!state.installedSnap}
               />
             ),
