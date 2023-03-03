@@ -53,6 +53,9 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
+    "@cosmjs/cosmwasm-stargate": "^0.29.5",
+    "@cosmjs/launchpad": "^0.27.1",
+    "@cosmjs/stargate": "^0.29.5",
     "@ethersproject/abstract-provider": "^5.7.0",
     "@metamask/detect-provider": "^2.0.0",
     "@metamask/key-tree": "^6.2.1",

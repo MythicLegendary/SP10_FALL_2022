@@ -4,7 +4,13 @@ import { JsonBIP44CoinTypeNode } from "@metamask/key-tree";
 import { hasProperty, isObject, Json } from '@metamask/utils';
 import { BytesLike, ethers, parseUnits } from "ethers";
 import { Web3Provider } from "@ethersproject/providers";
+import { Decimal } from "@cosmjs/math";
 import  web3  from "web3";
+
+import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
+import { coins} from "@cosmjs/launchpad";
+import { Coin, DirectSecp256k1HdWallet, makeAuthInfoBytes } from "@cosmjs/proto-signing";
+import { SigningStargateClient, StargateClientOptions, SigningStargateClientOptions, GasPrice } from "@cosmjs/stargate";
 //will need further imports to ensure!
 
 import { publicKeyCreate, ecdsaSign } from 'secp256k1';
@@ -52,6 +58,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
       return getPluginState();
+
+    case 'cosmjsDemo':
+      console.log("COSMOS-SNAP: This is a demonstration of cosmjs.");
+      //await getAccountDemo();
+      await transactionDemo();
+      return {}
 
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
@@ -217,6 +229,71 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 };
 
 //----------------------------------------------------------
+
+async function getAccountDemo() {
+  const sender = {
+    mnemonic: "luggage rotate orient usage program cloud armed warrior rich erase acquire remember",
+    address: "cosmos14eadktsf4zzah6har7h7a46tunnj7rq7lmppy5",
+    path: "m/44'/118'/0'/0/0"
+    };
+    const tendermintUrl = "http://localhost:26657";
+    try {
+      console.log("COSMOS-SNAP: GETTING THE WALLET");
+      const wallet_ = await DirectSecp256k1HdWallet.fromMnemonic(sender.mnemonic);
+      console.log("COSMOS-SNAP: Wallet -" + JSON.stringify(wallet_));
+  
+      console.log("COSMOS-SNAP: GETTING THE CLIENT");
+      const client = await SigningStargateClient.connectWithSigner(tendermintUrl, wallet_);
+      
+      console.log("COSMOS-SNAP: GETTING THE BALANCE");
+      const before = await client.getBalance(sender.address, "uatom");
+  
+      console.log("COSMOS-SNAP: " + JSON.stringify(before));
+    }
+    catch(error) {
+      console.log("COSMOS-SNAP: " + error);
+    }
+}
+
+async function transactionDemo() {
+  // To get this information use gaiad keys list --keyring-backend test (if a different keyring is used, change the command)
+  const sender = {
+    mnemonic: "luggage rotate orient usage program cloud armed warrior rich erase acquire remember",
+    address: "cosmos14eadktsf4zzah6har7h7a46tunnj7rq7lmppy5",
+    path: "m/44'/118'/0'/0/0"
+    };
+
+    // The mnemonic needs to be tracked actively, and can only be seen when the account is created. 
+    const recipient = {
+    mnemonic: "razor pistol select eyebrow defense punch elegant outer peace huge alcohol farm dawn again vacant rent birth flat asset kitten replace cart behave skate",
+    address: "cosmos1zqy2p565y7gdd6lxpnnvtwg6l85lnaazs5gpp7",
+    path: "m/44'/118'/0'/0/0"
+    };
+
+    const tendermintUrl = "http://localhost:26657";
+
+    try {
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(sender.mnemonic);
+
+      const options : SigningStargateClientOptions = {
+        gasPrice : new GasPrice(Decimal.fromUserInput("3.14" , 3), "uatom"),
+      }
+      const client = await SigningStargateClient.connectWithSigner(tendermintUrl, wallet, options);
+      
+      const before = await client.getBalance(recipient.address, "uatom");
+      console.log("COSMOS-SNAP: Before balance Recipient- " + JSON.stringify(before));
+  
+      const transferAmount : Coin[] = coins(7890, "uatom");
+
+      console.log("COSMOS-SNAP: Sending tranasaction.");
+      const send = await client.sendTokens(sender.address, recipient.address, transferAmount, {amount : transferAmount, gas : "200000"});
+      console.log("COSMOS-SNAP: SENT TRANSACTION" + JSON.stringify(send));
+    }
+    catch (error) {
+      console.log("COSMOS-SNAP: Error making transaction- " + error);
+    }
+
+}
 
 async function getPluginState()
 {

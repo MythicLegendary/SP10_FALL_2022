@@ -65,7 +65,7 @@ async function sendHello() {
     params: [
       defaultSnapOrigin,
       {
-        method: 'hello'
+        method: 'cosmjsDemo'
       },
     ],
   });
