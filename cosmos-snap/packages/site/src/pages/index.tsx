@@ -4,7 +4,6 @@ import { MetamaskActions, MetaMaskContext } from '../hooks';
 import {
   connectSnap,
   getSnap,
-  sendHello,
   sendSnapRPC,
   shouldDisplayReconnectButton,
 } from '../utils';
@@ -198,6 +197,47 @@ const Index = () => {
             !shouldDisplayReconnectButton(state.installedSnap)
           }
         />
+        <Card
+          content={{
+            title: 'COSMOS-Get-AccountDemo',
+            description:
+              'Only works for Wills Machine for now. (Run gaiad start)',
+            inputs:[],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('getCosmosAccountDemo', null)}}
+                disabled={!state.installedSnap}
+              />    
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+         <Card
+          content={{
+            title: 'COSMOS-Transaction-Demo',
+            description:
+              'Only works for Wills Machine for now. (Run gaiad start)',
+            inputs:[],
+            button: (
+              <SubmitButton
+                onClick={()=>{sendSnapRPC('sendCosmosTransactionDemo', null)}}
+                disabled={!state.installedSnap}
+              />   
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+ 
         <Card
           content={{
             title: 'GET SNAP STATE',

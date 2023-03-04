@@ -60,12 +60,12 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
  * Invoke the "hello" method from the example snap.
  */
 async function sendHello() {
-  await window.ethereum.request({
+    await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: [
       defaultSnapOrigin,
       {
-        method: 'cosmjsDemo'
+        method: 'hello'
       },
     ],
   });
@@ -74,20 +74,14 @@ async function sendHello() {
 /**
  * Invoke the "setConfig" method from the cosmos snap.
  */
-async function sendSetConfig() {
-  let data : any = {}
-  data['nodeUrl'] = "https://random.getblock.io";
-  data['denom'] = "urand";
-  data['prefix'] = "cosmos";
-  data['memo'] = "SP-10-2023";
-  data['gas'] = 0;
-  const response : unknown = await window.ethereum.request({
+async function sendSetConfig(payload : any) {
+  return await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: [
       defaultSnapOrigin,
       {
         method: 'setConfig',
-        params: [data]
+        params: [payload]
       },
     ],
   });
@@ -97,8 +91,7 @@ async function sendSetConfig() {
  * Invoke the "getAccounts" method from the cosmos snap.
  */
 async function sendGetAccount() {
-
-  await window.ethereum.request({
+  return await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: [
       defaultSnapOrigin,
@@ -113,8 +106,7 @@ async function sendGetAccount() {
  * Invoke the "getAccountInfo" method from the cosmos snap.
  */
 async function sendGetAccountInfo() {
-
-  await window.ethereum.request({
+  return await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: [
       defaultSnapOrigin,
@@ -126,6 +118,52 @@ async function sendGetAccountInfo() {
 };
 
 /**
+ * Invoke the "getSnapState" method from the cosmos snap.
+ */
+async function sendGetSnapState() {
+  return await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'getSnapState'
+      },
+    ],
+  });
+}
+
+
+/** 
+ * Invoke the cosmjsDemo method. 
+*/
+async function sendGetCosmosAccountDemo() {
+  return await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'getCosmosAccountDemo'
+      },
+    ],
+  });
+}
+
+/** 
+ * Invoke the sendCosmosTransactionDemo method. 
+*/
+async function sendCosmosTransactionDemo() {
+  return await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'sendCosmosTransactionDemo'
+      },
+    ],
+  });
+}
+
+/**
  * This is a common method to send snap JSON RPC requests.
  * Later there will be a different method for each request.
  */
@@ -135,8 +173,34 @@ async function sendGetAccountInfo() {
   let response : any = {}
   try {
     switch(methodName) {
+      case 'hello': {
+        await sendHello();
+        break;
+      }
+      case 'setConfig': {
+        response = await sendSetConfig(payload);
+        break;
+      }
+      case 'getSnapState': {
+        response = await sendGetSnapState();
+        break;
+      }
+      case 'getAccountInfo': {
+        response = await sendGetAccountInfo();
+        break;
+      } 
+      case 'sendCosmosTransactionDemo': {
+        console.log("WARNING: only functional on will's machine.");
+        response = await sendCosmosTransactionDemo();
+        break;
+      }
+      case 'getCosmosAccountDemo': {
+        console.log("WARNING: only functional on will's machine.");
+        response = await sendGetCosmosAccountDemo();
+        break;
+      }
       default : {
-        response = await sendHello();
+        await sendHello();
       }
     }
     console.log('[',methodName,'] <<< RECEIVING <<<', response);

@@ -57,13 +57,17 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
   switch (request.method) {
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
-      return getPluginState();
+      return await getPluginState();
 
-    case 'cosmjsDemo':
-      console.log("COSMOS-SNAP: This is a demonstration of cosmjs.");
-      //await getAccountDemo();
-      await transactionDemo();
-      return {}
+    case 'getCosmosAccountDemo':
+      console.log("COSMOS-SNAP: This is a demonstration of cosmjs. Getting account balance from genesis account");
+      return await getAccountDemo();
+      
+    
+    case 'sendCosmosTransactionDemo': {
+      console.log("COSMOS-SNAP: This is a demonstration of cosmjs. Sending transaction between backend-test keys");
+      return await transactionDemo();
+    }
 
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
@@ -249,9 +253,11 @@ async function getAccountDemo() {
       const before = await client.getBalance(sender.address, "uatom");
   
       console.log("COSMOS-SNAP: " + JSON.stringify(before));
+      return before;
     }
     catch(error) {
       console.log("COSMOS-SNAP: " + error);
+      return error;
     }
 }
 
