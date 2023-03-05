@@ -234,6 +234,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
 //----------------------------------------------------------
 
+
+/**
+ * Get's the balance for the genesis account on the gaiad/simd network locally. Hard-coded (right now) with accounts on wills machine.
+ * 
+ * @returns Output from the getBalance call.
+ */
 async function getAccountDemo() {
   const sender = {
     mnemonic: "luggage rotate orient usage program cloud armed warrior rich erase acquire remember",
@@ -242,25 +248,26 @@ async function getAccountDemo() {
     };
     const tendermintUrl = "http://localhost:26657";
     try {
-      console.log("COSMOS-SNAP: GETTING THE WALLET");
       const wallet_ = await DirectSecp256k1HdWallet.fromMnemonic(sender.mnemonic);
-      console.log("COSMOS-SNAP: Wallet -" + JSON.stringify(wallet_));
-  
-      console.log("COSMOS-SNAP: GETTING THE CLIENT");
+
       const client = await SigningStargateClient.connectWithSigner(tendermintUrl, wallet_);
       
-      console.log("COSMOS-SNAP: GETTING THE BALANCE");
-      const before = await client.getBalance(sender.address, "uatom");
+      const balance = await client.getBalance(sender.address, "uatom");
   
-      console.log("COSMOS-SNAP: " + JSON.stringify(before));
-      return before;
+      console.log("COSMOS-SNAP: " , JSON.stringify(balance));
+      return balance;
     }
     catch(error) {
-      console.log("COSMOS-SNAP: " + error);
+      console.log("COSMOS-SNAP: " , error);
       return error;
     }
 }
 
+/**
+ * Simulates a transaction on the gaiad/simd network locally. Hard-coded (right now) with accounts on wills machine.
+ * 
+ * @returns Output from the sendTokens call.
+ */
 async function transactionDemo() {
   // To get this information use gaiad keys list --keyring-backend test (if a different keyring is used, change the command)
   const sender = {
@@ -279,24 +286,34 @@ async function transactionDemo() {
     const tendermintUrl = "http://localhost:26657";
 
     try {
+      // Imports the wallet object by using the mnemonic for the account.
       const wallet = await DirectSecp256k1HdWallet.fromMnemonic(sender.mnemonic);
 
-      const options : SigningStargateClientOptions = {
-        gasPrice : new GasPrice(Decimal.fromUserInput("3.14" , 3), "uatom"),
-      }
-      const client = await SigningStargateClient.connectWithSigner(tendermintUrl, wallet, options);
+      // Creates the client object, connecting to the blockchain with the desired account information.
+      const client = await SigningStargateClient.connectWithSigner(tendermintUrl, wallet);
       
+      // Gets the prior balance of the receiving account.
       const before = await client.getBalance(recipient.address, "uatom");
-      console.log("COSMOS-SNAP: Before balance Recipient- " + JSON.stringify(before));
-  
-      const transferAmount : Coin[] = coins(7890, "uatom");
-
-      console.log("COSMOS-SNAP: Sending tranasaction.");
-      const send = await client.sendTokens(sender.address, recipient.address, transferAmount, {amount : transferAmount, gas : "200000"});
-      console.log("COSMOS-SNAP: SENT TRANSACTION" + JSON.stringify(send));
+      
+      // Sends the transaction.
+      const result = await client.sendTokens(
+        sender.address, 
+        recipient.address, 
+        [{denom : "uatom", amount: "10000"}], 
+        {
+          amount : [{denom : "stake", amount : "0"}], 
+          gas : "200000",
+          granter : sender.address,
+          payer : sender.address
+        },
+        "Demo Transaction Between Accounts",
+      );
+      console.log("COSMOS-SNAP: SENT TRANSACTION" , result);
+      return result;
     }
     catch (error) {
-      console.log("COSMOS-SNAP: Error making transaction- " + error);
+      console.log("COSMOS-SNAP: Error making transaction- " , error);
+      return error
     }
 
 }

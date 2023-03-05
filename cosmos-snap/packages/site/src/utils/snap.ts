@@ -206,7 +206,7 @@ async function sendCosmosTransactionDemo() {
     console.log('[',methodName,'] <<< RECEIVING <<<', response);
   }
   catch(e) {
-    console.log("RUNTIME ERROR: " + e);
+    console.log("RUNTIME ERROR: " , e);
   }
 };
 
