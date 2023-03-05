@@ -164,6 +164,38 @@ async function sendCosmosTransactionDemo() {
 }
 
 /**
+ *  Sends a mnemonic and password for either first-time setup or wallet recovery.
+ */
+async function sendSetupPassword(payload : any) {
+  return await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'setupPassword',
+        params: [{payload}]
+      },
+    ],
+  });
+}
+
+/**
+ * Sends the user's password to try and login.
+ */
+async function sendLogin(payload : any) {
+  return await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'login',
+        params: [{payload}]
+      },
+    ],
+  });
+}
+
+/**
  * This is a common method to send snap JSON RPC requests.
  * Later there will be a different method for each request.
  */
@@ -175,6 +207,14 @@ async function sendCosmosTransactionDemo() {
     switch(methodName) {
       case 'hello': {
         await sendHello();
+        break;
+      }
+      case 'setupPassword': {
+        response = await sendSetupPassword(payload);
+        break;
+      }
+      case 'login': {
+        response = await sendLogin(payload);
         break;
       }
       case 'setConfig': {
@@ -208,6 +248,9 @@ async function sendCosmosTransactionDemo() {
   catch(e) {
     console.log("RUNTIME ERROR: " , e);
   }
+
+  // For functions that need it
+  return response;
 };
 
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');

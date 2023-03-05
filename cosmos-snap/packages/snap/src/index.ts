@@ -27,18 +27,7 @@ import RIPEMD160Static from "ripemd160";
 const getMessage = (originString: string): string =>
   `Hello, ${originString}!`;
 
-
-//hardcoded to start with ATOM as our base cryptocurrency, the official and most popular Cosmos coin.
-updatePluginState({
-  nodeUrl: "https://atom.getblock.io",
-  denom: "uatom",
-  prefix: "cosmos",
-  memo: "SP-10-2022",
-  gas: 0,
-  version: "0.0.1"
-})
-
-/**
+/**s
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
  * @param args - The request handler args as object.
@@ -69,6 +58,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       return await transactionDemo();
     }
 
+    case 'setupPassword': {
+      console.log("COSMOS-SNAP: Setting up new password for key encryption.");
+      return setupPassword(request.params[0]['password'], request.params[0]['mnemonic']);
+    }
+
+    case 'login': {
+      console.log("COSMOS-SNAP: Logging in user.");
+      return loginUser(request.params[0]['password']);
+    }
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
       await updatePluginState({
@@ -111,14 +109,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       pubKey = await getPubKey()
       account = getAccount(pubKey)
       return await getRewards(account)
-    
-      case 'createCyberlink':
-        let linkData = request.params[0]
-        return await createCyberlinkTx(
-          linkData['objectFrom'],
-          linkData['objectTo']
-        )
-    
+
     case 'createSend':
       console.log("COSMOS-SNAP: Creating Send Transaction.");
       let sendData = request.params[0]
@@ -233,7 +224,56 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 };
 
 //----------------------------------------------------------
+/**
+ * Logs in the user using the password. Updates the lastLogin field to be the current session number.
+ */
+async function loginUser(password : string) {
+  const currentState : any = await getPluginState();
+  // Get the stored password
+  const storedPassword : string = await decryptPassword(currentState['encryptedPassword']);
+  // Compare the values
+  if(password === storedPassword) {
+    return {loginSuccessful : true, msg : "Login Sucessful"}
+  } 
+  else {
+    return {loginSuccessful : false, msg : "Login Failed: Password not correct."}
+  }
+}
 
+/**
+ * Sets up the new password used for verification
+ */
+async function setupPassword(password : string, mnemonic : string) {
+  // Get the wallet object from the mnemonic
+  const wallet :  DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic);
+  // Serialize the wallet using the password
+  const serializedWallet : string = await wallet.serialize(password);
+  // Update the pluginState with the encrypted key and serialized wallet
+  await updatePluginState(
+    {
+      ...await getPluginState(),
+      serializedWallet : serializedWallet,
+      encryptedPassword : await encryptPassword(password)
+
+    });
+  return {msg : "Succussful serialization of wallet."}
+}
+
+/**
+ * Encrypt the user's password before storing it.
+ */
+async function encryptPassword(password : string) {
+  //TODO
+  return password;
+}
+
+/**
+ * Decrypt's the user password when retrieving it from storage.
+ */
+async function decryptPassword(password : string) {
+  //TODO
+  return password;
+}
 
 /**
  * Get's the balance for the genesis account on the gaiad/simd network locally. Hard-coded (right now) with accounts on wills machine.
@@ -649,43 +689,6 @@ async function createMultiSendTx(inputs : any, outputs : any) {
     currentPluginState.denom
   );
 }
-
-function createCyberlink(txContext : any, objectFrom : any, objectTo : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cyberd/Link',
-    value: {
-      address: txContext.bech32,
-      links: [
-        {
-          from: objectFrom,
-          to: objectTo,
-        },
-      ],
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createCyberlinkTx (objectFrom :any, objectTo : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createCyberlink(
-    txContext,
-    objectFrom,
-    objectTo,
-    currentPluginState.denom
-  );
-
-  const signedTx = await sign(tx, txContext);
-  return await txSubmit(signedTx)
-  // return signedTx
-};
 
 function createDelegate(txContext : any, validatorBech32 : any, amount : any, denom : any) {
   const txSkeleton = createSkeleton(txContext, denom);
