@@ -197,6 +197,36 @@ const Index = () => {
         />
         <Card
           content={{
+            title: 'Login With Password',
+            description:
+              'Enter Password To Unlock Other Functions',
+            inputs:["password"],
+            rpcRequest: 'login'
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Setup Account',
+            description:
+              'Enter mnemonic and a new password to setup or reset your account.',
+            inputs:["mnemonic", "password"],
+            rpcRequest: 'login'
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
             title: 'COSMOS-Get-AccountDemo',
             description:
               'Only works for Wills Machine for now. (Run gaiad start)',
