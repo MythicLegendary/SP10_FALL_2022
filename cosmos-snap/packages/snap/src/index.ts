@@ -45,7 +45,7 @@ const getMessage = (originString: string): string =>
 
 export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {origin : string, request : any}) => {
   let pubKey, account;
-  console.log("COSMOS-SNAP: Snap RPC Handler invoked");
+  console.log("COSMOS-SNAP: Snap RPC Handler invoked. Request: ", request);
   switch (request.method) {
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
@@ -243,15 +243,22 @@ async function loginUser(password : string) {
   }
 }
 
+function getWalletFromSerializedWallet(wallet: string)
+{
+  return JSON.parse(wallet);
+}
+
 /**
  * Sets up the new password used for verification
  */
 async function setupPassword(password : string, mnemonic : string) {
-  // Get the wallet object from the mnemonic
-  const wallet :  DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic);
-  // Serialize the wallet using the password
-  const serializedWallet : string = await wallet.serialize(password);
-  // Update the pluginState with the encrypted key and serialized wallet
+  try {
+    // Get the wallet object from the mnemonic
+    const wallet :  DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic);
+    // Serialize the wallet using the password
+    const serializedWallet : string = JSON.stringify(wallet);
+    console.log("Wallet serialized.");
+    // Update the pluginState with the encrypted key and serialized wallet
   await updatePluginState(
     {
       ...await getPluginState(),
@@ -259,7 +266,12 @@ async function setupPassword(password : string, mnemonic : string) {
       password : password
 
     });
-  return {msg : "Succussful serialization of wallet."}
+  return {msg : "Successful serialization of wallet."}
+  }
+  catch(error) {
+    console.log(error);
+    return {msg : "Serialization not successful."}
+  }
 }
 
 async function bip32Entropy(){
@@ -319,6 +331,8 @@ async function transactionDemo() {
     address: "cosmos1zqy2p565y7gdd6lxpnnvtwg6l85lnaazs5gpp7",
     path: "m/44'/118'/0'/0/0"
     };
+
+    //scene chronic payment jeans profit stereo bring load remind display disagree bitter couch track adapt worry sword ranch web utility camp talent comfort duck
 
     const tendermintUrl = "http://localhost:26657";
 

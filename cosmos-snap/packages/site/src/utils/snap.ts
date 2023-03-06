@@ -173,7 +173,7 @@ async function sendSetupPassword(payload : any) {
       defaultSnapOrigin,
       {
         method: 'setupPassword',
-        params: [{payload}]
+        params: [payload]
       },
     ],
   });
@@ -189,7 +189,7 @@ async function sendLogin(payload : any) {
       defaultSnapOrigin,
       {
         method: 'login',
-        params: [{payload}]
+        params: [payload]
       },
     ],
   });
