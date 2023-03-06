@@ -1,11 +1,13 @@
 import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from '../../../node_modules/@metamask/snap-types';
 import detectEthereumProvider from '@metamask/detect-provider';
-import { JsonBIP44CoinTypeNode } from "@metamask/key-tree";
+import { JsonBIP44CoinTypeNode, SLIP10Node, SLIP10Path } from "@metamask/key-tree";
 import { hasProperty, isObject, Json } from '@metamask/utils';
 import { BytesLike, ethers, parseUnits } from "ethers";
 import { Web3Provider } from "@ethersproject/providers";
 import { Decimal } from "@cosmjs/math";
 import  web3  from "web3";
+import {Buffer} from 'buffer';
+import crypto from 'crypto';
 
 import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import { coins} from "@cosmjs/launchpad";
@@ -15,9 +17,9 @@ import { SigningStargateClient, StargateClientOptions, SigningStargateClientOpti
 
 import { publicKeyCreate, ecdsaSign } from 'secp256k1';
 import { bech32 } from 'bech32'
-import {Buffer} from 'buffer';''
 import Sha256WithX2 from "sha256";
 import RIPEMD160Static from "ripemd160";
+
 /**
  * Get a message from the origin. For demonstration purposes only.
  *
@@ -27,6 +29,7 @@ import RIPEMD160Static from "ripemd160";
 const getMessage = (originString: string): string =>
   `Hello, ${originString}!`;
 
+  
 /**s
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -230,7 +233,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 async function loginUser(password : string) {
   const currentState : any = await getPluginState();
   // Get the stored password
-  const storedPassword : string = await decryptPassword(currentState['encryptedPassword']);
+  const storedPassword : string = await currentState.password;
   // Compare the values
   if(password === storedPassword) {
     return {loginSuccessful : true, msg : "Login Sucessful"}
@@ -253,28 +256,22 @@ async function setupPassword(password : string, mnemonic : string) {
     {
       ...await getPluginState(),
       serializedWallet : serializedWallet,
-      encryptedPassword : await encryptPassword(password)
+      password : password
 
     });
   return {msg : "Succussful serialization of wallet."}
 }
 
-/**
- * Encrypt the user's password before storing it.
- */
-async function encryptPassword(password : string) {
-  //TODO
-  return password;
+async function bip32Entropy(){
+  const entropy : any = await wallet.request({
+    method: 'snap_getBip32Entropy',
+    params: {
+      path: ["m", "44'", "118'", "0'"],
+      curve: 'secp256k1',
+    },
+  })
+  return entropy;
 }
-
-/**
- * Decrypt's the user password when retrieving it from storage.
- */
-async function decryptPassword(password : string) {
-  //TODO
-  return password;
-}
-
 /**
  * Get's the balance for the genesis account on the gaiad/simd network locally. Hard-coded (right now) with accounts on wills machine.
  * 
