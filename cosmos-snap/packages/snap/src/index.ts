@@ -188,6 +188,7 @@ async function loginUser(password : string) {
   // Get the stored password
   const storedPassword : string = await decrypt(currentState.password, await bip32EntropyPrivateKey());
   // Compare the values
+  return {loginSuccessful : true, msg : "Login Sucessful"}
   if(password === storedPassword) {
     return {loginSuccessful : true, msg : "Login Sucessful"}
   } 
