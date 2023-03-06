@@ -1,14 +1,21 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import styled from 'styled-components';
+import {
+  sendSnapRPC
+} from '../utils';
+import {
+  SubmitButton
+} from '../components';
 
 type CardProps = {
   content: {
     title?: string;
     description: ReactNode;
     inputs: string[];
-    button: ReactNode;
+    rpcRequest: string;
+    button?: ReactNode;
   };
-  disabled?: boolean;
+  disabled: boolean;
   fullWidth?: boolean;
 };
 
@@ -46,26 +53,58 @@ const Description = styled.div`
   margin-bottom: 5px;
 `;
 
-export const Card = ({ content, disabled = false, fullWidth }: CardProps) => {
-  return (
-    <CardWrapper fullWidth={fullWidth} disabled={disabled}>
-      {content.title && (
-        <Title>{content.title}</Title>
-      )}
-      <Description>{content.description}</Description>
+export class Card extends React.Component<CardProps> {
+  inputDivRef = React.createRef<HTMLInputElement>();
 
-      {/* Display a list of input fields (it's messy but works :/ - blame Abhijay ) */
-        (
-          ()=>{
-            let inputs = [];
-            for(let i = 0; i < content.inputs.length; i++) {
-              inputs.push(<input placeholder={content.inputs[i]}></input>);
+  gatherInputs() {
+    let inputDiv = this.inputDivRef.current;
+    let inputFields = inputDiv?.querySelectorAll('input');
+    let res:any = {};
+
+    if (inputFields==null) return res;
+
+    for (let i = 0; i < inputFields.length; i++) {
+      let input = inputFields[i];      
+      res[input.id] = input.value;
+    }
+    
+    return res;
+  }
+
+  render() {
+    return (
+      <CardWrapper fullWidth={this.props.fullWidth} disabled={this.props.disabled}>
+
+      {this.props.content.title && (
+        <Title>{this.props.content.title}</Title>
+      )}
+
+      <Description>{this.props.content.description}</Description>
+
+      <div ref={this.inputDivRef}>
+        {/* Display a list of input fields (it's messy but works :/ - blame Abhijay ) */
+          (
+            ()=>{
+              let inputs = [];
+              for(let i = 0; i < this.props.content.inputs.length; i++) {
+                inputs.push(<input placeholder={this.props.content.inputs[i]} id={this.props.content.inputs[i]} key={i}></input>);
+              }
+              return inputs;
             }
-            return inputs;
-          }
-        )()
+          )()
+        }
+      </div>
+
+      {
+        this.props.content.button ? (this.props.content.button) : (
+          <SubmitButton
+            onClick={()=>{sendSnapRPC(this.props.content.rpcRequest, this.gatherInputs())}}
+            disabled={this.props.disabled}
+          />
+        )
       }
-      {content.button}
+
     </CardWrapper>
-  );
-};
+    );
+  }
+}

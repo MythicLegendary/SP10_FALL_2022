@@ -71,7 +71,6 @@ const Notice = styled.div`
   margin-top: 2.4rem;
   max-width: 60rem;
   width: 100%;
-
   & > * {
     margin: 0;
   }
@@ -138,8 +137,10 @@ const Index = () => {
               description:
                 'Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.',
               inputs:[],
+              rpcRequest: '',
               button: <InstallFlaskButton />,
             }}
+            disabled={false}
             fullWidth
           />
         )}
@@ -150,6 +151,7 @@ const Index = () => {
               description:
                 'Get started by connecting to and installing the example snap.',
               inputs:[],
+              rpcRequest: '',
               button: (
                 <ConnectButton
                   onClick={handleConnectClick}
@@ -167,6 +169,7 @@ const Index = () => {
               description:
                 'While connected to a local running snap this button will always be displayed in order to update the snap if a change is made.',
               inputs:[],
+              rpcRequest: '',
               button: (
                 <ReconnectButton
                   onClick={handleConnectClick}
@@ -183,12 +186,7 @@ const Index = () => {
             description:
               'Display a custom message within a confirmation screen in MetaMask.',
             inputs:[],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('hello', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'hello'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -203,12 +201,7 @@ const Index = () => {
             description:
               'Only works for Wills Machine for now. (Run gaiad start)',
             inputs:[],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('getCosmosAccountDemo', null)}}
-                disabled={!state.installedSnap}
-              />    
-            ),
+            rpcRequest: 'getCosmosAccountDemo'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -222,13 +215,8 @@ const Index = () => {
             title: 'COSMOS-Transaction-Demo',
             description:
               'Only works for Wills Machine for now. (Run gaiad start)',
-            inputs:[],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('sendCosmosTransactionDemo', null)}}
-                disabled={!state.installedSnap}
-              />   
-            ),
+            inputs:["fromAddress", "toAddress"],
+            rpcRequest: 'sendCosmosTransactionDemo'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -237,19 +225,13 @@ const Index = () => {
             !shouldDisplayReconnectButton(state.installedSnap)
           }
         />
- 
         <Card
           content={{
             title: 'GET SNAP STATE',
             description:
               '',
             inputs:[],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('getSnapState', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'getSnapState'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -264,18 +246,13 @@ const Index = () => {
             description:
               '',
             inputs:[
-              "https://atom.getblock.io",
-              "uatom",
-              "cosmos",
-              "SP-10-2022",
-              "200000"
+              "nodeUrl",
+              "denom",
+              "prefix",
+              "memo",
+              "gas"
             ],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('setConfig', {url: "", denom: "", prefix: "", memo: "", gas: ""})}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'setConfig'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -290,12 +267,7 @@ const Index = () => {
             description:
               '',
             inputs:[],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('getAccountInfo', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'getAccountInfo'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -310,12 +282,7 @@ const Index = () => {
             description:
               '',
             inputs:[],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('getNetworkStatus', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'getNetworkStatus'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -330,12 +297,7 @@ const Index = () => {
             description:
               '',
             inputs:[],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('getBandwidth', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'getBandwidth'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -350,12 +312,7 @@ const Index = () => {
             description:
               '',
             inputs:[],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('getIndexStats', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'getIndexStats'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -370,12 +327,7 @@ const Index = () => {
             description:
               '',
             inputs:[],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('getRewards', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'getRewards'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -390,12 +342,7 @@ const Index = () => {
             description:
               '',
             inputs:['to', 'amount'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createSend', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createSend'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -410,12 +357,7 @@ const Index = () => {
             description:
               '',
             inputs:['inputs', 'outputs'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createMultiSend', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createMultiSend'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -430,12 +372,7 @@ const Index = () => {
             description:
               '',
             inputs:['to', 'amount'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createDelegate', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createDelegate'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -450,12 +387,7 @@ const Index = () => {
             description:
               '',
             inputs:['from', 'to', 'amount'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createRedelegate', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createRedelegate'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -470,12 +402,7 @@ const Index = () => {
             description:
               '',
             inputs:['from', 'amount'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createUndelegate', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createUndelegate'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -490,12 +417,7 @@ const Index = () => {
             description:
               '',
             inputs:['rewards'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('withdrawDelegationReward', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'withdrawDelegationReward'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -510,12 +432,7 @@ const Index = () => {
             description:
               '',
             inputs:['title','description','deposit'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createTextProposal', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createTextProposal'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -530,12 +447,7 @@ const Index = () => {
             description:
               '',
             inputs:['title','description','recipient','deposit','amount'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createCommunityPoolSpend', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createCommunityPoolSpend'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -550,12 +462,7 @@ const Index = () => {
             description:
               '',
             inputs:['title','description','changes','deposit'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createParamsChange', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createParamsChange'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -570,12 +477,7 @@ const Index = () => {
             description:
               '',
             inputs:['id','amount'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createDeposit', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createDeposit'
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -590,12 +492,7 @@ const Index = () => {
             description:
               '',
             inputs:['id','option'],
-            button: (
-              <SubmitButton
-                onClick={()=>{sendSnapRPC('createVote', null)}}
-                disabled={!state.installedSnap}
-              />
-            ),
+            rpcRequest: 'createVote'
           }}
           disabled={!state.installedSnap}
           fullWidth={
