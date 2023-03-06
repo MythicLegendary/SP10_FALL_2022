@@ -216,7 +216,7 @@ const Index = () => {
             description:
               'Enter mnemonic and a new password to setup or reset your account.',
             inputs:["mnemonic", "password"],
-            rpcRequest: 'login'
+            rpcRequest: 'setupPassword'
           }}
           disabled={!state.installedSnap}
           fullWidth={

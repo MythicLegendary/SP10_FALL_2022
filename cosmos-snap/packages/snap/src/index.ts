@@ -243,14 +243,25 @@ async function loginUser(password : string) {
   }
 }
 
+function getWalletFromSerializedWallet(wallet: string)
+{
+  return JSON.parse(wallet);
+}
+
 /**
  * Sets up the new password used for verification
  */
 async function setupPassword(password : string, mnemonic : string) {
   // Get the wallet object from the mnemonic
+  console.log("Begin setupPassword.");
+  console.log(mnemonic);
+  console.log(password);
   const wallet :  DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic);
+  console.log("Wallet established.");
   // Serialize the wallet using the password
-  const serializedWallet : string = await wallet.serialize(password);
+  const serializedWallet : string = JSON.stringify(wallet);
+  console.log(serializedWallet);
+  console.log("Wallet serialized.");
   // Update the pluginState with the encrypted key and serialized wallet
   await updatePluginState(
     {
@@ -259,7 +270,7 @@ async function setupPassword(password : string, mnemonic : string) {
       password : password
 
     });
-  return {msg : "Succussful serialization of wallet."}
+  return {msg : "Successful serialization of wallet."}
 }
 
 async function bip32Entropy(){
