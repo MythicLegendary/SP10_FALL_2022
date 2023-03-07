@@ -45,7 +45,7 @@ const getMessage = (originString: string): string =>
 
 export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {origin : string, request : any}) => {
   let pubKey, account;
-  console.log("COSMOS-SNAP: Snap RPC Handler invoked");
+  console.log("COSMOS-SNAP: Snap RPC Handler invoked. Request: ", request);
   switch (request.method) {
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
@@ -67,7 +67,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
     }
 
     case 'login': {
-      console.log("COSMOS-SNAP: Logging in user.");
+      console.log("COSMOS-SNAP: Logging in user.";
       return loginUser(request.params[0]['password']);
     }
     case 'setConfig':

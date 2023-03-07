@@ -81,7 +81,7 @@ async function sendSetConfig(payload : any) {
       defaultSnapOrigin,
       {
         method: 'setConfig',
-        params: [payload]
+        params: [{payload}]
       },
     ],
   });
@@ -189,7 +189,7 @@ async function sendLogin(payload : any) {
       defaultSnapOrigin,
       {
         method: 'login',
-        params: [{payload}]
+        params: [payload]
       },
     ],
   });
