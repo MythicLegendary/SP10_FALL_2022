@@ -10,7 +10,7 @@ import {Buffer} from 'buffer';
 import crypto from 'crypto';
 
 import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
-import { coins} from "@cosmjs/launchpad";
+import { AccountData, coins} from "@cosmjs/launchpad";
 import { Coin, DirectSecp256k1HdWallet, makeAuthInfoBytes } from "@cosmjs/proto-signing";
 import { SigningStargateClient, StargateClientOptions, SigningStargateClientOptions, GasPrice } from "@cosmjs/stargate";
 //will need further imports to ensure!
@@ -82,16 +82,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       })
       return await getPluginState();
 
-    case 'getAccount':
-      console.log("COSMOS-SNAP: Getting the account associated with the public key.");
-      pubKey = await getPubKey();
-      return await getAccount(pubKey);
-    
     case 'getAccountInfo':
       console.log("COSMOS-SNAP: Getting Account Info.");
-      pubKey = await getPubKey();
-      account = await getAccount(pubKey);
-      return await getAccountInfo(account);
+      return getAccountInfo();
 
     case 'getStatus':
       console.log("COSMOS-SNAP: Getting status.");
@@ -253,17 +246,12 @@ function getWalletFromSerializedWallet(wallet: string)
  */
 async function setupPassword(password : string, mnemonic : string) {
   try {
-    // Get the wallet object from the mnemonic
-    const wallet :  DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic);
-    // Serialize the wallet using the password
-    const serializedWallet : string = JSON.stringify(wallet);
-    console.log("Wallet serialized.");
     // Update the pluginState with the encrypted key and serialized wallet
   await updatePluginState(
     {
       ...await getPluginState(),
-      serializedWallet : serializedWallet,
-      password : password
+      mnemonic : encrypt(mnemonic, await bip32EntropyPrivateKey()),
+      password : encrypt(password, await bip32EntropyPrivateKey())
 
     });
   return {msg : "Successful serialization of wallet."}
@@ -274,7 +262,15 @@ async function setupPassword(password : string, mnemonic : string) {
   }
 }
 
-async function bip32Entropy(){
+async function encrypt(password : string, key : string) {
+  return password;
+}
+
+async function decrypt(password : string, key : string) {
+  return password;
+}
+
+async function bip32EntropyPrivateKey(){
   const entropy : any = await wallet.request({
     method: 'snap_getBip32Entropy',
     params: {
@@ -282,8 +278,37 @@ async function bip32Entropy(){
       curve: 'secp256k1',
     },
   })
-  return entropy;
+  return entropy.privateKey;
 }
+
+/**
+ * Retrieves the current currencies associated with the account, with the currency specified in the configuration.
+ */
+async function getAccountInfo() {
+  try {
+    // Get the wallet (keys) object
+    const currentState : any = await getPluginState();
+    const wallet : DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(
+      await decrypt(
+        currentState.mnemonic, 
+        await bip32EntropyPrivateKey()
+    ));
+    
+    // Get the client object to interact with the blockchain
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    
+    // Get the public address of the account
+    const accountData : AccountData = (await wallet.getAccounts())[0];
+
+    // Return result
+    return await client.getBalance(accountData.address, currentState.denom)
+  }
+  catch(error) {
+    console.log("COSMOS-SNAP: " , error);
+    return error;
+  }
+}
+
 /**
  * Get's the balance for the genesis account on the gaiad/simd network locally. Hard-coded (right now) with accounts on wills machine.
  * 
@@ -406,7 +431,7 @@ async function getPubKey () {
   const prikeyArr = new Uint8Array(hexToBytes(PRIV_KEY));
   return bytesToHex(publicKeyCreate(prikeyArr, true))
 }
-
+// Deprecated
 async function getAccount (pubkey: any) {
   const currentPluginState : any = await getPluginState()
   const address = await getAddress(hexToBytes(pubkey))
@@ -442,8 +467,8 @@ async function getStatus() {
     console.error(error)
   }
 }
-
-async function getAccountInfo(address: any) {
+// Deprecated
+async function getAccountInfoDeprecated(address: any) {
   const currentPluginState : any = await getPluginState()
   try {
     const response = await fetch(`${currentPluginState.nodeUrl}/api/account?address="${address}"`, {
@@ -581,7 +606,7 @@ async function createSendTx(subjectTo : any, amount :  any) {
 async function createTxContext() {
   const pubKey = await getPubKey()
   const account = getAccount(pubKey)
-  const accountInfo = await getAccountInfo(account)
+  const accountInfo = await getAccountInfoDeprecated(account)
 
   const currentPluginState : any = await getPluginState();
 
