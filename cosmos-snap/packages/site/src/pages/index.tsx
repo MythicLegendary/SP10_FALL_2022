@@ -280,7 +280,9 @@ const Index = () => {
               "denom",
               "prefix",
               "memo",
-              "gas"
+              "gas",
+              "feeDenom",
+              "feeAmount"
             ],
             rpcRequest: 'setConfig'
           }}
@@ -371,7 +373,7 @@ const Index = () => {
             title: 'Create Send',
             description:
               '',
-            inputs:['to', 'amount'],
+            inputs:['recipientAddress', 'amount', 'denom', 'memo'],
             rpcRequest: 'createSend'
           }}
           disabled={!state.installedSnap}

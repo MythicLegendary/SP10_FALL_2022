@@ -12,7 +12,7 @@ import crypto from 'crypto';
 import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import { AccountData, coins} from "@cosmjs/launchpad";
 import { Coin, DirectSecp256k1HdWallet, makeAuthInfoBytes } from "@cosmjs/proto-signing";
-import { SigningStargateClient, StargateClientOptions, SigningStargateClientOptions, GasPrice } from "@cosmjs/stargate";
+import { SigningStargateClient, StargateClientOptions, SigningStargateClientOptions, GasPrice, StdFee } from "@cosmjs/stargate";
 //will need further imports to ensure!
 
 import { publicKeyCreate, ecdsaSign } from 'secp256k1';
@@ -79,6 +79,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
         prefix: request.params[0]['prefix'],
         memo: request.params[0]['memo'],
         gas: request.params[0]['gas'],
+        feeDenom  : request.params[0]['feeDenom'],
+        feeAmount : request.params[0]['feeAmount']
       })
       return await getPluginState();
 
@@ -108,11 +110,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'createSend':
       console.log("COSMOS-SNAP: Creating Send Transaction.");
-      let sendData = request.params[0]
-      return await createSendTx(
-        sendData['subjectTo'],
-        sendData['amount']
-      )
+      return await createSend(request.params[0]);
 
     case 'createMultiSend':
         console.log("COSMOS-SNAP: Creating Multi Send Transaction.");
@@ -335,6 +333,52 @@ async function getAccountDemo() {
       console.log("COSMOS-SNAP: " , error);
       return error;
     }
+}
+
+/**
+ * Sends a transaction request with reciepient, amount and denom.
+ */
+async function createSend(transactionRequest : any) {
+  try {
+    // Get the wallet (keys) object
+    const currentState : any = await getPluginState();
+    const wallet : DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(
+      await decrypt(
+        currentState.mnemonic, 
+        await bip32EntropyPrivateKey()
+    ));
+    
+    // Get the client object to interact with the blockchain
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    
+    // Get the public address of the account
+    const accountData : AccountData = (await wallet.getAccounts())[0];
+    
+    // Format the amount
+    const amount : Coin[] = [{denom : transactionRequest.denom, amount: transactionRequest.amount}];
+
+    // Format the fee
+    const fee : StdFee =
+    {
+      amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
+      gas : currentState.gas,
+      granter : accountData.address,
+      payer : accountData.address
+    };
+    
+    // Make the transaction request to the network.
+    return await client.sendTokens(
+      accountData.address,
+      transactionRequest.recipientAddress,
+      amount, 
+      fee,
+      transactionRequest.memo
+    );
+  }
+  catch(error) {
+    console.log("COSMOS-SNAP ", error);
+    return error;
+  } 
 }
 
 /**
@@ -565,7 +609,7 @@ async function getRewards(address: any) {
   }
 }
 
-function createSend(txContext : any, recipient : any, amount : any, denom :any) {
+function createSendDeprecated(txContext : any, recipient : any, amount : any, denom :any) {
   const txSkeleton = createSkeleton(txContext, denom);
 
   const txMsg = {
@@ -587,12 +631,12 @@ function createSend(txContext : any, recipient : any, amount : any, denom :any) 
   return txSkeleton;
 }
 
-
-async function createSendTx(subjectTo : any, amount :  any) {
+// Deprecated
+async function createSendDeprecatedTx(subjectTo : any, amount :  any) {
   const txContext = await createTxContext()
   const currentPluginState : any = await getPluginState()
 
-  const tx = await createSend(
+  const tx = await createSendDeprecated(
     txContext,
     subjectTo,
     amount,

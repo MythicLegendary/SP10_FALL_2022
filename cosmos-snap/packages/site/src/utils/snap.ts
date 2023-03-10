@@ -196,6 +196,23 @@ async function sendLogin(payload : any) {
 }
 
 /**
+ * Sends a transaction request with reciepient, amount and denom.
+ */
+async function sendCreateSend(payload : any) {
+  return await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'createSend',
+        params: [payload]
+      },
+    ],
+  });
+}
+
+
+/**
  * This is a common method to send snap JSON RPC requests.
  * Later there will be a different method for each request.
  */
@@ -239,6 +256,10 @@ async function sendLogin(payload : any) {
         response = await sendGetCosmosAccountDemo();
         break;
       }
+      case 'createSend':
+        response = await sendCreateSend(payload);
+        break;
+
       default : {
         await sendHello();
       }
