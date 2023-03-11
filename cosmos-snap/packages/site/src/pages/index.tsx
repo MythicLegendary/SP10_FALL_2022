@@ -227,36 +227,6 @@ const Index = () => {
         />
         <Card
           content={{
-            title: 'COSMOS-Get-AccountDemo',
-            description:
-              'Only works for Wills Machine for now. (Run gaiad start)',
-            inputs:[],
-            rpcRequest: 'getCosmosAccountDemo'
-          }}
-          disabled={!state.installedSnap || !state.isLoggedIn}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-         <Card
-          content={{
-            title: 'COSMOS-Transaction-Demo',
-            description:
-              'Only works for Wills Machine for now. (Run gaiad start)',
-            inputs:["fromAddress", "toAddress"],
-            rpcRequest: 'sendCosmosTransactionDemo'
-          }}
-          disabled={!state.installedSnap || !state.isLoggedIn}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
             title: 'GET SNAP STATE',
             description:
               '',

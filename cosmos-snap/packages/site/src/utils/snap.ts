@@ -57,160 +57,20 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
 };
 
 /**
- * Invoke the "hello" method from the example snap.
- */
-async function sendHello() {
-    await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'hello'
-      },
-    ],
-  });
-};
-
-/**
- * Invoke the "setConfig" method from the cosmos snap.
- */
-async function sendSetConfig(payload : any) {
-  return await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'setConfig',
-        params: [payload]
-      },
-    ],
-  });
-};
-
-/**
- * Invoke the "getAccounts" method from the cosmos snap.
- */
-async function sendGetAccount() {
-  return await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'getAccount'
-      },
-    ],
-  });
-};
-
-/**
- * Invoke the "getAccountInfo" method from the cosmos snap.
- */
-async function sendGetAccountInfo() {
-  return await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'getAccountInfo'
-      },
-    ],
-  });
-};
-
-/**
- * Invoke the "getSnapState" method from the cosmos snap.
- */
-async function sendGetSnapState() {
-  return await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'getSnapState'
-      },
-    ],
-  });
-}
-
-
-/** 
- * Invoke the cosmjsDemo method. 
-*/
-async function sendGetCosmosAccountDemo() {
-  return await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'getCosmosAccountDemo'
-      },
-    ],
-  });
-}
-
-/** 
- * Invoke the sendCosmosTransactionDemo method. 
-*/
-async function sendCosmosTransactionDemo() {
-  return await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'sendCosmosTransactionDemo'
-      },
-    ],
-  });
-}
-
-/**
- *  Sends a mnemonic and password for either first-time setup or wallet recovery.
- */
-async function sendSetupPassword(payload : any) {
-  return await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'setupPassword',
-        params: [payload]
-      },
-    ],
-  });
-}
-
-/**
- * Sends the user's password to try and login.
- */
-async function sendLogin(payload : any) {
-  return await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'login',
-        params: [payload]
-      },
-    ],
-  });
-}
-
-/**
  * Sends a transaction request with reciepient, amount and denom.
  */
-async function sendCreateSend(payload : any) {
+async function sendRequest(payload : any, method : string) {
   return await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: [
       defaultSnapOrigin,
       {
-        method: 'createSend',
+        method: method,
         params: [payload]
       },
     ],
   });
 }
-
 
 /**
  * This is a common method to send snap JSON RPC requests.
@@ -221,49 +81,7 @@ async function sendCreateSend(payload : any) {
   console.log('[',methodName,'] >>> SENDING >>>', payload);
   let response : any = {}
   try {
-    switch(methodName) {
-      case 'hello': {
-        await sendHello();
-        break;
-      }
-      case 'setupPassword': {
-        response = await sendSetupPassword(payload);
-        break;
-      }
-      case 'login': {
-        response = await sendLogin(payload);
-        break;
-      }
-      case 'setConfig': {
-        response = await sendSetConfig(payload);
-        break;
-      }
-      case 'getSnapState': {
-        response = await sendGetSnapState();
-        break;
-      }
-      case 'getAccountInfo': {
-        response = await sendGetAccountInfo();
-        break;
-      } 
-      case 'sendCosmosTransactionDemo': {
-        console.log("WARNING: only functional on will's machine.");
-        response = await sendCosmosTransactionDemo();
-        break;
-      }
-      case 'getCosmosAccountDemo': {
-        console.log("WARNING: only functional on will's machine.");
-        response = await sendGetCosmosAccountDemo();
-        break;
-      }
-      case 'createSend':
-        response = await sendCreateSend(payload);
-        break;
-
-      default : {
-        await sendHello();
-      }
-    }
+    response = await sendRequest(payload, methodName);
     console.log('[',methodName,'] <<< RECEIVING <<<', response);
   }
   catch(e) {

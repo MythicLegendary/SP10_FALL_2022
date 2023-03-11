@@ -47,6 +47,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
   let pubKey, account;
   console.log("COSMOS-SNAP: Snap RPC Handler invoked. Request: ", request);
   switch (request.method) {
+
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
       return await getPluginState();
@@ -70,6 +71,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       console.log("COSMOS-SNAP: Logging in user.");
       return loginUser(request.params[0]['password']);
     }
+    
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
       await updatePluginState({
@@ -114,89 +116,45 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'createMultiSend':
         console.log("COSMOS-SNAP: Creating Multi Send Transaction.");
-        let multiSendData = request.params[0]
-        return await createMultiSendTx(
-          multiSendData['inputs'],
-          multiSendData['outputs']
-        )
+        return await createMultiSend(
+          request.params[0]
+        );
 
     case 'createDelegate':
       console.log("COSMOS-SNAP: Creating Delegate.");
-      let delegateData = request.params[0]
-      return await createDelegateTx(
-        delegateData['validatorTo'],
-        delegateData['amount']
-      )
+      return {}
 
     case 'createRedelegate':
       console.log("COSMOS-SNAP: Creating Redelegate");
-      let redelegateData = request.params[0]
-      return await createRedelegateTx(
-        redelegateData['validatorFrom'],
-        redelegateData['validatorTo'],
-        redelegateData['amount']
-      )
+      return {}
 
     case 'createUndelegate':
       console.log("COSMOS-SNAP: Creating Undelegate");
-      let undelegateData = request.params[0]
-      return await createUndelegateTx(
-        undelegateData['validatorFrom'],
-        undelegateData['amount']
-      )
+      return {}
 
     case 'createWithdrawDelegationReward':
       console.log("COSMOS-SNAP: Creating Withdrawal Delegation Reward");
-      let withdrawDelegationReward = request.params[0]
-      return await createWithdrawDelegationRewardTx(
-        withdrawDelegationReward['rewards']
-      )
+      return {}
 
     case 'createTextProposal':
       console.log("COSMOS-SNAP: Creating Text Proposal");
-      let textProposalData = request.params[0]
-      return await createTextProposalTx(
-        textProposalData['title'],
-        textProposalData['description'],
-        textProposalData['deposit']
-      )
+      return {}
 
     case 'createCommunityPoolSpend':
       console.log("COSMOS-SNAP: Creating Community Pool Spend.");
-      let communitySpendProposalData = request.params[0]
-      return await createCommunityPoolSpendProposalTx(
-        communitySpendProposalData['title'],
-        communitySpendProposalData['description'],
-        communitySpendProposalData['recipient'],
-        communitySpendProposalData['deposit'],
-        communitySpendProposalData['amount']
-      )
+      return {}
 
     case 'createParamsChangeProposal':
       console.log("COSMOS-SNAP: Create Params Change Proposal.");
-      let paramsChangeProposalData = request.params[0]
-      return await createParamsChangeProposalTx(
-        paramsChangeProposalData['title'],
-        paramsChangeProposalData['description'],
-        paramsChangeProposalData['changes'],
-        paramsChangeProposalData['deposit']
-      )
+      return {}
       
     case 'createDeposit':
       console.log("COSMOS-SNAP: Create Deposit.");
-      let depositData = request.params[0]
-      return await createDepositTx(
-        depositData['proposalId'],
-        depositData['amount']
-      )
+      return {}
       
     case 'createVote':
       console.log("COSMOS-SNAP: Creating Vote.");
-      let voteData = request.params[0]
-      return await createVoteTx(
-        voteData['proposalId'],
-        voteData['option']
-      )
+      return {}
       
     case 'hello':
       return wallet.request({
@@ -381,6 +339,10 @@ async function createSend(transactionRequest : any) {
   } 
 }
 
+async function createMultiSend(transactionRequest : any) {
+  return  {}
+}
+
 /**
  * Simulates a transaction on the gaiad/simd network locally. Hard-coded (right now) with accounts on wills machine.
  * 
@@ -475,6 +437,7 @@ async function getPubKey () {
   const prikeyArr = new Uint8Array(hexToBytes(PRIV_KEY));
   return bytesToHex(publicKeyCreate(prikeyArr, true))
 }
+
 // Deprecated
 async function getAccount (pubkey: any) {
   const currentPluginState : any = await getPluginState()
@@ -742,7 +705,7 @@ async function txSubmit(signedTx : any) {
   return result
 }
 
-function createMultiSend(txContext : any, inputs : any, outputs : any, denom : any) {
+function createMultiSendDeprecated(txContext : any, inputs : any, outputs : any, denom : any) {
   const txSkeleton = createSkeleton(txContext, denom);
 
   const txMsg = {
@@ -758,11 +721,11 @@ function createMultiSend(txContext : any, inputs : any, outputs : any, denom : a
   return txSkeleton;
 }
 
-async function createMultiSendTx(inputs : any, outputs : any) {
+async function createMultiSendDeprecatedTx(inputs : any, outputs : any) {
   const txContext = await createTxContext()
   const currentPluginState : any = await getPluginState()
 
-  const tx = await createMultiSend(
+  const tx = await createMultiSendDeprecated(
     txContext,
     JSON.parse(inputs),
     JSON.parse(outputs),
