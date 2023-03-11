@@ -52,16 +52,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
       return await getPluginState();
 
-    case 'getCosmosAccountDemo':
-      console.log("COSMOS-SNAP: This is a demonstration of cosmjs. Getting account balance from genesis account");
-      return await getAccountDemo();
-      
-    
-    case 'sendCosmosTransactionDemo': {
-      console.log("COSMOS-SNAP: This is a demonstration of cosmjs. Sending transaction between backend-test keys");
-      return await transactionDemo();
-    }
-
     case 'setupPassword': {
       console.log("COSMOS-SNAP: Setting up new password for key encryption.");
       return setupPassword(request.params[0]['password'], request.params[0]['mnemonic']);
@@ -182,7 +172,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 async function loginUser(password : string) {
   const currentState : any = await getPluginState();
   // Get the stored password
-  const storedPassword : string = await currentState.password;
+  const storedPassword : string = await decrypt(currentState.password, await bip32EntropyPrivateKey());
   // Compare the values
   if(password === storedPassword) {
     return {loginSuccessful : true, msg : "Login Sucessful"}
@@ -192,9 +182,14 @@ async function loginUser(password : string) {
   }
 }
 
-function getWalletFromSerializedWallet(wallet: string)
-{
-  return JSON.parse(wallet);
+async function getCosmosWallet() {
+  const currentState : any = await getPluginState();
+
+  return await DirectSecp256k1HdWallet.fromMnemonic(
+    await decrypt(
+      currentState.mnemonic, 
+      await bip32EntropyPrivateKey()
+  ));
 }
 
 /**
@@ -218,14 +213,25 @@ async function setupPassword(password : string, mnemonic : string) {
   }
 }
 
+/**
+ * Decrypts passwords and mnemonics.
+ */
 async function encrypt(password : string, key : string) {
+  // TODO: Implement
   return password;
 }
 
+/**
+ * Decrypts passwords and mnemonics.
+ */
 async function decrypt(password : string, key : string) {
+  // TODO: Implement
   return password;
 }
 
+/**
+ * Gets the unique entropy value used to create the keys; use to encrypt data.
+ */
 async function bip32EntropyPrivateKey(){
   const entropy : any = await wallet.request({
     method: 'snap_getBip32Entropy',
@@ -244,11 +250,7 @@ async function getAccountInfo() {
   try {
     // Get the wallet (keys) object
     const currentState : any = await getPluginState();
-    const wallet : DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(
-      await decrypt(
-        currentState.mnemonic, 
-        await bip32EntropyPrivateKey()
-    ));
+    const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
     
     // Get the client object to interact with the blockchain
     const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
@@ -266,47 +268,15 @@ async function getAccountInfo() {
 }
 
 /**
- * Get's the balance for the genesis account on the gaiad/simd network locally. Hard-coded (right now) with accounts on wills machine.
- * 
- * @returns Output from the getBalance call.
- */
-async function getAccountDemo() {
-  const sender = {
-    mnemonic: "luggage rotate orient usage program cloud armed warrior rich erase acquire remember",
-    address: "cosmos14eadktsf4zzah6har7h7a46tunnj7rq7lmppy5",
-    path: "m/44'/118'/0'/0/0"
-    };
-    const tendermintUrl = "http://localhost:26657";
-    try {
-      const wallet_ = await DirectSecp256k1HdWallet.fromMnemonic(sender.mnemonic);
-
-      const client = await SigningStargateClient.connectWithSigner(tendermintUrl, wallet_);
-      
-      const balance = await client.getBalance(sender.address, "uatom");
-  
-      console.log("COSMOS-SNAP: " , JSON.stringify(balance));
-      return balance;
-    }
-    catch(error) {
-      console.log("COSMOS-SNAP: " , error);
-      return error;
-    }
-}
-
-/**
  * Sends a transaction request with reciepient, amount and denom.
  */
 async function createSend(transactionRequest : any) {
   try {
     // Get the wallet (keys) object
-    const currentState : any = await getPluginState();
-    const wallet : DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(
-      await decrypt(
-        currentState.mnemonic, 
-        await bip32EntropyPrivateKey()
-    ));
+    const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
     
     // Get the client object to interact with the blockchain
+    const currentState : any = await getPluginState();
     const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
     
     // Get the public address of the account
@@ -339,67 +309,16 @@ async function createSend(transactionRequest : any) {
   } 
 }
 
+/**
+ * Creates a multi-send transaction (multiple recipients and or multiple denoms). 
+ */
 async function createMultiSend(transactionRequest : any) {
   return  {}
 }
 
 /**
- * Simulates a transaction on the gaiad/simd network locally. Hard-coded (right now) with accounts on wills machine.
- * 
- * @returns Output from the sendTokens call.
+ * Gets the data persisted by MetaMask.
  */
-async function transactionDemo() {
-  // To get this information use gaiad keys list --keyring-backend test (if a different keyring is used, change the command)
-  const sender = {
-    mnemonic: "luggage rotate orient usage program cloud armed warrior rich erase acquire remember",
-    address: "cosmos14eadktsf4zzah6har7h7a46tunnj7rq7lmppy5",
-    path: "m/44'/118'/0'/0/0"
-    };
-
-    // The mnemonic needs to be tracked actively, and can only be seen when the account is created. 
-    const recipient = {
-    mnemonic: "razor pistol select eyebrow defense punch elegant outer peace huge alcohol farm dawn again vacant rent birth flat asset kitten replace cart behave skate",
-    address: "cosmos1zqy2p565y7gdd6lxpnnvtwg6l85lnaazs5gpp7",
-    path: "m/44'/118'/0'/0/0"
-    };
-
-    //scene chronic payment jeans profit stereo bring load remind display disagree bitter couch track adapt worry sword ranch web utility camp talent comfort duck
-
-    const tendermintUrl = "http://localhost:26657";
-
-    try {
-      // Imports the wallet object by using the mnemonic for the account.
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(sender.mnemonic);
-
-      // Creates the client object, connecting to the blockchain with the desired account information.
-      const client = await SigningStargateClient.connectWithSigner(tendermintUrl, wallet);
-      
-      // Gets the prior balance of the receiving account.
-      const before = await client.getBalance(recipient.address, "uatom");
-      
-      // Sends the transaction.
-      const result = await client.sendTokens(
-        sender.address, 
-        recipient.address, 
-        [{denom : "uatom", amount: "10000"}], 
-        {
-          amount : [{denom : "stake", amount : "0"}], 
-          gas : "200000",
-          granter : sender.address,
-          payer : sender.address
-        },
-        "Demo Transaction Between Accounts",
-      );
-      console.log("COSMOS-SNAP: SENT TRANSACTION" , result);
-      return result;
-    }
-    catch (error) {
-      console.log("COSMOS-SNAP: Error making transaction- " , error);
-      return error
-    }
-
-}
-
 async function getPluginState()
 {
     return await wallet.request({
@@ -408,6 +327,9 @@ async function getPluginState()
   });
 }
 
+/**
+ * Updates the data persisted by MetaMask.
+ */
 async function updatePluginState(state: unknown)
 {
   return await wallet.request({
