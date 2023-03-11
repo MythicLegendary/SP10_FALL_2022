@@ -280,6 +280,36 @@ const Index = () => {
         />
         <Card
           content={{
+            title: 'Create Send',
+            description:
+              '',
+            inputs:['recipientAddress', 'amount', 'denom', 'memo'],
+            rpcRequest: 'createSend'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create MultiSend',
+            description:
+              'Enter transaction like such: <address>-<amount>-<denom> and separate with a single space',
+            inputs:['inputs', 'memo'],
+            rpcRequest: 'createMultiSend'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
             title: 'GET NETWORK STATUS',
             description:
               '',
@@ -330,36 +360,6 @@ const Index = () => {
               '',
             inputs:[],
             rpcRequest: 'getRewards'
-          }}
-          disabled={!state.installedSnap || !state.isLoggedIn}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
-            title: 'Create Send',
-            description:
-              '',
-            inputs:['recipientAddress', 'amount', 'denom', 'memo'],
-            rpcRequest: 'createSend'
-          }}
-          disabled={!state.installedSnap || !state.isLoggedIn}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
-            title: 'Create MultiSend',
-            description:
-              '',
-            inputs:['inputs', 'outputs'],
-            rpcRequest: 'createMultiSend'
           }}
           disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={

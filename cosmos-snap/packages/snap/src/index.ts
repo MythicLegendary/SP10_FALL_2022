@@ -20,6 +20,16 @@ import { bech32 } from 'bech32'
 import Sha256WithX2 from "sha256";
 import RIPEMD160Static from "ripemd160";
 
+
+interface EncodeObject {
+  readonly typeUrl: string;
+  readonly value: {
+    fromAddress : string,
+    toAddress : string,
+    amount : Coin[]
+  };
+}
+
 /**
  * Get a message from the origin. For demonstration purposes only.
  *
@@ -313,7 +323,55 @@ async function createSend(transactionRequest : any) {
  * Creates a multi-send transaction (multiple recipients and or multiple denoms). 
  */
 async function createMultiSend(transactionRequest : any) {
-  return  {}
+    try {
+      // Get the wallet (keys) object
+      const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+    
+      // Get the client object to interact with the blockchain
+      const currentState : any = await getPluginState();
+      const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+      
+      // Get the public address of the account
+      const accountData : AccountData = (await wallet.getAccounts())[0];
+      
+      // Format the fee
+      const fee : StdFee =
+      {
+        amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
+        gas : currentState.gas,
+        granter : accountData.address,
+        payer : accountData.address
+      };
+
+      // Format the multiple transactions
+      const messages : Array<EncodeObject> = [];
+      const transactions : string[] = transactionRequest.inputs.split(" ");
+      for (let i = 0; i < transactions.length; i ++) {
+        // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
+        const transaction : string[] = transactions[i].split("-");
+        let newMessage : EncodeObject = {
+          typeUrl : "/cosmos.bank.v1beta1.MsgSend",
+          value : {
+            fromAddress : accountData.address,
+            toAddress : transaction[0],
+            amount : [{amount : transaction[1], denom : transaction[2]}]
+          }
+        };
+        messages.push(newMessage);
+      }
+      
+      // TODO: Use signAndBroadcast
+      return await client.signAndBroadcast(
+        accountData.address,
+        messages,
+        fee,
+        transactionRequest.memo
+      );
+    }
+    catch(error) {
+      console.log("COSMOS-SNAP ", error);
+      return error;
+    } 
 }
 
 /**
