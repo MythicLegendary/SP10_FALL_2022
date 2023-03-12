@@ -4,3 +4,9 @@ William Genesis -
     address: "cosmos14eadktsf4zzah6har7h7a46tunnj7rq7lmppy5",
     path: "m/44'/118'/0'/0/0"
 };
+
+TestURL: http://localhost:26657
+Test Denom: uatom
+Test fee: 0
+Test Fee Denom: stake
+Test gas: 200000
