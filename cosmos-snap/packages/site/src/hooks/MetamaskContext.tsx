@@ -13,11 +13,13 @@ export type MetamaskState = {
   isFlask: boolean;
   installedSnap?: Snap;
   error?: Error;
+  isLoggedIn: boolean;
 };
 
 const initialState: MetamaskState = {
   isFlask: false,
   error: undefined,
+  isLoggedIn: false
 };
 
 type MetamaskDispatch = { type: MetamaskActions; payload: any };
@@ -35,6 +37,7 @@ export enum MetamaskActions {
   SetInstalled = 'SetInstalled',
   SetFlaskDetected = 'SetFlaskDetected',
   SetError = 'SetError',
+  SetLogin = 'SetLogin'
 }
 
 const reducer: Reducer<MetamaskState, MetamaskDispatch> = (state, action) => {
@@ -56,6 +59,12 @@ const reducer: Reducer<MetamaskState, MetamaskDispatch> = (state, action) => {
         ...state,
         error: action.payload,
       };
+    
+    case MetamaskActions.SetLogin:
+      return {
+        ...state,
+        isLoggedIn: action.payload,
+      }
 
     default:
       return state;

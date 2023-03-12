@@ -1,5 +1,6 @@
-import React, { ReactNode } from 'react';
+import React, { FunctionComponent, ReactNode, useContext } from 'react';
 import styled from 'styled-components';
+import { MetamaskActions, MetaMaskContext } from '../hooks';
 import {
   sendSnapRPC
 } from '../utils';
@@ -53,11 +54,12 @@ const Description = styled.div`
   margin-bottom: 5px;
 `;
 
-export class Card extends React.Component<CardProps> {
-  inputDivRef = React.createRef<HTMLInputElement>();
+export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth}) => {
+  const inputDivRef = React.createRef<HTMLInputElement>();
+  const [state, dispatch] = useContext(MetaMaskContext);
 
-  gatherInputs() {
-    let inputDiv = this.inputDivRef.current;
+  const gatherInputs = () => {
+    let inputDiv = inputDivRef.current;
     let inputFields = inputDiv?.querySelectorAll('input');
     let res:any = {};
 
@@ -71,23 +73,35 @@ export class Card extends React.Component<CardProps> {
     return res;
   }
 
-  render() {
-    return (
-      <CardWrapper fullWidth={this.props.fullWidth} disabled={this.props.disabled}>
+  const submitButtonClicked = async () => {
+    let response = await sendSnapRPC(content.rpcRequest, gatherInputs());
+        
+    if (response==null) return;
+    
+    if (content.rpcRequest=='login') {
+      dispatch({
+        type: MetamaskActions.SetLogin,
+        payload: response.loginSuccessful
+      });
+    }
+  }
 
-      {this.props.content.title && (
-        <Title>{this.props.content.title}</Title>
+  return (
+    <CardWrapper fullWidth={fullWidth} disabled={disabled}>
+
+      {content.title && (
+        <Title>{content.title}</Title>
       )}
 
-      <Description>{this.props.content.description}</Description>
+      <Description>{content.description}</Description>
 
-      <div ref={this.inputDivRef}>
+      <div ref={inputDivRef}>
         {/* Display a list of input fields (it's messy but works :/ - blame Abhijay ) */
           (
             ()=>{
               let inputs = [];
-              for(let i = 0; i < this.props.content.inputs.length; i++) {
-                inputs.push(<input placeholder={this.props.content.inputs[i]} id={this.props.content.inputs[i]} key={i}></input>);
+              for(let i = 0; i < content.inputs.length; i++) {
+                inputs.push(<input placeholder={content.inputs[i]} id={content.inputs[i]} key={i}></input>);
               }
               return inputs;
             }
@@ -96,15 +110,14 @@ export class Card extends React.Component<CardProps> {
       </div>
 
       {
-        this.props.content.button ? (this.props.content.button) : (
+        content.button ? (content.button) : (
           <SubmitButton
-            onClick={()=>{sendSnapRPC(this.props.content.rpcRequest, this.gatherInputs())}}
-            disabled={this.props.disabled}
+            onClick={submitButtonClicked}
+            disabled={disabled}
           />
         )
       }
 
     </CardWrapper>
-    );
-  }
+  );
 }

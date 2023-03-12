@@ -188,7 +188,7 @@ const Index = () => {
             inputs:[],
             rpcRequest: 'hello'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -233,7 +233,7 @@ const Index = () => {
             inputs:[],
             rpcRequest: 'getCosmosAccountDemo'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -248,7 +248,7 @@ const Index = () => {
             inputs:["fromAddress", "toAddress"],
             rpcRequest: 'sendCosmosTransactionDemo'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -263,7 +263,7 @@ const Index = () => {
             inputs:[],
             rpcRequest: 'getSnapState'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -286,7 +286,7 @@ const Index = () => {
             ],
             rpcRequest: 'setConfig'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -301,7 +301,7 @@ const Index = () => {
             inputs:[],
             rpcRequest: 'getAccountInfo'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -316,7 +316,7 @@ const Index = () => {
             inputs:[],
             rpcRequest: 'getNetworkStatus'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -331,7 +331,7 @@ const Index = () => {
             inputs:[],
             rpcRequest: 'getBandwidth'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -346,7 +346,7 @@ const Index = () => {
             inputs:[],
             rpcRequest: 'getIndexStats'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -361,7 +361,7 @@ const Index = () => {
             inputs:[],
             rpcRequest: 'getRewards'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -376,7 +376,7 @@ const Index = () => {
             inputs:['recipientAddress', 'amount', 'denom', 'memo'],
             rpcRequest: 'createSend'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -391,7 +391,7 @@ const Index = () => {
             inputs:['inputs', 'outputs'],
             rpcRequest: 'createMultiSend'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -406,7 +406,7 @@ const Index = () => {
             inputs:['to', 'amount'],
             rpcRequest: 'createDelegate'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -421,7 +421,7 @@ const Index = () => {
             inputs:['from', 'to', 'amount'],
             rpcRequest: 'createRedelegate'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -436,7 +436,7 @@ const Index = () => {
             inputs:['from', 'amount'],
             rpcRequest: 'createUndelegate'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -451,7 +451,7 @@ const Index = () => {
             inputs:['rewards'],
             rpcRequest: 'withdrawDelegationReward'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -466,7 +466,7 @@ const Index = () => {
             inputs:['title','description','deposit'],
             rpcRequest: 'createTextProposal'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -481,7 +481,7 @@ const Index = () => {
             inputs:['title','description','recipient','deposit','amount'],
             rpcRequest: 'createCommunityPoolSpend'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -496,7 +496,7 @@ const Index = () => {
             inputs:['title','description','changes','deposit'],
             rpcRequest: 'createParamsChange'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -511,7 +511,7 @@ const Index = () => {
             inputs:['id','amount'],
             rpcRequest: 'createDeposit'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
@@ -526,7 +526,7 @@ const Index = () => {
             inputs:['id','option'],
             rpcRequest: 'createVote'
           }}
-          disabled={!state.installedSnap}
+          disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
             state.isFlask &&
             Boolean(state.installedSnap) &&
