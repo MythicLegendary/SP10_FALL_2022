@@ -182,21 +182,6 @@ const Index = () => {
         )}
         <Card
           content={{
-            title: 'SEND HELLO',
-            description:
-              'Display a custom message within a confirmation screen in MetaMask.',
-            inputs:[],
-            rpcRequest: 'hello'
-          }}
-          disabled={!state.installedSnap || !state.isLoggedIn}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
             title: 'Login With Password',
             description:
               'Enter Password To Unlock Other Functions',

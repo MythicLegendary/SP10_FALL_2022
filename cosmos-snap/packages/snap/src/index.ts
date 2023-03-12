@@ -156,16 +156,14 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       console.log("COSMOS-SNAP: Creating Vote.");
       return {}
       
-    case 'hello':
+    case 'displayNotification':
       return wallet.request({
         method: 'snap_confirm',
         params: [
           {
-            prompt: getMessage(origin),
-            description:
-              'This custom confirmation is just for display purposes.',
-            textAreaContent:
-              'But you can edit the snap source code to make it do something, if you want to!',
+            prompt: request.params[0].prompt,
+            description: request.params[0].description,
+            textAreaContent: request.params[0].textAreaContent,
           },
         ],
       });
@@ -211,15 +209,15 @@ async function setupPassword(password : string, mnemonic : string) {
   await updatePluginState(
     {
       ...await getPluginState(),
-      mnemonic : encrypt(mnemonic, await bip32EntropyPrivateKey()),
-      password : encrypt(password, await bip32EntropyPrivateKey())
+      mnemonic : await encrypt(mnemonic, await bip32EntropyPrivateKey()),
+      password : await encrypt(password, await bip32EntropyPrivateKey())
 
     });
-  return {msg : "Successful serialization of wallet."}
+  return {msg : "Successful serialization of wallet.", setup : true}
   }
   catch(error) {
     console.log(error);
-    return {msg : "Serialization not successful."}
+    return {msg : "Serialization not successful.", setup : false}
   }
 }
 
@@ -269,7 +267,9 @@ async function getAccountInfo() {
     const accountData : AccountData = (await wallet.getAccounts())[0];
 
     // Return result
-    return await client.getBalance(accountData.address, currentState.denom)
+    let result : any = await client.getBalance(accountData.address, currentState.denom);
+    result['Account'] = accountData.address;
+    return result; 
   }
   catch(error) {
     console.log("COSMOS-SNAP: " , error);
