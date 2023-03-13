@@ -1,0 +1,44 @@
+{
+  "version": "0.1.0",
+  "description": "An example Snap written in TypeScript.",
+  "proposedName": "TypeScript Example Snap",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MetaMask/template-snap-monorepo.git"
+  },
+  "source": {
+    "shasum": "GEh9hV5dTz2jzy1br6aFyj9HgYrAOWEZ/3p27x767kM=",
+    "location": {
+      "npm": {
+        "filePath": "dist/bundle.js",
+        "iconPath": "images/icon.svg",
+        "packageName": "snap",
+        "registry": "https://registry.npmjs.org/"
+      }
+    }
+  },
+  "initialPermissions": {
+    "snap_confirm": {},
+    "snap_getBip44Entropy": [
+      {
+        "coinType": 118
+      }
+    ],
+    "snap_getBip32Entropy": [
+      {
+        "path": [
+          "m",
+          "44'",
+          "118'",
+          "0'"
+        ],
+        "curve": "secp256k1"
+      }
+    ],
+    "snap_manageState": {},
+    "endowment:network-access": {},
+    "endowment:transaction-insight": {},
+    "endowment:long-running": {}
+  },
+  "manifestVersion": "0.1"
+}
