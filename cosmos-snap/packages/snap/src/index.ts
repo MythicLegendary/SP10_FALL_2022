@@ -74,15 +74,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
     
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
+      const updates  : any = await updateConfiguration(request);
       await updatePluginState({
         ...await getPluginState(),
-        nodeUrl: request.params[0]['nodeUrl'],
-        denom: request.params[0]['denom'],
-        prefix: request.params[0]['prefix'],
-        memo: request.params[0]['memo'],
-        gas: request.params[0]['gas'],
-        feeDenom  : request.params[0]['feeDenom'],
-        feeAmount : request.params[0]['feeAmount']
+        ...updates
       })
       return await getPluginState();
 
@@ -421,6 +416,36 @@ async function updatePluginState(state: unknown)
   method: 'snap_manageState',
   params: ['update', state],
     });
+}
+
+/**
+ * Allows for dynamic updating using setConfig method.
+ */
+async function updateConfiguration(request : any) {
+  const updates  : any = request.params[0];
+  const currentState : any = await getPluginState();
+  if((updates.nodeUrl === null || updates.nodeUrl === '') && currentState.nodeUrl !== null) {
+    updates.nodeUrl = currentState.nodeUrl;
+  }
+  if((updates.denom === null || updates.denom === '') && currentState.denom !== null) {
+    updates.denom = currentState.denom;
+  }
+  if((updates.prefix === null || updates.prefix === '') && currentState.prefix !== null) {
+    updates.prefix  = currentState.prefix;
+  }
+  if((updates.memo === null || updates.memo === '') && currentState.memo !== null) {
+    updates.memo = currentState.memo;
+  }
+  if((updates.gas === null || updates.gas === '') && currentState.gas !== null) {
+    updates.gas = currentState.gas;
+  }
+  if((updates.feeDenom === null || updates.feeDenom === '') && currentState.feeDenom !== null) {
+    updates.feeDenom = currentState.feeDenom;
+  }
+  if((updates.feeAmount === null || updates.feeAmount === '') && currentState.feeAmount !== null) {
+    updates.feeAmount = currentState.feeAmount;
+  }
+  return updates;
 }
 
 //this function will also require its own endowment in the manifest...
