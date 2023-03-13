@@ -20,6 +20,8 @@ import { bech32 } from 'bech32'
 import Sha256WithX2 from "sha256";
 import RIPEMD160Static from "ripemd160";
 
+import { caesar, rot13 } from "simple-cipher-js";
+
 
 interface EncodeObject {
   readonly typeUrl: string;
@@ -208,37 +210,74 @@ async function getCosmosWallet() {
  * Sets up the new password used for verification
  */
 async function setupPassword(password : string, mnemonic : string) {
-  try {
-    // Update the pluginState with the encrypted key and serialized wallet
-  await updatePluginState(
-    {
-      ...await getPluginState(),
-      mnemonic : await encrypt(mnemonic, await bip32EntropyPrivateKey()),
-      password : await encrypt(password, await bip32EntropyPrivateKey())
+  
+  console.log("Unencrypted:", password);
+  console.log("Unencrypted:", mnemonic);
+  const encryptedPassword = await encrypt(password, "key123");
+  const encryptedMnemonic = await encrypt(mnemonic, "key123");
+  console.log("Encrypted:", encryptedPassword);
+  console.log("Encrypted:", encryptedMnemonic);
+  const decryptedPassword = await decrypt(encryptedPassword, "key123");
+  const decryptedMnemonic = await decrypt(encryptedMnemonic, "key123");
+  console.log("Decrypted:", decryptedPassword);
+  console.log("Decrypted:", decryptedMnemonic);
+  
+  
+  // try {
+  //   // Update the pluginState with the encrypted key and serialized wallet
+  // await updatePluginState(
+  //   {
+  //     ...await getPluginState(),
+  //     mnemonic : await encrypt(mnemonic, await bip32EntropyPrivateKey()),
+  //     password : await encrypt(password, await bip32EntropyPrivateKey())
 
-    });
-  return {msg : "Successful serialization of wallet.", setup : true}
-  }
-  catch(error) {
-    console.log(error);
-    return {msg : "Serialization not successful.", setup : false}
-  }
+  //   });
+  // return {msg : "Successful serialization of wallet.", setup : true}
+  // }
+  // catch(error) {
+  //   console.log(error);
+  //   return {msg : "Serialization not successful.", setup : false}
+  // }
 }
 
 /**
  * Decrypts passwords and mnemonics.
  */
 async function encrypt(password : string, key : string) {
-  // TODO: Implement
-  return password;
+  let keyint = 0;
+
+  for(let i = 0; i<key.length; i++)
+  {
+    let character = key.charCodeAt(i);
+    keyint = ((keyint << 5) - keyint) + character;
+    keyint = keyint & keyint;
+  }
+  
+  keyint = keyint%25;
+  if(keyint < 0){keyint = keyint*-1;}
+  console.log(keyint);
+  console.log("Current password:", password);
+  return caesar.encrypt(password, keyint);
 }
 
 /**
  * Decrypts passwords and mnemonics.
  */
 async function decrypt(password : string, key : string) {
-  // TODO: Implement
-  return password;
+  let keyint = 0;
+
+  for(let i = 0; i<key.length; i++)
+  {
+    let character = key.charCodeAt(i);
+    keyint = ((keyint << 5) - keyint) + character;
+    keyint = keyint & keyint;
+  }
+  
+  keyint = keyint%25;
+  if(keyint < 0){keyint = keyint*-1;}
+  console.log(keyint);
+  console.log("Current password:", password);
+  return caesar.decrypt(password, keyint);
 }
 
 /**
