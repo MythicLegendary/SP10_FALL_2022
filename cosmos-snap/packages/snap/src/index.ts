@@ -62,7 +62,21 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
-      return await getPluginState();
+
+      const obj:any =  await getPluginState();
+
+      var filtered = Object.assign({}, ...
+        Object.entries(obj).filter(([k,v]) => k != 'mnemonic').map(([k,v]) => ({[k]:v}))
+    );
+      
+      var filtered2 = Object.assign({}, ...
+        Object.entries(filtered).filter(([k,v]) => k != 'password').map(([k,v]) => ({[k]:v}))
+    );
+  
+  console.log(filtered2);
+  return filtered2;
+
+
 
     case 'setupPassword': {
       console.log("COSMOS-SNAP: Setting up new password for key encryption.");
@@ -211,33 +225,22 @@ async function getCosmosWallet() {
  */
 async function setupPassword(password : string, mnemonic : string) {
   
-  console.log("Unencrypted:", password);
-  console.log("Unencrypted:", mnemonic);
-  const encryptedPassword = await encrypt(password, "key123");
-  const encryptedMnemonic = await encrypt(mnemonic, "key123");
-  console.log("Encrypted:", encryptedPassword);
-  console.log("Encrypted:", encryptedMnemonic);
-  const decryptedPassword = await decrypt(encryptedPassword, "key123");
-  const decryptedMnemonic = await decrypt(encryptedMnemonic, "key123");
-  console.log("Decrypted:", decryptedPassword);
-  console.log("Decrypted:", decryptedMnemonic);
-  
-  
-  // try {
-  //   // Update the pluginState with the encrypted key and serialized wallet
-  // await updatePluginState(
-  //   {
-  //     ...await getPluginState(),
-  //     mnemonic : await encrypt(mnemonic, await bip32EntropyPrivateKey()),
-  //     password : await encrypt(password, await bip32EntropyPrivateKey())
+ 
+  try {
+    // Update the pluginState with the encrypted key and serialized wallet
+  await updatePluginState(
+    {
+      ...await getPluginState(),
+      mnemonic : await encrypt(mnemonic, await bip32EntropyPrivateKey()),
+      password : await encrypt(password, await bip32EntropyPrivateKey())
 
-  //   });
-  // return {msg : "Successful serialization of wallet.", setup : true}
-  // }
-  // catch(error) {
-  //   console.log(error);
-  //   return {msg : "Serialization not successful.", setup : false}
-  // }
+    });
+  return {msg : "Successful serialization of wallet.", setup : true}
+  }
+  catch(error) {
+    console.log(error);
+    return {msg : "Serialization not successful.", setup : false}
+  }
 }
 
 /**
