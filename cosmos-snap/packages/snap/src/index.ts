@@ -88,7 +88,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'getAccountInfo':
       console.log("COSMOS-SNAP: Getting Account Info.");
-      return getAccountInfo();
+      return await getAccountInfo();
+
+    case 'getAccountGeneral':
+      console.log("COSMOS-SNAP: Getting Account Info General");
+      return await getAccountInfoGeneral(request.params[0].address, request.params[0].denom);
 
     case 'getStatus':
       console.log("COSMOS-SNAP: Getting status.");
@@ -269,6 +273,29 @@ async function getAccountInfo() {
     // Return result
     let result : any = await client.getBalance(accountData.address, currentState.denom);
     result['Account'] = accountData.address;
+    return result; 
+  }
+  catch(error) {
+    console.log("COSMOS-SNAP: " , error);
+    return error;
+  }
+}
+
+/**
+ * Returns the balance of -denom- at -address-
+ */
+async function getAccountInfoGeneral(address : string, denom : string) {
+  try {
+    // Get the wallet (keys) object
+    const currentState : any = await getPluginState();
+    const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+    
+    // Get the client object to interact with the blockchain
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    
+    // Return result
+    let result : any = await client.getBalance(address, denom);
+    result['Account'] = address;
     return result; 
   }
   catch(error) {

@@ -252,9 +252,24 @@ const Index = () => {
           content={{
             title: 'GET ACCOUNT INFO',
             description:
-              '',
+              'Retrieve the balance of the default coin for your account.',
             inputs:[],
             rpcRequest: 'getAccountInfo'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'GET ACCOUNT GENERAL',
+            description:
+              'Retrieve the balance of a partiuclar coin at a particular address.',
+            inputs:['denom', 'address'],
+            rpcRequest: 'getAccountGeneral'
           }}
           disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={

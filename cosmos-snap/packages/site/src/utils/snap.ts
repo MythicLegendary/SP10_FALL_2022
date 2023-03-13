@@ -109,6 +109,14 @@ async function sendNotification(methodName : string, response : any) {
         };
         break;
     }
+    case 'getAccountGeneral': {
+      content = {
+        prompt: "Account Information",
+        description : "Account Information for : " + response.Account,
+        textAreaContent : JSON.stringify(response)
+        };
+        break;
+    }
     case 'createSend': {
       response['rawLog'] = "[REMOVED FOR LENGTH]"
       content = {
