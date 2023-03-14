@@ -144,6 +144,14 @@ async function sendNotification(methodName : string, response : any) {
         };
         break;
     }
+    case 'clearWalletData': {
+      content = {
+        prompt: "Wallet Data Clearted",
+        description : " ",
+        textAreaContent : JSON.stringify(response)
+        };
+        break;
+    }
     default: {
       content = {
       prompt: "Response From "  + methodName,

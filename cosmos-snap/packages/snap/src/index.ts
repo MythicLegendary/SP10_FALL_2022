@@ -7,6 +7,7 @@ import { Web3Provider } from "@ethersproject/providers";
 import { Decimal } from "@cosmjs/math";
 import  web3  from "web3";
 import {Buffer} from 'buffer';
+import { caesar, rot13 } from "simple-cipher-js";
 import crypto from 'crypto';
 
 import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
@@ -60,10 +61,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
-      return await getPluginState();
+      const filteredState =  filterResponse(await getPluginState());
+      return filteredState;
 
     case 'setupPassword': {
       console.log("COSMOS-SNAP: Setting up new password for key encryption.");
+      // TODO: Init wallet data
       return setupPassword(request.params[0]['password'], request.params[0]['mnemonic']);
     }
 
@@ -79,7 +82,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
         ...await getPluginState(),
         ...updates
       })
-      return await getPluginState();
+      return filterResponse(await getPluginState());
+
+    case 'clearWalletData':
+      console.log("COSMOS-SNAP: Clearing the config data.");
+      return await clearConfigData();
 
     case 'getAccountInfo':
       console.log("COSMOS-SNAP: Getting Account Info.");
@@ -224,16 +231,36 @@ async function setupPassword(password : string, mnemonic : string) {
  * Decrypts passwords and mnemonics.
  */
 async function encrypt(password : string, key : string) {
-  // TODO: Implement
-  return password;
+  let keyint = 0;
+
+  for(let i = 0; i<key.length; i++)
+  {
+    let character = key.charCodeAt(i);
+    keyint = ((keyint << 5) - keyint) + character;
+    keyint = keyint & keyint;
+  }
+
+  keyint = keyint%25;
+  if(keyint < 0){keyint = keyint*-1;}
+  return caesar.encrypt(password, keyint);
 }
 
 /**
  * Decrypts passwords and mnemonics.
  */
 async function decrypt(password : string, key : string) {
-  // TODO: Implement
-  return password;
+  let keyint = 0;
+
+  for(let i = 0; i<key.length; i++)
+  {
+    let character = key.charCodeAt(i);
+    keyint = ((keyint << 5) - keyint) + character;
+    keyint = keyint & keyint;
+  }
+
+  keyint = keyint%25;
+  if(keyint < 0){keyint = keyint*-1;}
+  return caesar.decrypt(password, keyint);
 }
 
 /**
@@ -326,6 +353,8 @@ async function createSend(transactionRequest : any) {
       payer : accountData.address
     };
     
+    console.log(transactionRequest, accountData.address);
+    
     // Make the transaction request to the network.
     return await client.sendTokens(
       accountData.address,
@@ -382,7 +411,7 @@ async function createMultiSend(transactionRequest : any) {
         messages.push(newMessage);
       }
       
-      // TODO: Use signAndBroadcast
+      //Use signAndBroadcast
       return await client.signAndBroadcast(
         accountData.address,
         messages,
@@ -416,6 +445,37 @@ async function updatePluginState(state: unknown)
   method: 'snap_manageState',
   params: ['update', state],
     });
+}
+
+/**
+ * Clear the configuration data.
+ */
+async function clearConfigData() {
+  const currentState : any = await getPluginState();
+  currentState.nodeUrl  = "";
+  currentState.feeDenom = ""
+  currentState.feeAmount= "0";
+  currentState.denom = "";
+  currentState.memo = "";
+  currentState.prefix = ""; 
+  currentState.gas = "0"
+  await updatePluginState(currentState);
+
+  return {dataCleared : true};
+}
+
+/**
+ * Filters the mnemonic and password from the response.
+ */
+function filterResponse(currentState : any) {
+  let filtered : any = Object.assign({}, ...
+    Object.entries(currentState).filter(([k,v]) => k != 'mnemonic').map(([k,v]) => ({[k]:v}))
+  );
+
+  let filtered2 = Object.assign({}, ...
+    Object.entries(filtered).filter(([k,v]) => k != 'password').map(([k,v]) => ({[k]:v}))
+  );
+  return filtered2;
 }
 
 /**

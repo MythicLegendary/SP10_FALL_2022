@@ -281,12 +281,45 @@ const Index = () => {
           content={{
             title: 'SET SNAP CONFIG',
             description:
+              'Set the gas for transactions',
+            inputs:[
+              "gas",
+            ],
+            rpcRequest: 'setConfig'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'SET SNAP CONFIG',
+            description:
               'Set the memo and prefix.',
             inputs:[
               "memo",
               "prefix"
             ],
             rpcRequest: 'setConfig'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'ClEAR DATA',
+            description:
+              'Clear all the configuration data.',
+            inputs:[
+            ],
+            rpcRequest: 'clearWalletData'
           }}
           disabled={!state.installedSnap || !state.isLoggedIn}
           fullWidth={
