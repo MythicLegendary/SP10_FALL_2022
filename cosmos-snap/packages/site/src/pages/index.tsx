@@ -229,15 +229,62 @@ const Index = () => {
           content={{
             title: 'SET SNAP CONFIG',
             description:
-              '',
+              'Set the URL for the Cosmos Blockchain Host.',
             inputs:[
               "nodeUrl",
+            ],
+            rpcRequest: 'setConfig'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'SET SNAP CONFIG',
+            description:
+              'Set the default denom used for your account balance.',
+            inputs:[
               "denom",
-              "prefix",
-              "memo",
-              "gas",
+            ],
+            rpcRequest: 'setConfig'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'SET SNAP CONFIG',
+            description:
+              'Set the parameters for formatting transaction fees.',
+            inputs:[
               "feeDenom",
               "feeAmount"
+            ],
+            rpcRequest: 'setConfig'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'SET SNAP CONFIG',
+            description:
+              'Set the memo and prefix.',
+            inputs:[
+              "memo",
+              "prefix"
             ],
             rpcRequest: 'setConfig'
           }}
