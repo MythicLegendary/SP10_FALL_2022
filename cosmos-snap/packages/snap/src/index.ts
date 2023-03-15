@@ -125,15 +125,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
           request.params[0]
         );
 
-    case 'createDelegate':
+    case 'createDelegateDeprecated':
       console.log("COSMOS-SNAP: Creating Delegate.");
       return {}
 
-    case 'createRedelegate':
+    case 'createRedelegateDeprecated':
       console.log("COSMOS-SNAP: Creating Redelegate");
       return {}
 
-    case 'createUndelegate':
+    case 'createUndelegateDeprecated':
       console.log("COSMOS-SNAP: Creating Undelegate");
       return {}
 
@@ -513,6 +513,70 @@ async function createMultiSend(transactionRequest : any) {
       console.log("COSMOS-SNAP ", error);
       return error;
     } 
+}
+
+// TODO: Verify
+async function createDelegate(delegationRequest : any) {
+  // Get the wallet (keys) object
+  const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+      
+  // Get the client object to interact with the blockchain
+  const currentState : any = await getPluginState();
+  const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+
+  // Get the public address of the account
+  const accountData : AccountData = (await wallet.getAccounts())[0];
+
+  // Format the fee
+  const fee : StdFee =
+  {
+    amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
+    gas : currentState.gas,
+    granter : accountData.address,
+    payer : accountData.address
+  };
+
+  const amount : Coin[]  = [
+    {
+      amount: delegationRequest.amount,
+      denom: delegationRequest.denom,
+    },
+  ];
+
+  // Format the delegation method
+  const msgs = [
+    {
+      typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
+      value: {
+        delegatorAddress: accountData.address,
+        validatorAddress: delegationRequest.toAddress,
+        amount,
+      },
+    },
+  ];
+
+  const memo = "Delegation from " + accountData.address;
+
+  const response : any = await client.signAndBroadcast(accountData.address,
+    msgs, 
+    fee, 
+    memo
+  );
+
+  return response;
+} 
+
+
+async function createRedelegate(delegationRequest : any) {
+  return{}
+}
+
+async function createUndelegate(delegationRequest : any) {
+  return {}
+}
+
+async function withdrawDelegationReward(delegationRequest : any) {
+  return {}
 }
 
 /**
@@ -921,7 +985,7 @@ async function createMultiSendDeprecatedTx(inputs : any, outputs : any) {
   );
 }
 
-function createDelegate(txContext : any, validatorBech32 : any, amount : any, denom : any) {
+function createDelegateDeprecated(txContext : any, validatorBech32 : any, amount : any, denom : any) {
   const txSkeleton = createSkeleton(txContext, denom);
 
   const txMsg = {
@@ -941,11 +1005,11 @@ function createDelegate(txContext : any, validatorBech32 : any, amount : any, de
   return txSkeleton;
 }
 
-async function createDelegateTx(validatorTo : any, amount : any) {
+async function createDelegateDeprecatedTx(validatorTo : any, amount : any) {
   const txContext = await createTxContext()
   const currentPluginState : any = await getPluginState()
 
-  const tx = await createDelegate(
+  const tx = await createDelegateDeprecated(
     txContext,
     validatorTo,
     amount,
@@ -957,7 +1021,7 @@ async function createDelegateTx(validatorTo : any, amount : any) {
   // return signedTx
 };
 
-function createRedelegate(txContext : any, validatorSourceBech32 : any, validatorDestBech32 : any, amount : any, denom : any) {
+function createRedelegateDeprecated(txContext : any, validatorSourceBech32 : any, validatorDestBech32 : any, amount : any, denom : any) {
   const txSkeleton = createSkeleton(txContext, denom);
 
   const txMsg = {
@@ -978,11 +1042,11 @@ function createRedelegate(txContext : any, validatorSourceBech32 : any, validato
   return txSkeleton;
 }
 
-async function  createRedelegateTx(validatorFrom : any, validatorTo : any, amount : any) {
+async function  createRedelegateDeprecatedTx(validatorFrom : any, validatorTo : any, amount : any) {
   const txContext = await createTxContext()
   const currentPluginState : any = await getPluginState()
 
-  const tx = await createRedelegate(
+  const tx = await createRedelegateDeprecated(
     txContext,
     validatorFrom,
     validatorTo,
@@ -995,7 +1059,7 @@ async function  createRedelegateTx(validatorFrom : any, validatorTo : any, amoun
   // return signedTx
 };
 
-function createUndelegate(txContext : any, validatorBech32 : any, amount : any, denom : any) {
+function createUndelegateDeprecated(txContext : any, validatorBech32 : any, amount : any, denom : any) {
   const txSkeleton = createSkeleton(txContext, denom);
 
   const txMsg = {
@@ -1015,11 +1079,11 @@ function createUndelegate(txContext : any, validatorBech32 : any, amount : any, 
   return txSkeleton;
 }
 
-async function createUndelegateTx(validatorFrom : any, amount : any) {
+async function createUndelegateDeprecatedTx(validatorFrom : any, amount : any) {
   const txContext = await createTxContext()
   const currentPluginState : any = await getPluginState()
 
-  const tx = await createUndelegate(
+  const tx = await createUndelegateDeprecated(
     txContext,
     validatorFrom,
     amount,

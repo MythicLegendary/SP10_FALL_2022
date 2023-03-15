@@ -432,66 +432,67 @@ const Index = () => {
                 !shouldDisplayReconnectButton(state.installedSnap)
               }
             />
-            <Card
-              content={{
-                title: 'Create Delegate',
-                description:
-                  '',
-                inputs: ['to', 'amount'],
-                rpcRequest: 'createDelegate'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Create Redelegate',
-                description:
-                  '',
-                inputs: ['from', 'to', 'amount'],
-                rpcRequest: 'createRedelegate'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Create Undelegate',
-                description:
-                  '',
-                inputs: ['from', 'amount'],
-                rpcRequest: 'createUndelegate'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Withdraw Delegation Reward',
-                description:
-                  '',
-                inputs: ['rewards'],
-                rpcRequest: 'withdrawDelegationReward'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
+
+<Card
+          content={{
+            title: 'Create Delegate',
+            description:
+              'Delegate tokens to a validator.',
+            inputs:['toAddress', 'amount', 'denom'],
+            rpcRequest: 'createDelegate'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Redelegate',
+            description:
+              'Move your delegated tokens to a different account.',
+            inputs:['fromAddress', 'toAddress', 'amount', 'denom'],
+            rpcRequest: 'createRedelegate'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Create Undelegate',
+            description:
+              'Undelegate tokens from the validator.',
+            inputs:['fromAddress', 'amount', 'denom'],
+            rpcRequest: 'createUndelegate'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: 'Withdraw Delegation Reward',
+            description:
+              'Get the rewards associated with your delegation.',
+            inputs:['rewards'],
+            rpcRequest: 'withdrawDelegationReward'
+          }}
+          disabled={!state.installedSnap || !state.isLoggedIn}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
           </CardContainer>
         </Tab>
       </Tabs>
