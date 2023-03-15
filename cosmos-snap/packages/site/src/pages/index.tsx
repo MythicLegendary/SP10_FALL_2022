@@ -432,8 +432,7 @@ const Index = () => {
                 !shouldDisplayReconnectButton(state.installedSnap)
               }
             />
-
-<Card
+                    <Card
           content={{
             title: 'Create Delegate',
             description:

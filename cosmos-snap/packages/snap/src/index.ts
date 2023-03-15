@@ -125,15 +125,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
           request.params[0]
         );
 
-    case 'createDelegateDeprecated':
+    case 'createDelegate':
       console.log("COSMOS-SNAP: Creating Delegate.");
-      return {}
+      return await createDelegate(request.params[0]);
 
-    case 'createRedelegateDeprecated':
+    case 'createRedelegate':
       console.log("COSMOS-SNAP: Creating Redelegate");
       return {}
 
-    case 'createUndelegateDeprecated':
+    case 'createUndelegate':
       console.log("COSMOS-SNAP: Creating Undelegate");
       return {}
 
@@ -517,66 +517,204 @@ async function createMultiSend(transactionRequest : any) {
 
 // TODO: Verify
 async function createDelegate(delegationRequest : any) {
-  // Get the wallet (keys) object
-  const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
-      
-  // Get the client object to interact with the blockchain
-  const currentState : any = await getPluginState();
-  const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+  try {
+    // Get the wallet (keys) object
+    const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+        
+    // Get the client object to interact with the blockchain
+    const currentState : any = await getPluginState();
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
 
-  // Get the public address of the account
-  const accountData : AccountData = (await wallet.getAccounts())[0];
+    // Get the public address of the account
+    const accountData : AccountData = (await wallet.getAccounts())[0];
 
-  // Format the fee
-  const fee : StdFee =
-  {
-    amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
-    gas : currentState.gas,
-    granter : accountData.address,
-    payer : accountData.address
-  };
-
-  const amount : Coin[]  = [
+    // Format the fee
+    const fee : StdFee =
     {
-      amount: delegationRequest.amount,
-      denom: delegationRequest.denom,
-    },
-  ];
+      amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
+      gas : currentState.gas,
+      granter : accountData.address,
+      payer : accountData.address
+    };
 
-  // Format the delegation method
-  const msgs = [
-    {
-      typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
-      value: {
-        delegatorAddress: accountData.address,
-        validatorAddress: delegationRequest.toAddress,
-        amount,
+    const amount : Coin[]  = [
+      {
+        amount: delegationRequest.amount,
+        denom: delegationRequest.denom,
       },
-    },
-  ];
+    ];
 
-  const memo = "Delegation from " + accountData.address;
+    // Format the delegation method
+    const msgs = [
+      {
+        typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
+        value: {
+          delegatorAddress: accountData.address,
+          validatorAddress: delegationRequest.toAddress,
+          amount,
+        },
+      },
+    ];
 
-  const response : any = await client.signAndBroadcast(accountData.address,
-    msgs, 
-    fee, 
-    memo
-  );
+    const memo = "Delegation from " + accountData.address;
 
-  return response;
+    const response : any = await client.signAndBroadcast(accountData.address,
+      msgs, 
+      fee, 
+      memo
+    );
+
+    return response;
+  }
+  catch(e) {
+    console.log("COSMOS-SNAP: ", e);
+    return e;
+  }
 } 
 
-
+/**
+ * Redelegates tokens from one validator to another.
+ */
 async function createRedelegate(delegationRequest : any) {
-  return{}
+    // Get the wallet (keys) object
+    const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+      
+    // Get the client object to interact with the blockchain
+    const currentState : any = await getPluginState();
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+  
+    // Get the public address of the account
+    const accountData : AccountData = (await wallet.getAccounts())[0];
+  
+    // Format the fee
+    const fee : StdFee =
+    {
+      amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
+      gas : currentState.gas,
+      granter : accountData.address,
+      payer : accountData.address
+    };
+  
+    const amount : Coin[]  = [
+      {
+        amount: delegationRequest.amount,
+        denom: delegationRequest.denom,
+      },
+    ];
+  
+    const msgs  = [{
+        typeUrl: "/cosmos.staking.v1beta1.MsgBeginRedelegate",
+        value: {
+          delegatorAddress: delegationRequest.fromAddress,
+          validatorSrcAddress: delegationRequest.fromAddress,
+          validatorDstAddress: delegationRequest.toAddress,
+          amount,
+        },
+      },
+    ];
+    const memo = "Redelegation from " + delegationRequest.fromAddress + " to " + delegationRequest.toAddress;
+
+    const response : any = await client.signAndBroadcast(accountData.address,
+      msgs, 
+      fee, 
+      memo
+    );
+
+    return response;
 }
 
+/**
+ * Undelegates a specified amount of tokens from a validator.
+ */
 async function createUndelegate(delegationRequest : any) {
-  return {}
+  try {
+    // Get the wallet (keys) object
+    const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+    
+    // Get the client object to interact with the blockchain
+    const currentState : any = await getPluginState();
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    
+    // Get the public address of the account
+    const accountData : AccountData = (await wallet.getAccounts())[0];
+    
+    // Format the amount
+    const amount : Coin = {denom : delegationRequest.denom, amount: delegationRequest.amount};
+
+    // Format the fee
+    const fee : StdFee =
+    {
+      amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
+      gas : currentState.gas,
+      granter : accountData.address,
+      payer : accountData.address
+    };
+    
+    // Create the undelegate message
+    const msgs = [
+      {
+        typeUrl: "/cosmos.staking.v1beta1.MsgUndelegate",
+        value: {
+          delegatorAddress: delegationRequest.fromAddress,
+          validatorAddress: currentState.validatorAddress,
+          amount,
+        },
+      },
+    ];
+
+    // Broadcast the transaction
+    const memo = "Undelegate"
+    const result = await client.signAndBroadcast(accountData.address, msgs, fee, memo);
+    return result;
+  }
+  catch(error) {
+    console.log("COSMOS-SNAP ", error);
+    return error;
+  } 
 }
 
-async function withdrawDelegationReward(delegationRequest : any) {
-  return {}
+/**
+ * Withdraws delegation rewards for a specific validator.
+ */
+async function withdrawDelegationReward(validatorAddress: string, denom: string) {
+  try {
+    // Get the wallet (keys) object
+    const wallet: DirectSecp256k1HdWallet = await getCosmosWallet();
+    
+    // Get the client object to interact with the blockchain
+    const currentState: any = await getPluginState();
+    const client: SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    
+    // Get the public address of the account
+    const accountData: AccountData = (await wallet.getAccounts())[0];
+    
+    // Format the fee
+    const fee: StdFee =
+    {
+      amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
+      gas : currentState.gas,
+      granter : accountData.address,
+      payer : accountData.address
+    };
+    
+    // Withdraw delegation rewards for the specified validator
+    const msgs = [
+      {
+        typeUrl: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+        value: {
+          delegatorAddress: accountData.address,
+          validatorAddress: validatorAddress,
+        },
+      },
+    ];
+    
+    // Make the transaction request to the network.
+    return await client.signAndBroadcast(accountData.address, msgs, fee);
+  }
+  catch(error) {
+    console.log("COSMOS-SNAP ", error);
+    return error;
+  } 
 }
 
 /**
