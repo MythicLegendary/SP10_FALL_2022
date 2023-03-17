@@ -158,7 +158,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       console.log("COSMOS-SNAP: Create Deposit.");
       return {}
       
-    case 'createVote':
+    case 'createVoteDeprecated':
       console.log("COSMOS-SNAP: Creating Vote.");
       return {}
       
@@ -423,6 +423,52 @@ async function createMultiSend(transactionRequest : any) {
       console.log("COSMOS-SNAP ", error);
       return error;
     } 
+}
+
+/**
+ * Fascilitate a vote in cosmjs.
+ */
+async function createVote( voteRequest : any) {
+  try {
+    // Get the wallet (keys) object
+    const wallet: DirectSecp256k1HdWallet = await getCosmosWallet();
+    
+    // Get the client object to interact with the blockchain
+    const currentState: any = await getPluginState();
+    const client: SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+
+    // Get the public address of the account
+    const accountData: AccountData = (await wallet.getAccounts())[0];
+
+    // Create the message to send to the blockchain
+    const voteMsg = {
+      proposalId: voteRequest.proposalId.toString(),
+      voter: accountData.address,
+      option: voteRequest.option,
+    };
+
+    // Create the message to send to the blockchain
+    const msg = {
+      typeUrl: "/cosmos.gov.v1beta1.MsgVote",
+      value: voteMsg,
+    };
+
+    // Format the fee.
+    const fee : StdFee =
+    {
+      amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
+      gas : currentState.gas,
+      granter : accountData.address,
+      payer : accountData.address
+    };
+
+    // Sign and broadcast the message
+    const result = await client.signAndBroadcast(accountData.address, [msg], fee, "Vote for " + voteRequest.proposalId);
+    console.log(result);
+    return result;
+  } catch (error) {
+    console.log("COSMOS-SNAP ", error);
+  }
 }
 
 /**
@@ -1141,7 +1187,7 @@ async function createDepositTx(proposalId : any, amount : any) {
   // return signedTx
 };
 
-function createVote(txContext :any, proposalId : any, option : any, denom : any) {
+function createVoteDeprecated(txContext :any, proposalId : any, option : any, denom : any) {
   const txSkeleton = createSkeleton(txContext, denom);
 
   const txMsg = {
@@ -1158,11 +1204,11 @@ function createVote(txContext :any, proposalId : any, option : any, denom : any)
   return txSkeleton;
 }
 
-async function createVoteTx(proposalId : any, option : any) {
+async function createVoteDeprecatedTx(proposalId : any, option : any) {
   const txContext = await createTxContext()
   const currentPluginState : any = await getPluginState()
 
-  const tx = await createVote(
+  const tx = await createVoteDeprecated(
     txContext,
     proposalId,
     option,
