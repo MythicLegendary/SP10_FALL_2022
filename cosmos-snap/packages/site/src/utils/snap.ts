@@ -81,50 +81,116 @@ async function sendNotification(methodName : string, response : any) {
         content = {
           prompt: "Login Unsuccessful",
           description : "Response For The Login Attempt",
-          textAreaContent : JSON.stringify(response)
+          textAreaContent : response.msg
           };
       }
       else {
         content = {
           prompt: "Login Successful!",
           description : "Response For The Login Attempt",
-          textAreaContent : JSON.stringify(response)
+          textAreaContent : response.msg
           };
       }
       break;
     }
     case 'setupPassword': {
+      if(response.setup) {
+        content = {
+          prompt: "Setting Up Password",
+          description : "Response From Setup : " + response.msg,
+          textAreaContent : "Password and Mnemonic Stored."
+          };
+      }
+      else {
+        content = {
+          prompt: "Setup Failed",
+          description : "",
+          textAreaContent : response.msg
+          };
+      }
+      break;
+    }
+    case 'getSnapState': {
+      let display = ""
+      for (const property in response) {
+        if (Object.prototype.hasOwnProperty.call(response, property)) {
+          display += `${property}: ${response[property]}`
+          display += '\n'
+        }
+      }
       content = {
-        prompt: "Setting Up Password",
-        description : "Response From Setup : " + response.msg,
-        textAreaContent : "Password and Mnemonic Stored."
+        prompt: "Configuration Data",
+        description : "",
+        textAreaContent : display
         };
-        break;
+      break;
+    }
+    case 'setConfig': {
+      let display = ""
+      for (const property in response) {
+        if (Object.prototype.hasOwnProperty.call(response, property)) {
+          display += `${property}: ${response[property]}`
+          display += '\n'
+        }
+      }
+      content = {
+        prompt: "Updated Configuration Data",
+        description : "",
+        textAreaContent : display
+        };
+      break;
     }
     case 'getAccountInfo': {
-      content = {
-        prompt: "Account Information",
-        description : "Account Information for : " + response.Account,
-        textAreaContent : JSON.stringify(response)
-        };
+        if(response.accountRetrieved) {
+          content = {
+            prompt: "Account Information",
+            description : "Account Information for : " + response.Account,
+            textAreaContent : "Amount of " + response.denom + ": " + response.amount
+            };
+        }
+        else {
+          content = {
+            prompt: "Account Retrieval failed",
+            description : "",
+            textAreaContent : response.msg
+            };
+        }
         break;
     }
     case 'getAccountGeneral': {
-      content = {
-        prompt: "Account Information",
-        description : "Account Information for : " + response.Account,
-        textAreaContent : JSON.stringify(response)
-        };
-        break;
+      if(response.accountRetrieved) {
+        content = {
+          prompt: "Account Information",
+          description : "Account Information for : " + response.Account,
+          textAreaContent : "Amount of " + response.denom + ": " + response.amount
+          };
+      }
+      else {
+        content = {
+          prompt: "Account Retrieval failed",
+          description : "",
+          textAreaContent : response.msg
+          };
+      }
+      break;
     }
     case 'createSend': {
-      response['rawLog'] = "[REMOVED FOR LENGTH]"
-      content = {
-        prompt: "Transaction Sent",
-        description : "Response For The Transaction",
-        textAreaContent : JSON.stringify(response)
-        };
-        break;
+      if(response.transactionSent) {
+        response['rawLog'] = "[REMOVED FOR LENGTH]"
+        content = {
+          prompt: "Transaction Sent",
+          description : "",
+          textAreaContent : response.msg
+          };
+      }
+      else {
+        content = {
+          prompt: "Transaction Not Sent",
+          description : "",
+          textAreaContent : response.msg
+          };
+      }
+      break;
     }
     case 'createMultiSend' : {
       response['rawLog'] = "[REMOVED FOR LENGTH]"
@@ -146,9 +212,9 @@ async function sendNotification(methodName : string, response : any) {
     }
     case 'clearWalletData': {
       content = {
-        prompt: "Wallet Data Clearted",
+        prompt: "Wallet Data Cleared",
         description : " ",
-        textAreaContent : JSON.stringify(response)
+        textAreaContent : ""
         };
         break;
     }

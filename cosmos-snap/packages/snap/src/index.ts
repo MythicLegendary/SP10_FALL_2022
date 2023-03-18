@@ -66,7 +66,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'setupPassword': {
       console.log("COSMOS-SNAP: Setting up new password for key encryption.");
-      // TODO: Init wallet data
       return setupPassword(request.params[0]['password'], request.params[0]['mnemonic']);
     }
 
@@ -184,16 +183,32 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
  * Logs in the user using the password. Updates the lastLogin field to be the current session number.
  */
 async function loginUser(password : string) {
-  const currentState : any = await getPluginState();
-  // Get the stored password
-  const storedPassword : string = await decrypt(currentState.password, await bip32EntropyPrivateKey());
-  // Compare the values
-  return {loginSuccessful : true, msg : "Login Sucessful"}
-  if(password === storedPassword) {
-    return {loginSuccessful : true, msg : "Login Sucessful"}
-  } 
-  else {
-    return {loginSuccessful : false, msg : "Login Failed: Password not correct."}
+  try {
+    const currentState : any = await getPluginState();
+    
+    // If there is no password yet.
+    if(currentState.password == null) {
+      return {msg : "No password stored; setup required.", loginSuccessful : false}
+    }
+
+    // If the user failed to enter a password
+    if(password == null || password == '') {
+      return {msg : "Password Required", loginSuccessful : false}
+    }
+
+    // Get the stored password
+    const storedPassword : string = await decrypt(currentState.password, await bip32EntropyPrivateKey());
+    // Compare the values
+    if(password === storedPassword) {
+      return {loginSuccessful : true, msg : "Login Sucessful"}
+    } 
+    else {
+      return {loginSuccessful : false, msg : "Login Failed: Password not correct."}
+    }
+  }
+  catch(e) {
+    console.log("COSMOS-SNAP: ", e);
+    return e;
   }
 }
 
@@ -209,9 +224,23 @@ async function getCosmosWallet() {
 
 /**
  * Sets up the new password used for verification
+ * Initializes the attributes of the wallet to empty.
  */
 async function setupPassword(password : string, mnemonic : string) {
   try {
+    // If the password is empty or null
+    if(password == null || password === '') {
+      return {msg: 'Password Required.', setup : false}
+    }
+    if(mnemonic == null || mnemonic === '') {
+      return {msg : 'Mnemonic required', setup : false}
+    }
+    // If invalid length mnemonic
+    const length = mnemonic.split(" ").length;
+    if(length !== 12 && length !== 24 && length !== 25) {
+      return {msg : 'Invalid Mnemonic Length' , setup : false}
+    }
+
     // Update the pluginState with the encrypted key and serialized wallet
   await updatePluginState(
     {
@@ -220,6 +249,7 @@ async function setupPassword(password : string, mnemonic : string) {
       password : await encrypt(password, await bip32EntropyPrivateKey())
 
     });
+  await clearConfigData();
   return {msg : "Successful serialization of wallet.", setup : true}
   }
   catch(error) {
@@ -287,15 +317,27 @@ async function getAccountInfo() {
     const currentState : any = await getPluginState();
     const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
     
+    // If the nodeUrl has not been set
+    if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+      return {msg : "Node URL required.", accountRetrieved : false}
+    }
+
     // Get the client object to interact with the blockchain
     const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
     
     // Get the public address of the account
     const accountData : AccountData = (await wallet.getAccounts())[0];
 
+    // If there is no default denom
+    if(currentState.denom == null || currentState.denom == '') {
+      return {msg : "Default denom required.", accountRetrieved : false}
+    }
+
     // Return result
     let result : any = await client.getBalance(accountData.address, currentState.denom);
     result['Account'] = accountData.address;
+    result['msg'] = "Account Details."
+    result['accountRetrieved'] = true;
     return result; 
   }
   catch(error) {
@@ -313,12 +355,26 @@ async function getAccountInfoGeneral(address : string, denom : string) {
     const currentState : any = await getPluginState();
     const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
     
+    // If the nodeUrl has not been set
+    if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+      return {msg : "Node URL required.", accountRetrieved : false}
+    }
     // Get the client object to interact with the blockchain
     const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
     
+    // If the denom is empty
+    if(denom == null || denom == '') {
+      return {msg : "Denom Required.", accountRetrieved : false}
+    }
+
+    // If the address is empty
+    if(address == null || address == '') {
+      return {msg : "Address Required.", accountRetrieved : false}
+    }
     // Return result
     let result : any = await client.getBalance(address, denom);
     result['Account'] = address;
+    result['accountRetrieved'] = true;
     return result; 
   }
   catch(error) {
@@ -337,14 +393,42 @@ async function createSend(transactionRequest : any) {
     
     // Get the client object to interact with the blockchain
     const currentState : any = await getPluginState();
+    
+    // If the nodeUrl has not been set
+    if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+      return {msg : "Node URL required.", transactionSent : false}
+    }
     const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
     
     // Get the public address of the account
     const accountData : AccountData = (await wallet.getAccounts())[0];
     
+    // If the recipient address, amount, or denom is missing
+    if(transactionRequest.recipientAddress == null || transactionRequest.recipientAddress == '') {
+      return {msg : "Recpient Address Required.", transactionSent : false}
+    }
+    if(transactionRequest.denom == null || transactionRequest.denom == '') {
+      return {msg : "Denom Required.", transactionSent : false}
+    }
+    if(transactionRequest.amount == null || transactionRequest.amount == '') {
+      return {msg : "Amount Required.", transactionSent : false}
+    }
+    if(transactionRequest.memo == null || transactionRequest.memo == '') {
+      return {msg : "Memo Required.", transactionSent : false}
+    }
     // Format the amount
     const amount : Coin[] = [{denom : transactionRequest.denom, amount: transactionRequest.amount}];
 
+    // If the fee is not set
+    if(currentState.feeDenom == null || currentState.feeDenom == '') {
+      return {msg : "Fee Denom not set.", transactionSent : false}
+    }
+    if(currentState.feeAmount == null || currentState.feeAmount == '') {
+      return {msg : "Fee Amount not set.", transactionSent : false}
+    }
+    if(currentState.gas == null || currentState.gas == '') {
+      return {msg : "Gas not set.", transactionSent : false}
+    }
     // Format the fee
     const fee : StdFee =
     {
@@ -354,16 +438,21 @@ async function createSend(transactionRequest : any) {
       payer : accountData.address
     };
     
+    
     console.log(transactionRequest, accountData.address);
     
     // Make the transaction request to the network.
-    return await client.sendTokens(
+    let response : any  = await client.sendTokens(
       accountData.address,
       transactionRequest.recipientAddress,
       amount, 
       fee,
       transactionRequest.memo
     );
+
+    response['msg'] = transactionRequest.amount + " " + transactionRequest.denom + " sent to " + transactionRequest.recipientAddress;
+    response['transactionSent'] = true; 
+    return response;
   }
   catch(error) {
     console.log("COSMOS-SNAP ", error);
@@ -431,10 +520,16 @@ async function createMultiSend(transactionRequest : any) {
  */
 async function getPluginState()
 {
-    return await wallet.request({
+    const currentState : any =  await wallet.request({
     method: 'snap_manageState',
     params: ['get'],
-  });
+    });
+
+    // If null return blank object.
+    if(currentState == null) {
+      return {}
+    } 
+    return currentState;
 }
 
 /**
@@ -455,11 +550,11 @@ async function clearConfigData() {
   const currentState : any = await getPluginState();
   currentState.nodeUrl  = "";
   currentState.feeDenom = ""
-  currentState.feeAmount= "0";
+  currentState.feeAmount= "";
   currentState.denom = "";
   currentState.memo = "";
   currentState.prefix = ""; 
-  currentState.gas = "0"
+  currentState.gas = ""
   await updatePluginState(currentState);
 
   return {dataCleared : true};

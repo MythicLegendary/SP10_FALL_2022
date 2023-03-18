@@ -433,7 +433,7 @@ const Index = () => {
           <CardContainer>
             <Card
               content={{
-                title: 'ClEAR DATA',
+                title: 'CLEAR DATA',
                 description:
                   'Clear all the configuration data.',
                 inputs: [
