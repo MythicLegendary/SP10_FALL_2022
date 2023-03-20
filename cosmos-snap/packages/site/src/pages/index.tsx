@@ -291,11 +291,11 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'GET REWARDS',
+                title: 'VIEW ADDRESSES',
                 description:
-                  '',
+                  'View the addresses saved',
                 inputs: [],
-                rpcRequest: 'getRewards'
+                rpcRequest: 'viewAddresses'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={
@@ -306,12 +306,11 @@ const Index = () => {
             />
           </CardContainer>
         </Tab>
-
         <Tab title="Configurations">
           <CardContainer>
             <Card
               content={{
-                title: 'SET SNAP CONFIG',
+                title: 'SET NODE URL',
                 description:
                   'Set the URL for the Cosmos Blockchain Host.',
                 inputs: [
@@ -328,7 +327,7 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'SET SNAP CONFIG',
+                title: 'SET DEFAULT DENOM',
                 description:
                   'Set the default denom used for your account balance.',
                 inputs: [
@@ -345,7 +344,7 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'SET SNAP CONFIG',
+                title: 'SET FEE PARAMETERS',
                 description:
                   'Set the parameters for formatting transaction fees.',
                 inputs: [
@@ -364,14 +363,32 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'SET SNAP CONFIG',
+                title: 'SET MEMO AND PREFIX',
                 description:
-                  'Set the memo and prefix.',
+                  '',
                 inputs: [
                   "memo",
                   "prefix"
                 ],
                 rpcRequest: 'setConfig'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'ADD ADDRESSES',
+                description:
+                  'Add user addresses to make sending transactions simpler.',
+                inputs: [
+                  "address",
+                  "name"
+                ],
+                rpcRequest: 'addAddress'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={

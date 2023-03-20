@@ -31,6 +31,11 @@ interface EncodeObject {
   };
 }
 
+interface DictionaryAccount {
+  address : string,
+  name : string
+}
+
 /**
  * Get a message from the origin. For demonstration purposes only.
  *
@@ -96,6 +101,16 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
         ...updates
       })
       return filterResponse(await getPluginState());
+    
+    case 'addAddress': {
+      console.log("COSMOS-SNAP: Adding a new name-address pair to the dictionary");
+      return await addAddress(request.params[0].name, request.params[0].address);
+    }
+
+    case 'viewAddresses' : {
+      console.log("COSMOS-SNAP: Return the dictionary of addresses set by the user.");
+      return {dictionary  : (await getPluginState()).dictionary}
+    }
 
     case 'clearWalletData':
       console.log("COSMOS-SNAP: Clearing the config data.");
@@ -320,6 +335,22 @@ async function bip32EntropyPrivateKey(){
     },
   })
   return entropy.privateKey;
+}
+
+/**
+ * Adds a new address to the dictionary.
+ */
+async function addAddress(name : string, address : string) {
+  if(name == null || name == '') {
+    return {msg : "Name Required." , added : false}
+  }
+  if(address == null || address == '') {
+    return {msg : "Address Required." , added : false}
+  }
+  const currentState : any = await getPluginState();
+  currentState.dictionary.push({name : name, address : address});
+  await updatePluginState(currentState);
+  return {msg : name + "-" + address + " was added to the dictionary." , added : true}
 }
 
 /**
@@ -558,7 +589,7 @@ async function updatePluginState(state: unknown)
 }
 
 /**
- * Clear the configuration data.
+ * Clear the configuration data. Also used to initialize it.
  */
 async function clearConfigData() {
   const currentState : any = await getPluginState();
@@ -569,6 +600,7 @@ async function clearConfigData() {
   currentState.memo = "";
   currentState.prefix = ""; 
   currentState.gas = ""
+  currentState.dictionary = new Array<DictionaryAccount>();
   await updatePluginState(currentState);
 
   return {dataCleared : true};
@@ -585,7 +617,11 @@ function filterResponse(currentState : any) {
   let filtered2 = Object.assign({}, ...
     Object.entries(filtered).filter(([k,v]) => k != 'password').map(([k,v]) => ({[k]:v}))
   );
-  return filtered2;
+
+  let filtered3 = Object.assign({}, ...
+    Object.entries(filtered2).filter(([k,v]) => k != 'dictionary').map(([k,v]) => ({[k]:v}))
+  );
+  return filtered3;
 }
 
 /**
