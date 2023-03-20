@@ -226,6 +226,39 @@ async function sendNotification(methodName : string, response : any) {
         };
         break;
     }
+    case 'addAddress': {
+      if(response.added) {
+        content = {
+          prompt: "Address Added",
+          description : "",
+          textAreaContent : response.msg
+          };
+          break;
+      }
+      else {
+        content = {
+          prompt: "Address Not Added",
+          description : "",
+          textAreaContent : response.msg
+          };
+          break;
+      }
+    }
+
+    case 'viewAddresses': {
+      const dictionary : Array<any> = response.dictionary;
+      let msg = "";
+      for(let i = 0; i < dictionary.length; i ++) {
+        msg += dictionary[i].name + "-" + dictionary[i].address + "\n\n";
+      }
+      content = {
+        prompt: "Addresses",
+        description : "",
+        textAreaContent : msg
+        };
+        break;
+    }
+
     case 'clearWalletData': {
       content = {
         prompt: "Wallet Data Cleared",

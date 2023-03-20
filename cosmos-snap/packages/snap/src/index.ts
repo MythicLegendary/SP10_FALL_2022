@@ -31,6 +31,11 @@ interface EncodeObject {
   };
 }
 
+interface DictionaryAccount {
+  address : string,
+  name : string
+}
+
 /**
  * Get a message from the origin. For demonstration purposes only.
  *
@@ -96,6 +101,16 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
         ...updates
       })
       return filterResponse(await getPluginState());
+    
+    case 'addAddress': {
+      console.log("COSMOS-SNAP: Adding a new name-address pair to the dictionary");
+      return await addAddress(request.params[0].name, request.params[0].address);
+    }
+
+    case 'viewAddresses' : {
+      console.log("COSMOS-SNAP: Return the dictionary of addresses set by the user.");
+      return {dictionary  : (await getPluginState()).dictionary}
+    }
 
     case 'clearWalletData':
       console.log("COSMOS-SNAP: Clearing the config data.");
@@ -323,6 +338,31 @@ async function bip32EntropyPrivateKey(){
 }
 
 /**
+ * Adds a new address to the dictionary.
+ */
+async function addAddress(name : string, address : string) {
+  if(name == null || name == '') {
+    return {msg : "Name Required." , added : false}
+  }
+  if(address == null || address == '') {
+    return {msg : "Address Required." , added : false}
+  }
+  const currentState : any = await getPluginState();
+  // if this name already exists
+  const dictionary : Array<DictionaryAccount> = currentState.dictionary;
+  for(let i = 0; i < dictionary.length; i ++) {
+    if(dictionary[i].name == name) {
+      return {msg : "Name already used." , added : false}
+    }
+  }
+
+  // Otherwise, add the new pairing
+  currentState.dictionary.push({name : name, address : address});
+  await updatePluginState(currentState);
+  return {msg : name + "-" + address + " was added to the dictionary." , added : true}
+}
+
+/**
  * Retrieves the current currencies associated with the account, with the currency specified in the configuration.
  */
 async function getAccountInfo() {
@@ -385,8 +425,16 @@ async function getAccountInfoGeneral(address : string, denom : string) {
     if(address == null || address == '') {
       return {msg : "Address Required.", accountRetrieved : false}
     }
+
+    // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
+    let searchAddress : string = address;
+    const possiblePairing : any  = (await getAddressFromName(searchAddress))
+    if(possiblePairing.pairing) {
+      searchAddress = possiblePairing.address;
+    }
+    
     // Return result
-    let result : any = await client.getBalance(address, denom);
+    let result : any = await client.getBalance(searchAddress, denom);
     result['Account'] = address;
     result['accountRetrieved'] = true;
     return result; 
@@ -455,10 +503,17 @@ async function createSend(transactionRequest : any) {
     
     console.log(transactionRequest, accountData.address);
     
+    // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
+    let recipientAddress : string = transactionRequest.recipientAddress;
+    const possiblePairing : any  = (await getAddressFromName(recipientAddress))
+    if(possiblePairing.pairing) {
+      recipientAddress = possiblePairing.address;
+    }
+
     // Make the transaction request to the network.
     let response : any  = await client.sendTokens(
       accountData.address,
-      transactionRequest.recipientAddress,
+      recipientAddress,
       amount, 
       fee,
       transactionRequest.memo
@@ -504,11 +559,19 @@ async function createMultiSend(transactionRequest : any) {
       for (let i = 0; i < transactions.length; i ++) {
         // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
         const transaction : string[] = transactions[i].split("-");
+        
+        // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
+        let recipientAddress : string = transaction[0];
+        const possiblePairing : any  = (await getAddressFromName(recipientAddress))
+        if(possiblePairing.pairing) {
+          recipientAddress = possiblePairing.address;
+        }
+
         let newMessage : EncodeObject = {
           typeUrl : "/cosmos.bank.v1beta1.MsgSend",
           value : {
             fromAddress : accountData.address,
-            toAddress : transaction[0],
+            toAddress : recipientAddress,
             amount : [{amount : transaction[1], denom : transaction[2]}]
           }
         };
@@ -558,7 +621,7 @@ async function updatePluginState(state: unknown)
 }
 
 /**
- * Clear the configuration data.
+ * Clear the configuration data. Also used to initialize it.
  */
 async function clearConfigData() {
   const currentState : any = await getPluginState();
@@ -569,6 +632,7 @@ async function clearConfigData() {
   currentState.memo = "";
   currentState.prefix = ""; 
   currentState.gas = ""
+  currentState.dictionary = new Array<DictionaryAccount>();
   await updatePluginState(currentState);
 
   return {dataCleared : true};
@@ -585,7 +649,25 @@ function filterResponse(currentState : any) {
   let filtered2 = Object.assign({}, ...
     Object.entries(filtered).filter(([k,v]) => k != 'password').map(([k,v]) => ({[k]:v}))
   );
-  return filtered2;
+
+  let filtered3 = Object.assign({}, ...
+    Object.entries(filtered2).filter(([k,v]) => k != 'dictionary').map(([k,v]) => ({[k]:v}))
+  );
+  return filtered3;
+}
+
+/**
+ * Seaches the dictionary for a name match, returns the address.
+ */
+async function getAddressFromName(name : string) {
+  const currentState : any = await getPluginState();
+  const dictionary : Array<DictionaryAccount> = currentState.dictionary;
+  for(let i = 0; i < dictionary.length; i ++) {
+    if(dictionary[i].name == name) {
+      return {address : dictionary[i].address, pairing : true}
+    }
+  }
+  return {pairing : false}
 }
 
 /**
