@@ -194,7 +194,7 @@ const Index = () => {
                 inputs: ["password"],
                 rpcRequest: 'login'
               }}
-              disabled={!state.installedSnap}
+              disabled={!state.installedSnap || state.isLoggedIn}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -209,7 +209,22 @@ const Index = () => {
                 inputs: ["mnemonic", "password"],
                 rpcRequest: 'setupPassword'
               }}
-              disabled={!state.installedSnap}
+              disabled={!state.installedSnap || state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Logout',
+                description:
+                  'Logout of the snap.',
+                inputs: [],
+                rpcRequest: 'logout'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -335,24 +350,8 @@ const Index = () => {
                   'Set the parameters for formatting transaction fees.',
                 inputs: [
                   "feeDenom",
-                  "feeAmount"
-                ],
-                rpcRequest: 'setConfig'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'SET SNAP CONFIG',
-                description:
-                  'Set the gas for transactions',
-                inputs: [
-                  "gas",
+                  "feeAmount",
+                  "gas"
                 ],
                 rpcRequest: 'setConfig'
               }}
@@ -386,22 +385,6 @@ const Index = () => {
 
         <Tab title="Transactions and Delegations">
           <CardContainer>
-            <Card
-              content={{
-                title: 'CLEAR DATA',
-                description:
-                  'Clear all the configuration data.',
-                inputs: [
-                ],
-                rpcRequest: 'clearWalletData'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
             <Card
               content={{
                 title: 'Create Send',
@@ -484,6 +467,41 @@ const Index = () => {
                   '',
                 inputs: ['rewards'],
                 rpcRequest: 'withdrawDelegationReward'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+          </CardContainer>
+        </Tab>
+        <Tab title="Data and Account Management.">
+          <CardContainer>
+          <Card
+              content={{
+                title: 'CLEAR DATA',
+                description:
+                  'Clear all the configuration data.',
+                inputs: [
+                ],
+                rpcRequest: 'clearWalletData'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Remove Account',
+                description:
+                  'Deletes all data, including keys.',
+                inputs: [],
+                rpcRequest: 'removeAccount'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={

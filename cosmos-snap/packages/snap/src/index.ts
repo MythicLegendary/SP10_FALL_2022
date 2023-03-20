@@ -74,6 +74,20 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       return loginUser(request.params[0]['password']);
     }
     
+    case 'logout' : {
+      console.log("COSMOS-SNAP: Logging out user- no backend run.");
+      return {}
+    }
+    
+    case 'removeAccount': {
+      console.log("COSMOS-SNAP: Removing Account");
+      // Remove All Data, Including Keys
+      await updatePluginState({});
+      // Set the parameters to the defaults
+      await clearConfigData();
+      return {msg : "All Configuration Data Cleared, Keys Removed."}
+    }
+
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
       const updates  : any = await updateConfiguration(request);

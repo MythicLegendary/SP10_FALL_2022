@@ -210,6 +210,22 @@ async function sendNotification(methodName : string, response : any) {
         };
         break;
     }
+    case 'removeAccount' : {
+      content = {
+        prompt: "Keys Removed.",
+        description : "",
+        textAreaContent : response.message
+        };
+        break;
+    }
+    case 'logout' : {
+      content = {
+        prompt: "Logout Successful.",
+        description : "",
+        textAreaContent : ""
+        };
+        break;
+    }
     case 'clearWalletData': {
       content = {
         prompt: "Wallet Data Cleared",

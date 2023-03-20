@@ -84,6 +84,12 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
         payload: response.loginSuccessful
       });
     }
+    if(content.rpcRequest == 'removeAccount' || content.rpcRequest == 'logout') {
+      dispatch({
+        type: MetamaskActions.SetLogin,
+        payload: false
+      });
+    }
   }
 
   return (
