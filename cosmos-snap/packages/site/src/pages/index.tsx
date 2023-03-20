@@ -276,51 +276,6 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'GET NETWORK STATUS',
-                description:
-                  '',
-                inputs: [],
-                rpcRequest: 'getNetworkStatus'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'GET BANDWIDTH',
-                description:
-                  '',
-                inputs: [],
-                rpcRequest: 'getBandwidth'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'GET INDEX STATS',
-                description:
-                  '',
-                inputs: [],
-                rpcRequest: 'getIndexStats'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
                 title: 'GET REWARDS',
                 description:
                   '',
@@ -529,81 +484,6 @@ const Index = () => {
                   '',
                 inputs: ['rewards'],
                 rpcRequest: 'withdrawDelegationReward'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Create Text Proposal',
-                description:
-                  '',
-                inputs: ['title', 'description', 'deposit'],
-                rpcRequest: 'createTextProposal'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Create Community Pool Spend',
-                description:
-                  '',
-                inputs: ['title', 'description', 'recipient', 'deposit', 'amount'],
-                rpcRequest: 'createCommunityPoolSpend'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Create Params Change',
-                description:
-                  '',
-                inputs: ['title', 'description', 'changes', 'deposit'],
-                rpcRequest: 'createParamsChange'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Create Deposit',
-                description:
-                  '',
-                inputs: ['id', 'amount'],
-                rpcRequest: 'createDeposit'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Create Vote',
-                description:
-                  '',
-                inputs: ['id', 'option'],
-                rpcRequest: 'createVote'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={
