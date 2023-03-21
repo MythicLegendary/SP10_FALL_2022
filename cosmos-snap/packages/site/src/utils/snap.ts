@@ -226,6 +226,14 @@ async function sendNotification(methodName : string, response : any) {
         };
         break;
     }
+    case 'createAccount': {
+      content = {
+        prompt: "New Account Information",
+        description : "Write Down Somewhere Safe- On paper.",
+        textAreaContent : response.msg
+        };
+        break;
+    }
     case 'addAddress': {
       if(response.added) {
         content = {

@@ -203,6 +203,21 @@ const Index = () => {
             />
             <Card
               content={{
+                title: 'Create a new Account',
+                description:
+                  'Generates a new set of keys, and adds them to the blockchain. Configurations required to create a new account.',
+                inputs: ['nodeUrl', 'feeAmount', 'feeDenom', 'gas'],
+                rpcRequest: 'createAccount'
+              }}
+              disabled={!state.installedSnap || state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
                 title: 'Setup Account',
                 description:
                   'Enter mnemonic and a new password to setup or reset your account.',

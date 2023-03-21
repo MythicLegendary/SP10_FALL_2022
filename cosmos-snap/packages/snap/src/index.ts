@@ -11,7 +11,8 @@ import { caesar, rot13 } from "simple-cipher-js";
 import crypto from 'crypto';
 
 import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
-import { AccountData, coins} from "@cosmjs/launchpad";
+import { AccountData, coins, Secp256k1HdWallet} from "@cosmjs/launchpad";
+import {Bip39, Random} from "@cosmjs/crypto";
 import { Coin, DirectSecp256k1HdWallet, makeAuthInfoBytes } from "@cosmjs/proto-signing";
 import { SigningStargateClient, StargateClientOptions, SigningStargateClientOptions, GasPrice, StdFee } from "@cosmjs/stargate";
 //will need further imports to ensure!
@@ -84,6 +85,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       return {}
     }
     
+    case 'createAccount' : {
+      console.log("COSMOS-SNAP: Creating a new account");
+      return await createAccount(request.params[0].nodeUrl, 
+        request.params[0].feeDenom, 
+        request.params[0].feeAmount, 
+        request.params[0].gas
+      );
+    }
+
     case 'removeAccount': {
       console.log("COSMOS-SNAP: Removing Account");
       // Remove All Data, Including Keys
@@ -125,16 +135,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       return await getAccountInfoGeneral(request.params[0].address, request.params[0].denom);
 
     case 'getStatus':
-      console.log("COSMOS-SNAP: Getting status.");
-      return getStatus();
-    
-    case 'getBandwidth':
-      console.log("COSMOS-SNAP: Getting bandwidth.");
-      pubKey = await getPubKey()
-      account = getAccount(pubKey)
-      return await getAccountBandwidth(account)
-    
-    case 'getIndexStats':
         console.log("COSMOS-SNAP: Getting index stats.");
         return await getIndexStats()
     
@@ -170,26 +170,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       console.log("COSMOS-SNAP: Creating Withdrawal Delegation Reward");
       return {}
 
-    case 'createTextProposal':
-      console.log("COSMOS-SNAP: Creating Text Proposal");
-      return {}
-
-    case 'createCommunityPoolSpend':
-      console.log("COSMOS-SNAP: Creating Community Pool Spend.");
-      return {}
-
-    case 'createParamsChangeProposal':
-      console.log("COSMOS-SNAP: Create Params Change Proposal.");
-      return {}
-      
-    case 'createDeposit':
-      console.log("COSMOS-SNAP: Create Deposit.");
-      return {}
-      
-    case 'createVote':
-      console.log("COSMOS-SNAP: Creating Vote.");
-      return {}
-      
     case 'displayNotification':
       return wallet.request({
         method: 'snap_confirm',
@@ -241,6 +221,56 @@ async function loginUser(password : string) {
   }
 }
 
+/**
+ * Generates a new acccount.
+ */
+async function createAccount(nodeUrl : string, feeDenom : string, feeAmount : string, gas : string) {
+  try {
+    // Generate a random mnemonic
+    const mnemonic : string = Bip39.encode(Random.getBytes(16)).toString();
+
+    // // Create a wallet and client object
+    // const wallet : Secp256k1HdWallet = await Secp256k1HdWallet.fromMnemonic(mnemonic);
+
+    
+    // // Get the public address of the account
+    // const accountData : AccountData = (await wallet.getAccounts())[0];
+    
+    // // Get the signing client
+    // const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(nodeUrl, wallet);
+
+    // // Format the fee
+    // const fee : StdFee =
+    // {
+    //   amount : [{denom : feeDenom, amount : feeAmount}],
+    //   gas : gas,
+    //   granter : accountData.address,
+    //   payer : accountData.address
+    // };
+    
+    // const msg : any = {
+    //   type: "cosmos-sdk/MsgCreateValidator",
+    //   value: {
+    //   }
+    // };
+
+    // return await client.signAndBroadcast(
+    //   accountData.address,
+    //   msg,
+    //   fee,
+    //   "Initial Transaction"
+    // );
+    return {msg : "Here is the mnemonic: " + mnemonic}
+  }
+  catch(e) {
+    console.log("COSMOS-SNAP: ", e);
+    return e;
+  }
+} 
+
+/**
+ * Returns the cosmos wallet associated with stored mnemonic. 
+ */
 async function getCosmosWallet() {
   const currentState : any = await getPluginState();
 
@@ -499,10 +529,7 @@ async function createSend(transactionRequest : any) {
       granter : accountData.address,
       payer : accountData.address
     };
-    
-    
-    console.log(transactionRequest, accountData.address);
-    
+        
     // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
     let recipientAddress : string = transactionRequest.recipientAddress;
     const possiblePairing : any  = (await getAddressFromName(recipientAddress))
