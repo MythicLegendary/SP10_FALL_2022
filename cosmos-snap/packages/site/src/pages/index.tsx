@@ -4,16 +4,19 @@ import { MetamaskActions, MetaMaskContext } from '../hooks';
 import {
   connectSnap,
   getSnap,
-  sendHello,
+  sendSnapRPC,
   shouldDisplayReconnectButton,
 } from '../utils';
 import {
   ConnectButton,
   InstallFlaskButton,
   ReconnectButton,
-  SendHelloButton,
-  Card,
+  SubmitButton,
+  Card
 } from '../components';
+
+import Tabs from "../components/Tabs"
+import Tab from "../components/Tab"
 
 const Container = styled.div`
   display: flex;
@@ -71,7 +74,6 @@ const Notice = styled.div`
   margin-top: 2.4rem;
   max-width: 60rem;
   width: 100%;
-
   & > * {
     margin: 0;
   }
@@ -117,100 +119,417 @@ const Index = () => {
     }
   };
 
-  const handleSendHelloClick = async () => {
-    try {
-      await sendHello();
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
   return (
     <Container>
       <Heading>
-        Welcome to <Span>template-snap</Span>
+        COSMOS SNAP <Span>DEV MODE</Span>
       </Heading>
       <Subtitle>
-        Get started by editing <code>src/index.ts</code>
+        Edit this site at <code>src/pages/index.tsx</code>
       </Subtitle>
-      <CardContainer>
-        {state.error && (
-          <ErrorMessage>
-            <b>An error happened:</b> {state.error.message}
-          </ErrorMessage>
-        )}
-        {!state.isFlask && (
-          <Card
-            content={{
-              title: 'Install',
-              description:
-                'Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.',
-              button: <InstallFlaskButton />,
-            }}
-            fullWidth
-          />
-        )}
-        {!state.installedSnap && (
-          <Card
-            content={{
-              title: 'Connect',
-              description:
-                'Get started by connecting to and installing the example snap.',
-              button: (
-                <ConnectButton
-                  onClick={handleConnectClick}
-                  disabled={!state.isFlask}
-                />
-              ),
-            }}
-            disabled={!state.isFlask}
-          />
-        )}
-        {shouldDisplayReconnectButton(state.installedSnap) && (
-          <Card
-            content={{
-              title: 'Reconnect',
-              description:
-                'While connected to a local running snap this button will always be displayed in order to update the snap if a change is made.',
-              button: (
-                <ReconnectButton
-                  onClick={handleConnectClick}
-                  disabled={!state.installedSnap}
-                />
-              ),
-            }}
-            disabled={!state.installedSnap}
-          />
-        )}
-        <Card
-          content={{
-            title: 'Send Hello message',
-            description:
-              'Display a custom message within a confirmation screen in MetaMask.',
-            button: (
-              <SendHelloButton
-                onClick={handleSendHelloClick}
+
+      <Tabs>
+        <Tab title="Setup">
+          <CardContainer>
+            {state.error && (
+              <ErrorMessage>
+                <b>An error happened:</b> {state.error.message}
+              </ErrorMessage>
+            )}
+            {!state.isFlask && (
+              <Card
+                content={{
+                  title: 'Install',
+                  description:
+                    'Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.',
+                  inputs: [],
+                  rpcRequest: '',
+                  button: <InstallFlaskButton />,
+                }}
+                disabled={false}
+                fullWidth
+              />
+            )}
+            {!state.installedSnap && (
+              <Card
+                content={{
+                  title: 'Connect',
+                  description:
+                    'Get started by connecting to and installing the example snap.',
+                  inputs: [],
+                  rpcRequest: '',
+                  button: (
+                    <ConnectButton
+                      onClick={handleConnectClick}
+                      disabled={!state.isFlask}
+                    />
+                  ),
+                }}
+                disabled={!state.isFlask}
+              />
+            )}
+            {shouldDisplayReconnectButton(state.installedSnap) && (
+              <Card
+                content={{
+                  title: 'Reconnect',
+                  description:
+                    'While connected to a local running snap this button will always be displayed in order to update the snap if a change is made.',
+                  inputs: [],
+                  rpcRequest: '',
+                  button: (
+                    <ReconnectButton
+                      onClick={handleConnectClick}
+                      disabled={!state.installedSnap}
+                    />
+                  ),
+                }}
                 disabled={!state.installedSnap}
               />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Notice>
-          <p>
-            Please note that the <b>snap.manifest.json</b> and{' '}
-            <b>package.json</b> must be located in the server root directory and
-            the bundle must be hosted at the location specified by the location
-            field.
-          </p>
-        </Notice>
-      </CardContainer>
+            )}
+            <Card
+              content={{
+                title: 'Login With Password',
+                description:
+                  'Enter Password To Unlock Other Functions',
+                inputs: ["password"],
+                rpcRequest: 'login'
+              }}
+              disabled={!state.installedSnap || state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Setup Account',
+                description:
+                  'Enter mnemonic and a new password to setup or reset your account.',
+                inputs: ["mnemonic", "password"],
+                rpcRequest: 'setupPassword'
+              }}
+              disabled={!state.installedSnap || state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Logout',
+                description:
+                  'Logout of the snap.',
+                inputs: [],
+                rpcRequest: 'logout'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+          </CardContainer>
+        </Tab>
+
+        <Tab title="Wallet and Network Information">
+          <CardContainer>
+            {state.error && (
+              <ErrorMessage>
+                <b>An error happened:</b> {state.error.message}
+              </ErrorMessage>
+            )}
+
+            <Card
+              content={{
+                title: 'GET SNAP STATE',
+                description:
+                  '',
+                inputs: [],
+                rpcRequest: 'getSnapState'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+
+            <Card
+              content={{
+                title: 'GET ACCOUNT INFO',
+                description:
+                  'Retrieve the balance of the default coin for your account.',
+                inputs: [],
+                rpcRequest: 'getAccountInfo'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+
+            <Card
+              content={{
+                title: 'GET ACCOUNT GENERAL',
+                description:
+                  'Retrieve the balance of a partiuclar coin at a particular address.',
+                inputs: ['denom', 'address'],
+                rpcRequest: 'getAccountGeneral'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'VIEW ADDRESSES',
+                description:
+                  'View the addresses saved',
+                inputs: [],
+                rpcRequest: 'viewAddresses'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+          </CardContainer>
+        </Tab>
+        <Tab title="Configurations">
+          <CardContainer>
+            <Card
+              content={{
+                title: 'SET NODE URL',
+                description:
+                  'Set the URL for the Cosmos Blockchain Host.',
+                inputs: [
+                  "nodeUrl",
+                ],
+                rpcRequest: 'setConfig'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'SET DEFAULT DENOM',
+                description:
+                  'Set the default denom used for your account balance.',
+                inputs: [
+                  "denom",
+                ],
+                rpcRequest: 'setConfig'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'SET FEE PARAMETERS',
+                description:
+                  'Set the parameters for formatting transaction fees.',
+                inputs: [
+                  "feeDenom",
+                  "feeAmount",
+                  "gas"
+                ],
+                rpcRequest: 'setConfig'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'SET MEMO AND PREFIX',
+                description:
+                  '',
+                inputs: [
+                  "memo",
+                  "prefix"
+                ],
+                rpcRequest: 'setConfig'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'ADD ADDRESSES',
+                description:
+                  'Add user addresses to make sending transactions simpler.',
+                inputs: [
+                  "address",
+                  "name"
+                ],
+                rpcRequest: 'addAddress'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+          </CardContainer>
+        </Tab>
+
+        <Tab title="Transactions and Delegations">
+          <CardContainer>
+            <Card
+              content={{
+                title: 'Create Send',
+                description:
+                  '',
+                inputs: ['recipientAddress', 'amount', 'denom', 'memo'],
+                rpcRequest: 'createSend'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Create MultiSend',
+                description:
+                  'Enter transaction like such: <address>-<amount>-<denom> and separate with a single space',
+                inputs: ['inputs', 'memo'],
+                rpcRequest: 'createMultiSend'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Create Delegate',
+                description:
+                  '',
+                inputs: ['to', 'amount'],
+                rpcRequest: 'createDelegate'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Create Redelegate',
+                description:
+                  '',
+                inputs: ['from', 'to', 'amount'],
+                rpcRequest: 'createRedelegate'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Create Undelegate',
+                description:
+                  '',
+                inputs: ['from', 'amount'],
+                rpcRequest: 'createUndelegate'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Withdraw Delegation Reward',
+                description:
+                  '',
+                inputs: ['rewards'],
+                rpcRequest: 'withdrawDelegationReward'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+          </CardContainer>
+        </Tab>
+        <Tab title="Data and Account Management.">
+          <CardContainer>
+          <Card
+              content={{
+                title: 'CLEAR DATA',
+                description:
+                  'Clear all the configuration data.',
+                inputs: [
+                ],
+                rpcRequest: 'clearWalletData'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Remove Account',
+                description:
+                  'Deletes all data, including keys.',
+                inputs: [],
+                rpcRequest: 'removeAccount'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+          </CardContainer>
+        </Tab>
+      </Tabs>
     </Container>
   );
 };

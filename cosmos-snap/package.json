@@ -53,16 +53,22 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
+    "@cosmjs/cosmwasm-stargate": "^0.29.5",
+    "@cosmjs/launchpad": "^0.27.1",
+    "@cosmjs/stargate": "^0.29.5",
     "@ethersproject/abstract-provider": "^5.7.0",
     "@metamask/detect-provider": "^2.0.0",
     "@metamask/key-tree": "^6.2.1",
+    "@metamask/snap-controllers": "^0.23.0",
     "@metamask/snap-types": "^0.23.0",
     "@metamask/snaps-cli": "^0.28.0",
     "bech32": "^2.0.0",
+    "crypto": "^1.0.1",
     "crypto-js": "^4.1.1",
     "ripemd160": "^2.0.2",
     "secp256k1": "^5.0.0",
     "sha256": "^0.2.0",
+    "simple-cipher-js": "^0.0.7",
     "web3": "^1.8.2"
   }
 }
