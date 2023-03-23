@@ -22,6 +22,7 @@ export const App: FunctionComponent<AppProps> = ({ children }) => {
 
   return (
     <>
+    
       <GlobalStyle />
       <Wrapper>
         <Header handleToggleClick={toggleTheme} />

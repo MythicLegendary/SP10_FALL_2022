@@ -15,6 +15,8 @@ import {
   Card,
 } from '../components';
 
+import {UserAuth} from '../hooks/AuthContext'
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -101,6 +103,16 @@ const ErrorMessage = styled.div`
 
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
+
+  const { googleSignIn } = UserAuth();
+
+  const handleGoogleSignIn =async () => {
+    try{
+      await googleSignIn();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleConnectClick = async () => {
     try {
@@ -190,7 +202,7 @@ const Index = () => {
               'Display a custom message within a confirmation screen in MetaMask.',
             button: (
               <SendHelloButton
-                onClick={handleSendHelloClick}
+                onClick={handleGoogleSignIn}
                 disabled={!state.installedSnap}
               />
             ),
