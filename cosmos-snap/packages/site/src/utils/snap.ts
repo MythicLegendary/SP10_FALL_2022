@@ -193,12 +193,22 @@ async function sendNotification(methodName : string, response : any) {
       break;
     }
     case 'createMultiSend' : {
-      content = {
-        prompt: "Transaction Sent",
-        description : "Response For The Transaction",
-        textAreaContent : response.msg
-        };
-        break;
+        if(response.transactionSent) {
+          content = {
+            prompt: "Transaction Sent",
+            description : "",
+            textAreaContent : response.msg
+            };
+            break;
+        }
+        else {
+          content = {
+            prompt: "Transaction Failed",
+            description : "",
+            textAreaContent : response.msg
+            };
+            break;
+        }
     }
     case 'error': {
       content = {

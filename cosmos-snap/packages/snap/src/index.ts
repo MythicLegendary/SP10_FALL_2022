@@ -2,7 +2,7 @@ import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from '../.
 import detectEthereumProvider from '@metamask/detect-provider';
 import { JsonBIP44CoinTypeNode, SLIP10Node, SLIP10Path } from "@metamask/key-tree";
 import { hasProperty, isObject, Json } from '@metamask/utils';
-import { BytesLike, ethers, parseUnits } from "ethers";
+import { assert, BytesLike, ethers, parseUnits } from "ethers";
 import { Web3Provider } from "@ethersproject/providers";
 import { Decimal } from "@cosmjs/math";
 import  web3  from "web3";
@@ -386,6 +386,7 @@ async function getAccountInfo() {
 
     // Return result
     let result : any = await client.getBalance(accountData.address, currentState.denom);
+    assertIsDeliverTxSuccess(result);
     result['Account'] = accountData.address;
     result['msg'] = "Account Details."
     result['accountRetrieved'] = true;
@@ -432,6 +433,7 @@ async function getAccountInfoGeneral(address : string, denom : string) {
     
     // Return result
     let result : any = await client.getBalance(searchAddress, denom);
+    assertIsDeliverTxSuccess(result);
     result['Account'] = address;
     result['accountRetrieved'] = true;
     return result; 
@@ -514,17 +516,18 @@ async function createSend(transactionRequest : any) {
     );
 
     // Make the transaction request to the network.
-    let response : any  = await client.sendTokens(
+    const response : any  = await client.sendTokens(
       accountData.address,
       recipientAddress,
       amount, 
       fee,
       transactionRequest.memo
     );
-
-    response['msg'] = transactionRequest.amount + " " + transactionRequest.denom + " sent to " + transactionRequest.recipientAddress;
-    response['transactionSent'] = true; 
-    return response;
+    assertIsDeliverTxSuccess(response);
+    return {
+      msg : transactionRequest.amount + " " + transactionRequest.denom + " sent to " + transactionRequest.recipientAddress,
+      transactionSent : true
+    };
   }
   catch(error) {
     console.log("COSMOS-SNAP ", error);
@@ -557,6 +560,8 @@ async function createMultiSend(transactionRequest : any) {
       // Format the multiple transactions
       const messages : Array<MsgSendEncodeObject> = [];
       const transactions : string[] = transactionRequest.inputs.split(" ");
+      let content = "";
+      
       for (let i = 0; i < transactions.length; i ++) {
         // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
         const transaction : string[] = transactions[i].split("-");
@@ -577,6 +582,7 @@ async function createMultiSend(transactionRequest : any) {
           }
         };
         messages.push(newMessage);
+        content += "\n" + transaction[1] + " " + transaction[2] + " sent to " + transaction[0] + "\n";
       }
       
       // Get the fee.
@@ -596,8 +602,11 @@ async function createMultiSend(transactionRequest : any) {
         transactionRequest.memo
       );
       assertIsDeliverTxSuccess(response);
-      response.msg = "Multi-Send Success: " + "";
-      return response;
+      
+      return  {
+        msg  : "Multi-Send Executed:" + "\n" + content,
+        transactionSent : true
+      }
     }
     catch(error) {
       console.log("COSMOS-SNAP ", error);
@@ -639,8 +648,6 @@ async function updatePluginState(state: unknown)
 async function clearConfigData() {
   const currentState : any = await getPluginState();
   currentState.nodeUrl  = "";
-  currentState.feeDenom = ""
-  currentState.feeAmount= "";
   currentState.denom = "";
   currentState.memo = "";
   currentState.prefix = ""; 
@@ -704,12 +711,7 @@ async function updateConfiguration(request : any) {
   if((updates.gas === null || updates.gas === '') && currentState.gas !== null) {
     updates.gas = currentState.gas;
   }
-  if((updates.feeDenom === null || updates.feeDenom === '') && currentState.feeDenom !== null) {
-    updates.feeDenom = currentState.feeDenom;
-  }
-  if((updates.feeAmount === null || updates.feeAmount === '') && currentState.feeAmount !== null) {
-    updates.feeAmount = currentState.feeAmount;
-  }
+
   return updates;
 }
 
