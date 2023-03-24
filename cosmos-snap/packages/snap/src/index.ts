@@ -112,7 +112,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'getAccountGeneral':
       console.log("COSMOS-SNAP: Getting Account Info General");
-      return await getAccountInfoGeneral(request.params[0].address, request.params[0].denom);
+      return await getAccountInfoGeneral(request.params[0].address);
 
     case 'getStatus':
       console.log("COSMOS-SNAP: Getting status.");
@@ -210,6 +210,10 @@ async function loginUser(password : string) {
       return {msg : "Password Required", loginSuccessful : false}
     }
 
+    if(currentState.password == null || currentState.password == '') {
+      return {msg : "No Password Stored; Setup Account.", loginSuccessful : false}
+    }
+    
     // Get the stored password
     const storedPassword : string = await decrypt(currentState.password, await bip32EntropyPrivateKey());
     // Compare the values
@@ -399,9 +403,9 @@ async function getAccountInfo() {
 }
 
 /**
- * Returns the balance of -denom- at -address-
+ * Returns the balance at -address-
  */
-async function getAccountInfoGeneral(address : string, denom : string) {
+async function getAccountInfoGeneral(address : string) {
   try {
     // Get the wallet (keys) object
     const currentState : any = await getPluginState();
@@ -415,7 +419,7 @@ async function getAccountInfoGeneral(address : string, denom : string) {
     const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
     
     // If the denom is empty
-    if(denom == null || denom == '') {
+    if(currentState.denom == null || currentState.denom == '') {
       return {msg : "Denom Required.", accountRetrieved : false}
     }
 
@@ -432,7 +436,7 @@ async function getAccountInfoGeneral(address : string, denom : string) {
     }
     
     // Return result
-    let result : any = await client.getBalance(searchAddress, denom);
+    let result : any = await client.getBalance(searchAddress, currentState.denom);
     assertIsDeliverTxSuccess(result);
     result['Account'] = address;
     result['accountRetrieved'] = true;
@@ -479,7 +483,7 @@ async function createSend(transactionRequest : any) {
     if(transactionRequest.recipientAddress == null || transactionRequest.recipientAddress == '') {
       return {msg : "Recpient Address Required.", transactionSent : false}
     }
-    if(transactionRequest.denom == null || transactionRequest.denom == '') {
+    if(currentState.denom == null || currentState.denom == '') {
       return {msg : "Denom Required.", transactionSent : false}
     }
     if(transactionRequest.amount == null || transactionRequest.amount == '') {
@@ -490,7 +494,7 @@ async function createSend(transactionRequest : any) {
     }
 
     // Format the amount
-    const amount : Coin[] = [{denom : transactionRequest.denom, amount: transactionRequest.amount}];
+    const amount : Coin[] = [{denom : currentState.denom, amount: transactionRequest.amount}];
     
     // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
     let recipientAddress : string = transactionRequest.recipientAddress;
@@ -525,7 +529,7 @@ async function createSend(transactionRequest : any) {
     );
     assertIsDeliverTxSuccess(response);
     return {
-      msg : transactionRequest.amount + " " + transactionRequest.denom + " sent to " + transactionRequest.recipientAddress,
+      msg : transactionRequest.amount + " " + currentState.denom + " sent to " + transactionRequest.recipientAddress,
       transactionSent : true
     };
   }

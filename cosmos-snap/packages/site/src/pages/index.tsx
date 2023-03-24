@@ -278,8 +278,8 @@ const Index = () => {
               content={{
                 title: 'GET ACCOUNT GENERAL',
                 description:
-                  'Retrieve the balance of a partiuclar coin at a particular address.',
-                inputs: ['denom', 'address'],
+                  'Retrieve the balance at a particular address.',
+                inputs: ['address'],
                 rpcRequest: 'getAccountGeneral'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
@@ -387,7 +387,7 @@ const Index = () => {
                 title: 'Create Send',
                 description:
                   '',
-                inputs: ['recipientAddress', 'amount', 'denom', 'memo'],
+                inputs: ['recipientAddress', 'amount', 'memo'],
                 rpcRequest: 'createSend'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
