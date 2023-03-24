@@ -13,23 +13,13 @@ import crypto from 'crypto';
 import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import { AccountData, coins} from "@cosmjs/launchpad";
 import { Coin, DirectSecp256k1HdWallet, makeAuthInfoBytes } from "@cosmjs/proto-signing";
-import { SigningStargateClient, StargateClientOptions, SigningStargateClientOptions, GasPrice, StdFee } from "@cosmjs/stargate";
+import { SigningStargateClient, StargateClientOptions, SigningStargateClientOptions, GasPrice, StdFee, MsgSendEncodeObject, calculateFee, assertIsDeliverTxSuccess } from "@cosmjs/stargate";
 //will need further imports to ensure!
 
 import { publicKeyCreate, ecdsaSign } from 'secp256k1';
 import { bech32 } from 'bech32'
 import Sha256WithX2 from "sha256";
 import RIPEMD160Static from "ripemd160";
-
-
-interface EncodeObject {
-  readonly typeUrl: string;
-  readonly value: {
-    fromAddress : string,
-    toAddress : string,
-    amount : Coin[]
-  };
-}
 
 interface DictionaryAccount {
   address : string,
@@ -216,11 +206,6 @@ async function loginUser(password : string) {
     const currentState : any = await getPluginState();
     
     // If there is no password yet.
-    if(currentState.password == null) {
-      return {msg : "No password stored; setup required.", loginSuccessful : false}
-    }
-
-    // If the user failed to enter a password
     if(password == null || password == '') {
       return {msg : "Password Required", loginSuccessful : false}
     }
@@ -237,7 +222,7 @@ async function loginUser(password : string) {
   }
   catch(e) {
     console.log("COSMOS-SNAP: ", e);
-    return e;
+    return {msg : e.toString()};
   }
 }
 
@@ -324,6 +309,18 @@ async function decrypt(password : string, key : string) {
 }
 
 /**
+ * Functions the fee by simulating a transaction.
+ */
+async function formatFee(msgs : Array<MsgSendEncodeObject>, fromAddress : string, 
+  client : SigningStargateClient, memo : string, gasPrice : GasPrice) {
+  // Simulate the transaction
+  const gasEstimation = await client.simulate(fromAddress, msgs, memo);
+  const fee : StdFee = calculateFee(Math.round(gasEstimation * 1.3), gasPrice);
+
+  return fee
+}
+
+/**
  * Gets the unique entropy value used to create the keys; use to encrypt data.
  */
 async function bip32EntropyPrivateKey(){
@@ -396,7 +393,7 @@ async function getAccountInfo() {
   }
   catch(error) {
     console.log("COSMOS-SNAP: " , error);
-    return error;
+    return {msg : error.toString()};
   }
 }
 
@@ -441,7 +438,7 @@ async function getAccountInfoGeneral(address : string, denom : string) {
   }
   catch(error) {
     console.log("COSMOS-SNAP: " , error);
-    return error;
+    return {msg : error.toString()};
   }
 }
 
@@ -456,11 +453,22 @@ async function createSend(transactionRequest : any) {
     // Get the client object to interact with the blockchain
     const currentState : any = await getPluginState();
     
+    // Get the gas price
+    if(currentState.gas == null || currentState.gas == '') {
+      return {msg : "Gas not set.", transactionSent : false}
+    }
+    const gasPrice : GasPrice = GasPrice.fromString(currentState.gas);
+
     // If the nodeUrl has not been set
     if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
       return {msg : "Node URL required.", transactionSent : false}
     }
-    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    const client : SigningStargateClient = await SigningStargateClient
+      .connectWithSigner(
+        currentState.nodeUrl, 
+        wallet, 
+        {gasPrice : gasPrice}
+      );
     
     // Get the public address of the account
     const accountData : AccountData = (await wallet.getAccounts())[0];
@@ -478,30 +486,9 @@ async function createSend(transactionRequest : any) {
     if(transactionRequest.memo == null || transactionRequest.memo == '') {
       return {msg : "Memo Required.", transactionSent : false}
     }
+
     // Format the amount
     const amount : Coin[] = [{denom : transactionRequest.denom, amount: transactionRequest.amount}];
-
-    // If the fee is not set
-    if(currentState.feeDenom == null || currentState.feeDenom == '') {
-      return {msg : "Fee Denom not set.", transactionSent : false}
-    }
-    if(currentState.feeAmount == null || currentState.feeAmount == '') {
-      return {msg : "Fee Amount not set.", transactionSent : false}
-    }
-    if(currentState.gas == null || currentState.gas == '') {
-      return {msg : "Gas not set.", transactionSent : false}
-    }
-    // Format the fee
-    const fee : StdFee =
-    {
-      amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
-      gas : currentState.gas,
-      granter : accountData.address,
-      payer : accountData.address
-    };
-    
-    
-    console.log(transactionRequest, accountData.address);
     
     // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
     let recipientAddress : string = transactionRequest.recipientAddress;
@@ -509,6 +496,22 @@ async function createSend(transactionRequest : any) {
     if(possiblePairing.pairing) {
       recipientAddress = possiblePairing.address;
     }
+
+    // Format the fee
+    const fee : StdFee = await formatFee(
+      [{
+        typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+        value: {
+          fromAddress: accountData.address,
+          toAddress: recipientAddress,
+          amount: amount
+            }
+      }],
+      accountData.address,
+      client,
+      transactionRequest.memo,
+      gasPrice
+    );
 
     // Make the transaction request to the network.
     let response : any  = await client.sendTokens(
@@ -525,7 +528,7 @@ async function createSend(transactionRequest : any) {
   }
   catch(error) {
     console.log("COSMOS-SNAP ", error);
-    return error;
+    return {msg : error.toString()};
   } 
 }
 
@@ -539,22 +542,20 @@ async function createMultiSend(transactionRequest : any) {
     
       // Get the client object to interact with the blockchain
       const currentState : any = await getPluginState();
-      const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+      if(currentState.gas == null || currentState.gas == '') {
+        return {msg : "Gas not set.", transactionSent : false}
+      }
+      if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+        return {msg : "Node URL required.", transactionSent : false}
+      }
+      const gasPrice : GasPrice = GasPrice.fromString(currentState.gas);
+      const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet, {gasPrice : gasPrice});
       
       // Get the public address of the account
       const accountData : AccountData = (await wallet.getAccounts())[0];
       
-      // Format the fee
-      const fee : StdFee =
-      {
-        amount : [{denom : currentState.feeDenom, amount : currentState.feeAmount}],
-        gas : currentState.gas,
-        granter : accountData.address,
-        payer : accountData.address
-      };
-
       // Format the multiple transactions
-      const messages : Array<EncodeObject> = [];
+      const messages : Array<MsgSendEncodeObject> = [];
       const transactions : string[] = transactionRequest.inputs.split(" ");
       for (let i = 0; i < transactions.length; i ++) {
         // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
@@ -567,7 +568,7 @@ async function createMultiSend(transactionRequest : any) {
           recipientAddress = possiblePairing.address;
         }
 
-        let newMessage : EncodeObject = {
+        let newMessage : MsgSendEncodeObject = {
           typeUrl : "/cosmos.bank.v1beta1.MsgSend",
           value : {
             fromAddress : accountData.address,
@@ -578,17 +579,29 @@ async function createMultiSend(transactionRequest : any) {
         messages.push(newMessage);
       }
       
+      // Get the fee.
+      const fee : StdFee = await formatFee(
+        messages,
+        accountData.address,
+        client,
+        transactionRequest.memo,
+        gasPrice
+      );
+
       //Use signAndBroadcast
-      return await client.signAndBroadcast(
+      const response : any = client.signAndBroadcast(
         accountData.address,
         messages,
         fee,
         transactionRequest.memo
       );
+      assertIsDeliverTxSuccess(response);
+      response.msg = "Multi-Send Success: " + "";
+      return response;
     }
     catch(error) {
       console.log("COSMOS-SNAP ", error);
-      return error;
+      return {msg : error.toString()};
     } 
 }
 

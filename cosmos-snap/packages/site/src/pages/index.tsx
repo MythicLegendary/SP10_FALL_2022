@@ -344,12 +344,10 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'SET FEE PARAMETERS',
+                title: 'SET THE GAS',
                 description:
-                  'Set the parameters for formatting transaction fees.',
+                  'Set as <amount><denom>.',
                 inputs: [
-                  "feeDenom",
-                  "feeAmount",
                   "gas"
                 ],
                 rpcRequest: 'setConfig'

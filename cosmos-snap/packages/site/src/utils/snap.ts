@@ -193,12 +193,10 @@ async function sendNotification(methodName : string, response : any) {
       break;
     }
     case 'createMultiSend' : {
-      response['rawLog'] = "[REMOVED FOR LENGTH]"
-      response['events'] = "[REMOVED FOR LENGTH]"
       content = {
         prompt: "Transaction Sent",
         description : "Response For The Transaction",
-        textAreaContent : JSON.stringify(response)
+        textAreaContent : response.msg
         };
         break;
     }
@@ -271,7 +269,7 @@ async function sendNotification(methodName : string, response : any) {
       content = {
       prompt: "Response From "  + methodName,
       description : " ",
-      textAreaContent : JSON.stringify(response)
+      textAreaContent : response.msg
       };
     }
   }
