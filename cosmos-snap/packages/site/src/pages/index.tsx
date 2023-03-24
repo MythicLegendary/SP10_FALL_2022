@@ -361,24 +361,6 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'SET MEMO AND PREFIX',
-                description:
-                  '',
-                inputs: [
-                  "memo",
-                  "prefix"
-                ],
-                rpcRequest: 'setConfig'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
                 title: 'ADD ADDRESSES',
                 description:
                   'Add user addresses to make sending transactions simpler.',

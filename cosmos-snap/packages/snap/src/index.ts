@@ -594,7 +594,7 @@ async function createMultiSend(transactionRequest : any) {
         gasPrice
       );
 
-      //Use signAndBroadcast
+      // Send the transaction.
       const response : any = client.signAndBroadcast(
         accountData.address,
         messages,
@@ -649,8 +649,6 @@ async function clearConfigData() {
   const currentState : any = await getPluginState();
   currentState.nodeUrl  = "";
   currentState.denom = "";
-  currentState.memo = "";
-  currentState.prefix = ""; 
   currentState.gas = ""
   currentState.dictionary = new Array<DictionaryAccount>();
   await updatePluginState(currentState);
@@ -701,12 +699,6 @@ async function updateConfiguration(request : any) {
   }
   if((updates.denom === null || updates.denom === '') && currentState.denom !== null) {
     updates.denom = currentState.denom;
-  }
-  if((updates.prefix === null || updates.prefix === '') && currentState.prefix !== null) {
-    updates.prefix  = currentState.prefix;
-  }
-  if((updates.memo === null || updates.memo === '') && currentState.memo !== null) {
-    updates.memo = currentState.memo;
   }
   if((updates.gas === null || updates.gas === '') && currentState.gas !== null) {
     updates.gas = currentState.gas;
