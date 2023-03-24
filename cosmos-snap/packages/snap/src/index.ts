@@ -9,6 +9,7 @@ import  web3  from "web3";
 import {Buffer} from 'buffer';
 import { caesar, rot13 } from "simple-cipher-js";
 import crypto from 'crypto';
+import flatted from 'flatted';
 
 import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
 import { AccountData, coins} from "@cosmjs/launchpad";
@@ -20,8 +21,9 @@ import { publicKeyCreate, ecdsaSign } from 'secp256k1';
 import { bech32 } from 'bech32'
 import Sha256WithX2 from "sha256";
 import RIPEMD160Static from "ripemd160";
+import { SnapControllerActions } from '@metamask/snap-controllers';
 
-interface DictionaryAccount {
+interface DictionaryAddress {
   address : string,
   name : string
 }
@@ -33,6 +35,23 @@ interface Transaction {
   amount : string, 
   memo: string
   denom: string
+}
+
+interface SnapConfiguration {
+  otherAccounts : Array<CosmosAccount>,
+  password : string,
+  activeAccount : CosmosAccount 
+}
+
+interface CosmosAccount {
+  accountName : string,
+  nodeUrl : string,
+  gas : string,
+  denom : string,
+  accountAddress : string,
+  addresses : Array<DictionaryAddress>,
+  mnemonic : string,
+  transactionHistory : Array<Transaction>
 }
 
 /**
@@ -70,7 +89,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'setupPassword': {
       console.log("COSMOS-SNAP: Setting up new password for key encryption.");
-      return setupPassword(request.params[0]['password'], request.params[0]['mnemonic']);
+      return setupPassword(request.params[0]['password'], 
+        request.params[0]['mnemonic'], 
+        request.params[0]['firstAccountName']
+      );
     }
 
     case 'login': {
@@ -83,22 +105,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       return {}
     }
     
-    case 'removeAccount': {
-      console.log("COSMOS-SNAP: Removing Account");
-      // Remove All Data, Including Keys
-      await updatePluginState({});
-      // Set the parameters to the defaults
-      await clearConfigData();
-      return {msg : "All Configuration Data Cleared, Keys Removed."}
-    }
-
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
-      const updates  : any = await updateConfiguration(request);
-      await updatePluginState({
-        ...await getPluginState(),
-        ...updates
-      })
+      await updatePluginState(await updateConfiguration(request));
       return filterResponse(await getPluginState());
     
     case 'addAddress': {
@@ -108,12 +117,38 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'viewAddresses' : {
       console.log("COSMOS-SNAP: Return the dictionary of addresses set by the user.");
-      return {dictionary  : (await getPluginState()).dictionary}
+      const currentState : SnapConfiguration = await getPluginState();
+
+      return {dictionary : currentState.activeAccount.addresses}
     }
 
-    case 'clearWalletData':
-      console.log("COSMOS-SNAP: Clearing the config data.");
-      return await clearConfigData();
+    case 'deleteWallet': {
+      console.log("COSMOS-SNAP: Attempting wallet deletion.");
+      return await deleteWallet(request);
+    }
+
+    case 'removeAccount' : {
+      console.log("COSMOS_SNAP: Attempting to remove an account.");
+      return await removeAccount(request);
+    }
+
+    case 'viewAccounts' : {
+      console.log("COSMOS-SNAP:  Retrieving Accounts");
+      const currentState : SnapConfiguration = await getPluginState();
+      const accounts : CosmosAccount[] = currentState.otherAccounts;
+      accounts.unshift(currentState.activeAccount);
+      return {accounts : accounts}  
+    }
+
+    case 'setActiveAccount' : {
+      console.log("COSMOS-SNAP: Setting the active account.");
+      return await setActiveAccount(request.params[0].accountName);
+    }
+
+    case 'addNewAccount' : {
+      console.log("COSMOS-SNAP: Adding a new account to the accounts list.");
+      return await addNewAccount(request.params[0].accountName, request.params[0].mnemonic);  
+    }
 
     case 'getAccountInfo':
       console.log("COSMOS-SNAP: Getting Account Info.");
@@ -122,26 +157,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
     case 'getAccountGeneral':
       console.log("COSMOS-SNAP: Getting Account Info General");
       return await getAccountInfoGeneral(request.params[0].address);
-
-    case 'getStatus':
-      console.log("COSMOS-SNAP: Getting status.");
-      return getStatus();
-    
-    case 'getBandwidth':
-      console.log("COSMOS-SNAP: Getting bandwidth.");
-      pubKey = await getPubKey()
-      account = getAccount(pubKey)
-      return await getAccountBandwidth(account)
-    
-    case 'getIndexStats':
-        console.log("COSMOS-SNAP: Getting index stats.");
-        return await getIndexStats()
-    
-    case 'getRewards':
-      console.log("COSMOS-SNAP: Getting rewards.");
-      pubKey = await getPubKey()
-      account = getAccount(pubKey)
-      return await getRewards(account)
 
     case 'createSend':
       console.log("COSMOS-SNAP: Creating Send Transaction.");
@@ -155,42 +170,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       console.log("COSMOS-SNAP: Getting Transaction History.");
       return await getTransactionHistory();
 
-    case 'createDelegate':
-      console.log("COSMOS-SNAP: Creating Delegate.");
-      return {}
-
-    case 'createRedelegate':
-      console.log("COSMOS-SNAP: Creating Redelegate");
-      return {}
-
-    case 'createUndelegate':
-      console.log("COSMOS-SNAP: Creating Undelegate");
-      return {}
-
-    case 'createWithdrawDelegationReward':
-      console.log("COSMOS-SNAP: Creating Withdrawal Delegation Reward");
-      return {}
-
-    case 'createTextProposal':
-      console.log("COSMOS-SNAP: Creating Text Proposal");
-      return {}
-
-    case 'createCommunityPoolSpend':
-      console.log("COSMOS-SNAP: Creating Community Pool Spend.");
-      return {}
-
-    case 'createParamsChangeProposal':
-      console.log("COSMOS-SNAP: Create Params Change Proposal.");
-      return {}
-      
-    case 'createDeposit':
-      console.log("COSMOS-SNAP: Create Deposit.");
-      return {}
-      
-    case 'createVote':
-      console.log("COSMOS-SNAP: Creating Vote.");
-      return {}
-      
     case 'displayNotification':
       return wallet.request({
         method: 'snap_confirm',
@@ -279,8 +258,8 @@ async function createMultiSendDummy(transactionRequest : any) {
  */
 
 async function getTransactionHistory() {
-  const currentState : any = await getPluginState();
-  return {transactionHistory  : (await getPluginState()).transactionHistory}
+  const currentState : SnapConfiguration = await getPluginState();
+  return {transactionHistory  : currentState.activeAccount.transactionHistory}
 }
 
 //----------------------------------------------------------
@@ -289,7 +268,7 @@ async function getTransactionHistory() {
  */
 async function loginUser(password : string) {
   try {
-    const currentState : any = await getPluginState();
+    const currentState : SnapConfiguration = await getPluginState();
     
     // If there is no password yet.
     if(password == null || password == '') {
@@ -302,6 +281,7 @@ async function loginUser(password : string) {
     
     // Get the stored password
     const storedPassword : string = await decrypt(currentState.password, await bip32EntropyPrivateKey());
+
     // Compare the values
     if(password === storedPassword) {
       return {loginSuccessful : true, msg : "Login Sucessful"}
@@ -316,21 +296,186 @@ async function loginUser(password : string) {
   }
 }
 
+/**
+ * Sets the active account parameter in the configuration.
+ */
+async function setActiveAccount(accountName : string) {
+  if(accountName == null || accountName == '') {
+    return {msg : 'Account Name Required.', accountChanged: false}
+  }
+
+  const currentState : SnapConfiguration = await getPluginState();
+  const accounts : CosmosAccount[] = currentState.otherAccounts;
+  // Find the account
+  for(let i = 0; i < accounts.length; i ++) {
+    // If the name matches remove the account
+    if (accounts[i].accountName ===  accountName) {
+      const newActiveAccount: CosmosAccount = accounts.splice(i, 1)[0];
+      const oldActiveAccount: CosmosAccount = currentState.activeAccount;
+      currentState.activeAccount = newActiveAccount;
+      accounts.push(oldActiveAccount);
+      currentState.otherAccounts = accounts;
+      await updatePluginState(currentState);
+      return {msg: "Account Successfully Changed.", accountChanged: true} 
+    }
+  }
+
+  return {msg : "Account Name Not Found.", accountChanged : false}
+}
+
+/**
+ * Adds a new account to the list of accounts.
+ */
+async function addNewAccount(accountName : string, mnemonic : string) {
+  if(accountName == null || accountName == '') {
+    return {msg : 'Account Name Required.', acccountAdded : false}
+  }
+  if(mnemonic == null || mnemonic == '') {
+    return {msg : 'Mnemonic Required.', acccountAdded : false}
+  }
+  // If invalid length mnemonic
+  const length = mnemonic.split(" ").length;
+  if(length !== 12 && length !== 24 && length !== 25) {
+    return {msg : 'Invalid Mnemonic Length' , setup : false}
+  }
+
+  const currentState : SnapConfiguration = await getPluginState();
+  const accounts : CosmosAccount[] = currentState.otherAccounts;
+  
+  // Check if the account is already stored.
+  for(let i = 0; i < accounts.length; i ++) {
+    // If the name matches remove the account
+    if (accounts[i].accountName === accountName) {
+      return {msg : "Account Name Already Exists.", accountAdded : false}
+    }
+  }
+  // Create a new account
+  let newAccount : CosmosAccount = {
+    nodeUrl : "",
+    denom : "",
+    gas : "",
+    addresses : new Array<DictionaryAddress>(),
+    accountName : "",
+    accountAddress : "",
+    mnemonic : "",
+    transactionHistory  : new Array<Transaction>
+  }
+
+  // Set the parameters of the new account
+  newAccount.mnemonic = await encrypt(mnemonic, await bip32EntropyPrivateKey());
+  newAccount.accountName = accountName;
+
+  // Get the account address.
+  const wallet : DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic);
+  const accountData : AccountData = (await wallet.getAccounts())[0]
+  newAccount.accountAddress = accountData.address;
+  
+  // Update the config
+  const updatedState : SnapConfiguration = await getPluginState();
+  updatedState.otherAccounts.push(newAccount);
+
+  // Store the new configuration
+  await updatePluginState(updatedState);
+
+  // Set the password
+  return {msg : "Account stored and serialized.", accountAdded : true}
+}
+
+/**
+ * Removes the account specified in the request.
+ */
+async function removeAccount(request : any) {
+  const removeAccountName : string = request.params[0].accountName;
+
+  // Confrim with th user that they want to remove the account.
+  if(!(await confirmRequest(request.params[0], 'removeAccount'))) {
+    return {msg : "Account Not Removed- User Rejected.", accountRemoved : false}
+  }
+
+  // Find the Account to delete, remove it.
+  const currentState : SnapConfiguration = await getPluginState();
+  const accounts: CosmosAccount[] = currentState.otherAccounts;
+
+  for(let i = 0; i < accounts.length; i ++) {
+    // If the name matches remove the account
+    if (accounts[i].accountName === removeAccountName) {
+      accounts.splice(i, 1); // Remove the account from the array
+      currentState.otherAccounts = accounts;
+      await updatePluginState(currentState);
+      return { msg: "Account removed successfully.", accountRemoved: true };
+    }
+  }
+
+  // If the account to remove is the active account.
+  if(currentState.activeAccount.accountName == removeAccountName) {
+    return {msg :  "Cannot remove the active account." , accountRemoved : false}
+  }
+
+  // Otherwise, account not found.
+  return {msg : "Account to remove not found.", accountRemoved : false}
+}
+
+/**
+ * Deletes the wallet, clears all SnapConfiguration data.
+ */
+async function deleteWallet(request : any) {
+    // Confirm  with the user
+    if(!(await confirmRequest(request.params[0], 'deleteWallet'))) {
+      return {msg : "Account Not Deleted- User Rejected", deleted : false}
+    }
+
+    // Check the login
+    const passwordCheck : any = await loginUser(request.params[0].password);
+    if(!passwordCheck.loginSuccessful) {
+      return {msg : "Authentication failed", deleted : false}
+    }
+
+    // Clear all data in the configuration
+    await updatePluginState(await setupWallet());
+
+    return {msg : "Wallet Completely Cleared.", deleted : true};
+}
+
+/**
+ * Returns the cosmos wallet for the active account.
+ */
 async function getCosmosWallet() {
-  const currentState : any = await getPluginState();
+  const currentAccount : CosmosAccount = (await getPluginState()).activeAccount;
 
   return await DirectSecp256k1HdWallet.fromMnemonic(
     await decrypt(
-      currentState.mnemonic, 
+      currentAccount.mnemonic, 
       await bip32EntropyPrivateKey()
   ));
 }
 
 /**
- * Sets up the new password used for verification
- * Initializes the attributes of the wallet to empty.
+ *  This function is used to create a new wallet configuration. 
  */
-async function setupPassword(password : string, mnemonic : string) {
+async function setupWallet() {
+  let newConfig : SnapConfiguration = {
+    otherAccounts : new Array<CosmosAccount>(),
+    activeAccount: {
+      accountName : "",
+      accountAddress : "",
+      addresses : new Array<DictionaryAddress>(),
+      mnemonic : "",
+      denom : "",
+      gas : "",
+      nodeUrl : "",
+      transactionHistory : new Array<Transaction>()
+    },
+    password : ""
+  }
+
+  return newConfig;
+}
+
+/**
+ * Sets up the new password used for verification
+ * Initializes wallet with a single account.
+ */
+async function setupPassword(password : string, mnemonic : string, accountName : string) {
   try {
     // If the password is empty or null
     if(password == null || password === '') {
@@ -344,32 +489,49 @@ async function setupPassword(password : string, mnemonic : string) {
     if(length !== 12 && length !== 24 && length !== 25) {
       return {msg : 'Invalid Mnemonic Length' , setup : false}
     }
+    // If the account name is empty or null.
+    if(accountName == null || accountName == '') {
+      return {msg : "Account name is required." , setup : false}
+    }
+    
+    // Get the blank configuration 
+    let newConfig : SnapConfiguration = await setupWallet();
+    
+    // Set the parameters of the new account
+    newConfig.activeAccount.mnemonic = await encrypt(mnemonic, await bip32EntropyPrivateKey());
+    newConfig.activeAccount.accountName = accountName;
 
-    // Update the pluginState with the encrypted key and serialized wallet
-  await updatePluginState(
-    {
-      ...await getPluginState(),
-      mnemonic : await encrypt(mnemonic, await bip32EntropyPrivateKey()),
-      password : await encrypt(password, await bip32EntropyPrivateKey())
+    // Get the account address.
+    const wallet : DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic);
+    const accountData : AccountData = (await wallet.getAccounts())[0]
+    newConfig.activeAccount.accountAddress = accountData.address;
+        
+    // Setup the password
+    newConfig.password = await encrypt(password, await bip32EntropyPrivateKey());
+    
+    // Store the new configuration
+    await updatePluginState(newConfig);
 
-    });
-  await clearConfigData();
-  return {msg : "Successful serialization of wallet.", setup : true}
+    // Set the password
+    return {msg : "Successful serialization of wallet.", setup : true}
   }
   catch(error) {
     console.log(error);
-    return {msg : "Serialization not successful.", setup : false}
+    return {msg : "Serialization not successful: " + error.toString(), setup : false}
   }
 }
 
+/**
+ * Used to confirm with the user that they want to perform an action.
+ */
 async function confirmRequest(params: any, method : string) {
-  const currentState : any = await getPluginState();
+  const currentAccount : CosmosAccount = (await getPluginState()).activeAccount;
   let prompt = "";
   let content = "";
   switch(method) {
     case 'createSend' : {
       prompt  = "Confirm Singular Transaction";
-      content = "Send " + params.amount + " " + currentState.denom +   " to " + params.recipientAddress;
+      content = "Send " + params.amount + " " + currentAccount.denom +   " to " + params.recipientAddress;
       break;
     }
     case 'createMultiSend' : {
@@ -477,9 +639,11 @@ async function addAddress(name : string, address : string) {
   if(address == null || address == '') {
     return {msg : "Address Required." , added : false}
   }
-  const currentState : any = await getPluginState();
+  
+  const currentState : SnapConfiguration = await getPluginState();
+
   // if this name already exists
-  const dictionary : Array<DictionaryAccount> = currentState.dictionary;
+  const dictionary : Array<DictionaryAddress> = currentState.activeAccount.addresses;
   for(let i = 0; i < dictionary.length; i ++) {
     if(dictionary[i].name == name) {
       return {msg : "Name already used." , added : false}
@@ -487,7 +651,7 @@ async function addAddress(name : string, address : string) {
   }
 
   // Otherwise, add the new pairing
-  currentState.dictionary.push({name : name, address : address});
+  dictionary.push({name : name, address : address}); 
   await updatePluginState(currentState);
   return {msg : name + "-" + address + " was added to the dictionary." , added : true}
 }
@@ -498,27 +662,27 @@ async function addAddress(name : string, address : string) {
 async function getAccountInfo() {
   try {
     // Get the wallet (keys) object
-    const currentState : any = await getPluginState();
+    const currentAccount : CosmosAccount = (await getPluginState()).activeAccount;
     const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
     
     // If the nodeUrl has not been set
-    if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+    if(currentAccount.nodeUrl == null || currentAccount.nodeUrl == '') {
       return {msg : "Node URL required.", accountRetrieved : false}
     }
 
     // Get the client object to interact with the blockchain
-    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentAccount.nodeUrl, wallet);
     
     // Get the public address of the account
     const accountData : AccountData = (await wallet.getAccounts())[0];
 
     // If there is no default denom
-    if(currentState.denom == null || currentState.denom == '') {
+    if(currentAccount.denom == null || currentAccount.denom == '') {
       return {msg : "Default denom required.", accountRetrieved : false}
     }
 
     // Return result
-    let result : any = await client.getBalance(accountData.address, currentState.denom);
+    let result : any = await client.getBalance(accountData.address, currentAccount.denom);
     assertIsDeliverTxSuccess(result);
     result['Account'] = accountData.address;
     result['msg'] = "Account Details."
@@ -537,18 +701,18 @@ async function getAccountInfo() {
 async function getAccountInfoGeneral(address : string) {
   try {
     // Get the wallet (keys) object
-    const currentState : any = await getPluginState();
+    const currentAccount : CosmosAccount = (await getPluginState()).activeAccount;
     const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
     
     // If the nodeUrl has not been set
-    if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+    if(currentAccount.nodeUrl == null || currentAccount.nodeUrl == '') {
       return {msg : "Node URL required.", accountRetrieved : false}
     }
     // Get the client object to interact with the blockchain
-    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentAccount.nodeUrl, wallet);
     
     // If the denom is empty
-    if(currentState.denom == null || currentState.denom == '') {
+    if(currentAccount.denom == null || currentAccount.denom == '') {
       return {msg : "Denom Required.", accountRetrieved : false}
     }
 
@@ -565,7 +729,7 @@ async function getAccountInfoGeneral(address : string) {
     }
     
     // Return result
-    let result : any = await client.getBalance(searchAddress, currentState.denom);
+    let result : any = await client.getBalance(searchAddress, currentAccount.denom);
     assertIsDeliverTxSuccess(result);
     result['Account'] = address;
     result['accountRetrieved'] = true;
@@ -593,21 +757,21 @@ async function createSend(transactionRequest : any) {
     const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
     
     // Get the client object to interact with the blockchain
-    const currentState : any = await getPluginState();
+    const currentAccount : CosmosAccount = (await getPluginState()).activeAccount;
     
     // Get the gas price
-    if(currentState.gas == null || currentState.gas == '') {
+    if(currentAccount.gas == null || currentAccount.gas == '') {
       return {msg : "Gas not set.", transactionSent : false}
     }
-    const gasPrice : GasPrice = GasPrice.fromString(currentState.gas);
+    const gasPrice : GasPrice = GasPrice.fromString(currentAccount.gas);
 
     // If the nodeUrl has not been set
-    if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+    if(currentAccount.nodeUrl == null || currentAccount.nodeUrl == '') {
       return {msg : "Node URL required.", transactionSent : false}
     }
     const client : SigningStargateClient = await SigningStargateClient
       .connectWithSigner(
-        currentState.nodeUrl, 
+        currentAccount.nodeUrl, 
         wallet, 
         {gasPrice : gasPrice}
       );
@@ -619,7 +783,7 @@ async function createSend(transactionRequest : any) {
     if(transactionRequest.recipientAddress == null || transactionRequest.recipientAddress == '') {
       return {msg : "Recpient Address Required.", transactionSent : false}
     }
-    if(currentState.denom == null || currentState.denom == '') {
+    if(currentAccount.denom == null || currentAccount.denom == '') {
       return {msg : "Denom Required.", transactionSent : false}
     }
     if(transactionRequest.amount == null || transactionRequest.amount == '') {
@@ -630,7 +794,7 @@ async function createSend(transactionRequest : any) {
     }
 
     // Format the amount
-    const amount : Coin[] = [{denom : currentState.denom, amount: transactionRequest.amount}];
+    const amount : Coin[] = [{denom : currentAccount.denom, amount: transactionRequest.amount}];
     
     // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
     let recipientAddress : string = transactionRequest.recipientAddress;
@@ -666,17 +830,20 @@ async function createSend(transactionRequest : any) {
     assertIsDeliverTxSuccess(response);
 
     // Record the transaction in the transaction history.
-    currentState.transactionHistory.push({
+    currentAccount.transactionHistory.push({
       type : "Singlular",
       timeSent : new Date(),
       address : transactionRequest.recipientAddress, 
       amount : transactionRequest.amount, 
       memo : transactionRequest.memo, 
-      denom : currentState.denom
+      denom : currentAccount.denom
     });
+    const currentState : SnapConfiguration = await getPluginState();
+    currentState.activeAccount = currentAccount;
     await updatePluginState(currentState);
+
     return {
-      msg : transactionRequest.amount + " " + currentState.denom + " sent to " + transactionRequest.recipientAddress,
+      msg : transactionRequest.amount + " " + currentAccount.denom + " sent to " + transactionRequest.recipientAddress,
       transactionSent : true
     };
   }
@@ -700,15 +867,15 @@ async function createMultiSend(transactionRequest : any) {
       }
 
       // Get the client object to interact with the blockchain
-      const currentState : any = await getPluginState();
-      if(currentState.gas == null || currentState.gas == '') {
+      const currentAccount : CosmosAccount = (await getPluginState()).activeAccount;
+      if(currentAccount.gas == null || currentAccount.gas == '') {
         return {msg : "Gas not set.", transactionSent : false}
       }
-      if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+      if(currentAccount.nodeUrl == null || currentAccount.nodeUrl == '') {
         return {msg : "Node URL required.", transactionSent : false}
       }
-      const gasPrice : GasPrice = GasPrice.fromString(currentState.gas);
-      const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet, {gasPrice : gasPrice});
+      const gasPrice : GasPrice = GasPrice.fromString(currentAccount.gas);
+      const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentAccount.nodeUrl, wallet, {gasPrice : gasPrice});
       
       // Get the public address of the account
       const accountData : AccountData = (await wallet.getAccounts())[0];
@@ -752,20 +919,20 @@ async function createMultiSend(transactionRequest : any) {
 
       // Send the transaction.
       const response : any = await client.signAndBroadcast(
-        accountData.address,      //return await createSend(request.params[0]);
+        accountData.address,
         messages,
         fee,
         transactionRequest.memo
       );
       assertIsDeliverTxSuccess(response);
-      
+
       // Record the succussful transaction
       const currentTime = new Date();
       for (let i = 0; i < transactions.length; i ++) {
         // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
         const transaction : string[] = transactions[i].split("-");
         
-        currentState.transactionHistory.push({
+        currentAccount.transactionHistory.push({
          type: "Multisend",
          timeSent : currentTime,
          address : transaction[0], 
@@ -774,6 +941,8 @@ async function createMultiSend(transactionRequest : any) {
          denom : transaction[2]
        });
       }
+      const currentState : SnapConfiguration = await getPluginState();
+      currentState.activeAccount = currentAccount;
       await updatePluginState(currentState);
 
       return  {
@@ -807,7 +976,7 @@ async function getPluginState()
 /**
  * Updates the data persisted by MetaMask.
  */
-async function updatePluginState(state: unknown)
+async function updatePluginState(state: SnapConfiguration)
 {
   return await wallet.request({
   method: 'snap_manageState',
@@ -819,12 +988,16 @@ async function updatePluginState(state: unknown)
  * Clear the configuration data. Also used to initialize it.
  */
 async function clearConfigData() {
-  const currentState : any = await getPluginState();
-  currentState.nodeUrl  = "";
-  currentState.denom = "";
-  currentState.gas = ""
-  currentState.dictionary = new Array<DictionaryAccount>();
-  currentState.transactionHistory = new Array<Transaction>();
+
+  let currentAccount : CosmosAccount = (await getPluginState()).activeAccount;
+  currentAccount.nodeUrl  = "";
+  currentAccount.denom = "";
+  currentAccount.gas = ""
+  currentAccount.addresses = new Array<DictionaryAddress>();
+  currentAccount.transactionHistory = new Array<Transaction>();
+  let currentState : SnapConfiguration = await getPluginState();
+  currentState.activeAccount = currentAccount;
+
   await updatePluginState(currentState);
 
   return {dataCleared : true};
@@ -832,24 +1005,23 @@ async function clearConfigData() {
 
 /**
  * Filters the mnemonic and password from the response.
+ * Returns the configuration and general data about the activeAccount.
  */
-function filterResponse(currentState : any) {
+function filterResponse(currentState : SnapConfiguration) {
+  // We only want to send the config, so extract it. 
+  let account : CosmosAccount = currentState.activeAccount;
+
   let filtered : any = Object.assign({}, ...
-    Object.entries(currentState).filter(([k,v]) => k != 'mnemonic').map(([k,v]) => ({[k]:v}))
+    Object.entries(account).filter(([k,v]) => k != 'mnemonic').map(([k,v]) => ({[k]:v}))
   );
 
   let filtered2 = Object.assign({}, ...
-    Object.entries(filtered).filter(([k,v]) => k != 'password').map(([k,v]) => ({[k]:v}))
+    Object.entries(filtered).filter(([k,v]) => k != 'addresses').map(([k,v]) => ({[k]:v}))
   );
-
+  
   let filtered3 = Object.assign({}, ...
-    Object.entries(filtered2).filter(([k,v]) => k != 'dictionary').map(([k,v]) => ({[k]:v}))
+    Object.entries(filtered).filter(([k,v]) => k != 'transactionHistory').map(([k,v]) => ({[k]:v}))
   );
-
-  let filtered4 = Object.assign({}, ...
-    Object.entries(filtered3).filter(([k,v]) => k != 'transactionHistory').map(([k,v]) => ({[k]:v}))
-  );
-
   return filtered3;
 }
 
@@ -857,8 +1029,8 @@ function filterResponse(currentState : any) {
  * Seaches the dictionary for a name match, returns the address.
  */
 async function getAddressFromName(name : string) {
-  const currentState : any = await getPluginState();
-  const dictionary : Array<DictionaryAccount> = currentState.dictionary;
+  const currentAccount : CosmosAccount = (await getPluginState()).activeAccount;
+  const dictionary : Array<DictionaryAddress> = currentAccount.addresses;
   for(let i = 0; i < dictionary.length; i ++) {
     if(dictionary[i].name == name) {
       return {address : dictionary[i].address, pairing : true}
@@ -868,22 +1040,33 @@ async function getAddressFromName(name : string) {
 }
 
 /**
- * Allows for dynamic updating using setConfig method.
+ * Returns an updates state.
  */
 async function updateConfiguration(request : any) {
   const updates  : any = request.params[0];
-  const currentState : any = await getPluginState();
-  if((updates.nodeUrl === null || updates.nodeUrl === '') && currentState.nodeUrl !== null) {
-    updates.nodeUrl = currentState.nodeUrl;
-  }
-  if((updates.denom === null || updates.denom === '') && currentState.denom !== null) {
-    updates.denom = currentState.denom;
-  }
-  if((updates.gas === null || updates.gas === '') && currentState.gas !== null) {
-    updates.gas = currentState.gas;
+
+  // Retrieve the active account
+  const currentState : SnapConfiguration = await getPluginState();
+  let activeAccount : CosmosAccount = currentState.activeAccount;
+  
+  // If a url change was entered
+  if(updates.nodeUrl != '' &&  updates.nodeUrl != null) {
+    activeAccount.nodeUrl = updates.nodeUrl;
   }
 
-  return updates;
+  // If a gas change was entered.
+  if(updates.gas != ''  && updates.gas != null) {
+    activeAccount.gas = updates.gas;
+  }
+
+  // If a denom change was entered.
+  if(updates.denom != ''  && updates.denom != null) {
+    activeAccount.denom = updates.denom;
+  }  
+
+  let updatedState : SnapConfiguration = currentState;
+  updatedState.activeAccount = activeAccount;
+  return updatedState;
 }
 
 //this function will also require its own endowment in the manifest...

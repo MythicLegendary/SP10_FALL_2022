@@ -7,6 +7,11 @@ William Genesis -
 
 TestURL: http://localhost:26657
 Test Denom: uatom
-Test fee: 0
-Test Fee Denom: stake
-Test gas: 200000
+Test gas: 0stake
+
+Other Accounts:
+{
+    mnemonic: "good round enhance drip stove usage fringe practice swap phrase lyrics bird belt filter orphan fatal artefact file road intact hurt tornado genre silly",
+    address: "cosmos1l5kzj0jmk3zyv4fafvmu3tz3wz4sh52agn9002",
+    path: "m/44'/118'/0'/0/0"
+};
