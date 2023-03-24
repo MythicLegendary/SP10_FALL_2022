@@ -3,6 +3,7 @@ import { ThemeProvider } from 'styled-components';
 import { getThemePreference, setLocalStorage } from './utils';
 import { dark, light } from './config/theme';
 import { MetaMaskProvider } from './hooks';
+import { AuthContextProvider } from './hooks/AuthContext';
 
 export type RootProps = {
   children: ReactNode;
@@ -23,10 +24,12 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
   };
 
   return (
-    <ToggleThemeContext.Provider value={toggleTheme}>
-      <ThemeProvider theme={darkTheme ? dark : light}>
-        <MetaMaskProvider>{children}</MetaMaskProvider>
-      </ThemeProvider>
-    </ToggleThemeContext.Provider>
+    <AuthContextProvider>
+      <ToggleThemeContext.Provider value={toggleTheme}>
+        <ThemeProvider theme={darkTheme ? dark : light}>
+         <MetaMaskProvider>{children}</MetaMaskProvider>
+        </ThemeProvider>
+      </ToggleThemeContext.Provider>
+    </AuthContextProvider>
   );
 };
