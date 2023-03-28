@@ -121,13 +121,6 @@ const Index = () => {
 
   return (
     <Container>
-      <Heading>
-        COSMOS SNAP <Span>DEV MODE</Span>
-      </Heading>
-      <Subtitle>
-        Edit this site at <code>src/pages/index.tsx</code>
-      </Subtitle>
-
       <Tabs>
         <Tab title="Setup">
           <CardContainer>
@@ -191,7 +184,7 @@ const Index = () => {
                 title: 'Login With Password',
                 description:
                   'Enter Password To Unlock Other Functions',
-                inputs: ["password"],
+                inputs: ["password:sensitive"],
                 rpcRequest: 'login'
               }}
               disabled={!state.installedSnap || state.isLoggedIn}
@@ -205,8 +198,8 @@ const Index = () => {
               content={{
                 title: 'Setup Wallet',
                 description:
-                  'Enter mnemonic and a new password to setup your cosmos wallet with a new account. The first account name will be "default."',
-                inputs: ["mnemonic", "password", "firstAccountName"],
+                  'Enter mnemonic and a new password to setup your cosmos wallet with a new account.',
+                inputs: ["mnemonic", "password:sensitive", "firstAccountName"],
                 rpcRequest: 'setupPassword'
               }}
               disabled={!state.installedSnap || state.isLoggedIn}
@@ -491,13 +484,18 @@ const Index = () => {
                 !shouldDisplayReconnectButton(state.installedSnap)
               }
             />
-            <Card
+          </CardContainer>
+        </Tab>
+        <Tab title="Data and Account Management.">
+          <CardContainer>
+          <Card
               content={{
                 title: 'Delete Wallet',
                 description:
                   'Deletes all data, including all keys.',
-                inputs: ['password'],
+                inputs: ['password:sensitive'],
                 rpcRequest: 'deleteWallet'
+
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={

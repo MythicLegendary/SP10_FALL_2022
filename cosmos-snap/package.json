@@ -62,6 +62,7 @@
     "@metamask/snap-controllers": "^0.23.0",
     "@metamask/snap-types": "^0.23.0",
     "@metamask/snaps-cli": "^0.28.0",
+    "antd": "^5.3.3",
     "bech32": "^2.0.0",
     "crypto": "^1.0.1",
     "crypto-js": "^4.1.1",
