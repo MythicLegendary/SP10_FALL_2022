@@ -167,7 +167,8 @@ export const GlobalStyle = createGlobalStyle`
     &:hover {
       background-color: transparent;
       border: 1px solid ${(props) => props.theme.colors.background.inverse};
-      color: ${(props) => props.theme.colors.text.default};
+      // color: ${(props) => props.theme.colors.text.default};
+      color: #eee;
     }
 
     &:disabled,
@@ -183,4 +184,70 @@ export const GlobalStyle = createGlobalStyle`
       border: 1px solid ${(props) => props.theme.colors.background.inverse};
     }
   }
+
+  .ant-tabs-tab-active {
+    background-color: rgb(28 22 44 / 94%) !important;
+    border-color: rgb(28 22 44 / 94%) !important;
+    color: #bbb !important;
+  }
+
+  div.ant-card-meta-description {
+    color: #bbb !important;
+  }
+  div.ant-card-meta-title {
+      color: #fff !important;
+  }
+
+  input {
+      background-color: transparent !important;
+      color: #bbb !important;
+  }
+
+  input::placeholder {
+      color: #4e3d7c !important;
+  }
+
+  .ant-input-password {
+      box-shadow: none !important;
+      background-color: transparent !important;
+      border-color: #4e3d7c !important;
+  }
+
+  .ant-btn {
+      background-color: #000 !important;
+      color: #bbb !important;
+      border-color: transparent !important;
+      font-weight: bold !important;
+  }
+
+  .ant-btn:hover {
+      background-color: transparent !important;
+      border-color: #4e3d7c !important;
+  }
+  .ant-radio-button-wrapper:hover {
+    color: #fff !important;
+  }
+
+  .ant-radio-button-wrapper-checked {
+    color: #fff !important;
+    background-color: rgba(28, 22, 44, 0.94) !important;
+    border-color: #4e3d7c !important;
+  }
+
+  .ant-radio-button-wrapper-checked::before {
+    background-color: #4e3d7c !important;
+  }
+
+  .ant-row::-webkit-scrollbar-thumb {
+      background-color: #222 !important;
+      border-radius: 16px !important;
+  }
+  .ant-row::-webkit-scrollbar {
+      background-color: transparent !important;
+  }
+
+  .ant-row::-webkit-scrollbar {
+      width: 10px;
+  }
+
 `;

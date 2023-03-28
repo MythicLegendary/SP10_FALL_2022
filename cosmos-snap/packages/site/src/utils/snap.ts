@@ -655,13 +655,16 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
     }
     case 'enrollUserPhoneNumber' : {
       try {
+        await googleLogin()
         await enrollSecondFactorFirebaseUser(payload.phoneNumber, recaptchaVerifier);
         return {proceed : false, response : {msg : "Enrollment Succeeded", enrolled : true}}
       }
       catch(error) {
+        if(error.code == 'auth/multi-factor-auth-required') {
+          return {proceed : false, response : {msg : "Enrollment Failure: Phone Number Already Enrolled", enrolled : false}}
+        }
         return {proceed : false, response : {msg : "Enrollment failure: " + error.toString(), enrolled : false}}
       }
-
     }
     case 'restoreWallet' : {
       try {

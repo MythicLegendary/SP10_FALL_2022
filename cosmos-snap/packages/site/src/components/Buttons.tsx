@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { MetamaskState } from '../hooks';
 import { ReactComponent as FlaskFox } from '../assets/flask_fox.svg';
 import { shouldDisplayReconnectButton } from '../utils';
+import { Button } from 'antd';
 
 const Link = styled.a`
   display: flex;
@@ -32,16 +33,16 @@ const Link = styled.a`
   }
 `;
 
-const Button = styled.button`
-  display: flex;
-  align-self: flex-start;
-  align-items: center;
-  justify-content: center;
-  margin-top: auto;
-  ${({ theme }) => theme.mediaQueries.small} {
-    width: 100%;
-  }
-`;
+// const Button = styled.button`
+//   display: flex;
+//   align-self: flex-start;
+//   align-items: center;
+//   justify-content: center;
+//   margin-top: auto;
+//   ${({ theme }) => theme.mediaQueries.small} {
+//     width: 100%;
+//   }
+// `;
 
 const ButtonText = styled.span`
   margin-left: 1rem;
@@ -78,7 +79,13 @@ export const InstallFlaskButton = () => (
 
 export const ConnectButton = (props: ComponentProps<typeof Button>) => {
   return (
-    <Button {...props}>
+    <Button {...props} style={{
+      display: 'flex',
+      alignSelf: 'flex-start',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 'auto'
+    }}>
       <FlaskFox />
       <ButtonText>Connect</ButtonText>
     </Button>
@@ -87,7 +94,13 @@ export const ConnectButton = (props: ComponentProps<typeof Button>) => {
 
 export const ReconnectButton = (props: ComponentProps<typeof Button>) => {
   return (
-    <Button {...props}>
+    <Button {...props} style={{
+      display: 'flex',
+      alignSelf: 'flex-start',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 'auto'
+    }}>
       <FlaskFox />
       <ButtonText>Reconnect</ButtonText>
     </Button>
