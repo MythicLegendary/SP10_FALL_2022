@@ -276,6 +276,49 @@ async function setupPassword(password : string, mnemonic : string) {
   }
 }
 
+async function confirmRequest(params: any, method : string) {
+  const currentState : any = await getPluginState();
+  let prompt = "";
+  let content = "";
+  switch(method) {
+    case 'createSend' : {
+      prompt  = "Confirm Singular Transaction";
+      content = "Send " + params.amount + " " + currentState.denom +   " to " + params.recipientAddress;
+      break;
+    }
+    case 'createMultiSend' : {
+      prompt = "Confirm Multi Send Transaction"
+      let transactions = params.inputs.split(" ");
+      for (let i = 0; i < transactions.length; i ++) {
+        // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
+        const transaction : string[] = transactions[i].split("-");
+        
+        // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
+        content += "\n Send " + transaction[1] + " " + transaction[2] + " to " + transaction[0] + "\n";
+      }
+      break;
+    }
+    case 'deleteWallet' : {
+      prompt = "Confirm Wallet Deletion";
+      break;
+    }
+    case 'removeAccount' : {
+      prompt = "Confrim Account Removal";
+      break;
+    }
+  }
+  return wallet.request({
+    method: 'snap_confirm',
+    params: [
+      {
+        prompt: prompt,
+        description: "",
+        textAreaContent: content,
+      },
+    ],
+  });
+}
+
 /**
  * Decrypts passwords and mnemonics.
  */
@@ -453,6 +496,13 @@ async function getAccountInfoGeneral(address : string) {
  */
 async function createSend(transactionRequest : any) {
   try {
+    // Confirm the transaction request with the user.
+    let confirmed = await confirmRequest(transactionRequest, 'createSend');
+    if (!confirmed) {
+      console.log("COSMOS-SNAP: Transaction Rejected By User");
+      return {msg : "Transaction Not Confirmed", transactionSent : false}
+    }
+    
     // Get the wallet (keys) object
     const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
     
@@ -547,6 +597,11 @@ async function createMultiSend(transactionRequest : any) {
       // Get the wallet (keys) object
       const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
     
+      // Confirm the transaction with the user
+      if(! (await confirmRequest(transactionRequest, 'createMultiSend'))) {
+        return {msg : "Transaction Denied by user.", transactionSent : false}
+      }
+
       // Get the client object to interact with the blockchain
       const currentState : any = await getPluginState();
       if(currentState.gas == null || currentState.gas == '') {
