@@ -1,17 +1,31 @@
 import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from '../../../node_modules/@metamask/snap-types';
 import detectEthereumProvider from '@metamask/detect-provider';
-import { JsonBIP44CoinTypeNode } from "@metamask/key-tree";
+import { JsonBIP44CoinTypeNode, SLIP10Node, SLIP10Path } from "@metamask/key-tree";
 import { hasProperty, isObject, Json } from '@metamask/utils';
-import { BytesLike, ethers, parseUnits } from "ethers";
+import { assert, BytesLike, ethers, parseUnits } from "ethers";
 import { Web3Provider } from "@ethersproject/providers";
+import { Decimal } from "@cosmjs/math";
 import  web3  from "web3";
+import {Buffer} from 'buffer';
+import { caesar, rot13 } from "simple-cipher-js";
+import crypto from 'crypto';
+
+import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
+import { AccountData, coins} from "@cosmjs/launchpad";
+import { Coin, DirectSecp256k1HdWallet, makeAuthInfoBytes } from "@cosmjs/proto-signing";
+import { SigningStargateClient, StargateClientOptions, SigningStargateClientOptions, GasPrice, StdFee, MsgSendEncodeObject, calculateFee, assertIsDeliverTxSuccess } from "@cosmjs/stargate";
 //will need further imports to ensure!
 
 import { publicKeyCreate, ecdsaSign } from 'secp256k1';
 import { bech32 } from 'bech32'
-import {Buffer} from 'buffer';''
 import Sha256WithX2 from "sha256";
 import RIPEMD160Static from "ripemd160";
+
+interface DictionaryAccount {
+  address : string,
+  name : string
+}
+
 /**
  * Get a message from the origin. For demonstration purposes only.
  *
@@ -21,18 +35,8 @@ import RIPEMD160Static from "ripemd160";
 const getMessage = (originString: string): string =>
   `Hello, ${originString}!`;
 
-
-//hardcoded to start with ATOM as our base cryptocurrency, the official and most popular Cosmos coin.
-updatePluginState({
-  nodeUrl: "https://atom.getblock.io",
-  denom: "uatom",
-  prefix: "cosmos",
-  memo: "SP-10-2022",
-  gas: 0,
-  version: "0.0.1"
-})
-
-/**
+  
+/**s
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
  * @param args - The request handler args as object.
@@ -45,37 +49,70 @@ updatePluginState({
  */
 
 
-export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
+export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {origin : string, request : any}) => {
   let pubKey, account;
-  console.log("COSMOS-SNAP: Snap RPC Handler invoked");
-
+  console.log("COSMOS-SNAP: Snap RPC Handler invoked. Request: ", request);
   switch (request.method) {
+
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
-      return getPluginState();
+      const filteredState =  filterResponse(await getPluginState());
+      return filteredState;
+
+    case 'setupPassword': {
+      console.log("COSMOS-SNAP: Setting up new password for key encryption.");
+      return setupPassword(request.params[0]['password'], request.params[0]['mnemonic']);
+    }
+
+    case 'login': {
+      console.log("COSMOS-SNAP: Logging in user.");
+      return loginUser(request.params[0]['password']);
+    }
+    
+    case 'logout' : {
+      console.log("COSMOS-SNAP: Logging out user- no backend run.");
+      return {}
+    }
+    
+    case 'removeAccount': {
+      console.log("COSMOS-SNAP: Removing Account");
+      // Remove All Data, Including Keys
+      await updatePluginState({});
+      // Set the parameters to the defaults
+      await clearConfigData();
+      return {msg : "All Configuration Data Cleared, Keys Removed."}
+    }
 
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
+      const updates  : any = await updateConfiguration(request);
       await updatePluginState({
         ...await getPluginState(),
-        nodeUrl: request.params[0]['nodeUrl'],
-        denom: request.params[0]['denom'],
-        prefix: request.params[0]['prefix'],
-        memo: request.params[0]['memo'],
-        gas: request.params[0]['gas'],
+        ...updates
       })
-      return await getPluginState();
-
-    case 'getAccount':
-      console.log("COSMOS-SNAP: Getting the account associated with the public key.");
-      pubKey = await getPubKey();
-      return await getAccount(pubKey);
+      return filterResponse(await getPluginState());
     
+    case 'addAddress': {
+      console.log("COSMOS-SNAP: Adding a new name-address pair to the dictionary");
+      return await addAddress(request.params[0].name, request.params[0].address);
+    }
+
+    case 'viewAddresses' : {
+      console.log("COSMOS-SNAP: Return the dictionary of addresses set by the user.");
+      return {dictionary  : (await getPluginState()).dictionary}
+    }
+
+    case 'clearWalletData':
+      console.log("COSMOS-SNAP: Clearing the config data.");
+      return await clearConfigData();
+
     case 'getAccountInfo':
       console.log("COSMOS-SNAP: Getting Account Info.");
-      pubKey = await getPubKey();
-      account = getAccount(pubKey);
-      return await getAccountInfo(account);
+      return await getAccountInfo();
+
+    case 'getAccountGeneral':
+      console.log("COSMOS-SNAP: Getting Account Info General");
+      return await getAccountInfoGeneral(request.params[0].address);
 
     case 'getStatus':
       console.log("COSMOS-SNAP: Getting status.");
@@ -96,118 +133,61 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
       pubKey = await getPubKey()
       account = getAccount(pubKey)
       return await getRewards(account)
-    
-      case 'createCyberlink':
-        let linkData = request.params[0]
-        return await createCyberlinkTx(
-          linkData['objectFrom'],
-          linkData['objectTo']
-        )
-    
+
     case 'createSend':
       console.log("COSMOS-SNAP: Creating Send Transaction.");
-      let sendData = request.params[0]
-      return await createSendTx(
-        sendData['subjectTo'],
-        sendData['amount']
-      )
+      return await createSend(request.params[0]);
 
     case 'createMultiSend':
         console.log("COSMOS-SNAP: Creating Multi Send Transaction.");
-        let multiSendData = request.params[0]
-        return await createMultiSendTx(
-          multiSendData['inputs'],
-          multiSendData['outputs']
-        )
+        return await createMultiSend(
+          request.params[0]
+        );
 
     case 'createDelegate':
       console.log("COSMOS-SNAP: Creating Delegate.");
-      let delegateData = request.params[0]
-      return await createDelegateTx(
-        delegateData['validatorTo'],
-        delegateData['amount']
-      )
+      return {}
 
     case 'createRedelegate':
       console.log("COSMOS-SNAP: Creating Redelegate");
-      let redelegateData = request.params[0]
-      return await createRedelegateTx(
-        redelegateData['validatorFrom'],
-        redelegateData['validatorTo'],
-        redelegateData['amount']
-      )
+      return {}
 
     case 'createUndelegate':
       console.log("COSMOS-SNAP: Creating Undelegate");
-      let undelegateData = request.params[0]
-      return await createUndelegateTx(
-        undelegateData['validatorFrom'],
-        undelegateData['amount']
-      )
+      return {}
 
     case 'createWithdrawDelegationReward':
       console.log("COSMOS-SNAP: Creating Withdrawal Delegation Reward");
-      let withdrawDelegationReward = request.params[0]
-      return await createWithdrawDelegationRewardTx(
-        withdrawDelegationReward['rewards']
-      )
+      return {}
 
     case 'createTextProposal':
       console.log("COSMOS-SNAP: Creating Text Proposal");
-      let textProposalData = request.params[0]
-      return await createTextProposalTx(
-        textProposalData['title'],
-        textProposalData['description'],
-        textProposalData['deposit']
-      )
+      return {}
 
     case 'createCommunityPoolSpend':
       console.log("COSMOS-SNAP: Creating Community Pool Spend.");
-      let communitySpendProposalData = request.params[0]
-      return await createCommunityPoolSpendProposalTx(
-        communitySpendProposalData['title'],
-        communitySpendProposalData['description'],
-        communitySpendProposalData['recipient'],
-        communitySpendProposalData['deposit'],
-        communitySpendProposalData['amount']
-      )
+      return {}
 
     case 'createParamsChangeProposal':
       console.log("COSMOS-SNAP: Create Params Change Proposal.");
-      let paramsChangeProposalData = request.params[0]
-      return await createParamsChangeProposalTx(
-        paramsChangeProposalData['title'],
-        paramsChangeProposalData['description'],
-        paramsChangeProposalData['changes'],
-        paramsChangeProposalData['deposit']
-      )
+      return {}
       
     case 'createDeposit':
       console.log("COSMOS-SNAP: Create Deposit.");
-      let depositData = request.params[0]
-      return await createDepositTx(
-        depositData['proposalId'],
-        depositData['amount']
-      )
+      return {}
       
     case 'createVote':
       console.log("COSMOS-SNAP: Creating Vote.");
-      let voteData = request.params[0]
-      return await createVoteTx(
-        voteData['proposalId'],
-        voteData['option']
-      )
+      return {}
       
-    case 'hello':
+    case 'displayNotification':
       return wallet.request({
         method: 'snap_confirm',
         params: [
           {
-            prompt: getMessage(origin),
-            description:
-              'This custom confirmation is just for display purposes.',
-            textAreaContent:
-              'But you can edit the snap source code to make it do something, if you want to!',
+            prompt: request.params[0].prompt,
+            description: request.params[0].description,
+            textAreaContent: request.params[0].textAreaContent,
           },
         ],
       });
@@ -218,21 +198,572 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request}) => {
 };
 
 //----------------------------------------------------------
+/**
+ * Logs in the user using the password. Updates the lastLogin field to be the current session number.
+ */
+async function loginUser(password : string) {
+  try {
+    const currentState : any = await getPluginState();
+    
+    // If there is no password yet.
+    if(password == null || password == '') {
+      return {msg : "Password Required", loginSuccessful : false}
+    }
 
-async function getPluginState()
-{
-    return await wallet.request({
-    method: 'snap_manageState',
-    params: ['get'],
+    if(currentState.password == null || currentState.password == '') {
+      return {msg : "No Password Stored; Setup Account.", loginSuccessful : false}
+    }
+    
+    // Get the stored password
+    const storedPassword : string = await decrypt(currentState.password, await bip32EntropyPrivateKey());
+    // Compare the values
+    if(password === storedPassword) {
+      return {loginSuccessful : true, msg : "Login Sucessful"}
+    } 
+    else {
+      return {loginSuccessful : false, msg : "Login Failed: Password not correct."}
+    }
+  }
+  catch(e) {
+    console.log("COSMOS-SNAP: ", e);
+    return {msg : e.toString()};
+  }
+}
+
+async function getCosmosWallet() {
+  const currentState : any = await getPluginState();
+
+  return await DirectSecp256k1HdWallet.fromMnemonic(
+    await decrypt(
+      currentState.mnemonic, 
+      await bip32EntropyPrivateKey()
+  ));
+}
+
+/**
+ * Sets up the new password used for verification
+ * Initializes the attributes of the wallet to empty.
+ */
+async function setupPassword(password : string, mnemonic : string) {
+  try {
+    // If the password is empty or null
+    if(password == null || password === '') {
+      return {msg: 'Password Required.', setup : false}
+    }
+    if(mnemonic == null || mnemonic === '') {
+      return {msg : 'Mnemonic required', setup : false}
+    }
+    // If invalid length mnemonic
+    const length = mnemonic.split(" ").length;
+    if(length !== 12 && length !== 24 && length !== 25) {
+      return {msg : 'Invalid Mnemonic Length' , setup : false}
+    }
+
+    // Update the pluginState with the encrypted key and serialized wallet
+  await updatePluginState(
+    {
+      ...await getPluginState(),
+      mnemonic : await encrypt(mnemonic, await bip32EntropyPrivateKey()),
+      password : await encrypt(password, await bip32EntropyPrivateKey())
+
+    });
+  await clearConfigData();
+  return {msg : "Successful serialization of wallet.", setup : true}
+  }
+  catch(error) {
+    console.log(error);
+    return {msg : "Serialization not successful.", setup : false}
+  }
+}
+
+async function confirmRequest(params: any, method : string) {
+  const currentState : any = await getPluginState();
+  let prompt = "";
+  let content = "";
+  switch(method) {
+    case 'createSend' : {
+      prompt  = "Confirm Singular Transaction";
+      content = "Send " + params.amount + " " + currentState.denom +   " to " + params.recipientAddress;
+      break;
+    }
+    case 'createMultiSend' : {
+      prompt = "Confirm Multi Send Transaction"
+      let transactions = params.inputs.split(" ");
+      for (let i = 0; i < transactions.length; i ++) {
+        // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
+        const transaction : string[] = transactions[i].split("-");
+        
+        // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
+        content += "\n Send " + transaction[1] + " " + transaction[2] + " to " + transaction[0] + "\n";
+      }
+      break;
+    }
+    case 'deleteWallet' : {
+      prompt = "Confirm Wallet Deletion";
+      break;
+    }
+    case 'removeAccount' : {
+      prompt = "Confrim Account Removal";
+      break;
+    }
+  }
+  return wallet.request({
+    method: 'snap_confirm',
+    params: [
+      {
+        prompt: prompt,
+        description: "",
+        textAreaContent: content,
+      },
+    ],
   });
 }
 
+/**
+ * Decrypts passwords and mnemonics.
+ */
+async function encrypt(password : string, key : string) {
+  let keyint = 0;
+
+  for(let i = 0; i<key.length; i++)
+  {
+    let character = key.charCodeAt(i);
+    keyint = ((keyint << 5) - keyint) + character;
+    keyint = keyint & keyint;
+  }
+
+  keyint = keyint%25;
+  if(keyint < 0){keyint = keyint*-1;}
+  return caesar.encrypt(password, keyint);
+}
+
+/**
+ * Decrypts passwords and mnemonics.
+ */
+async function decrypt(password : string, key : string) {
+  let keyint = 0;
+
+  for(let i = 0; i<key.length; i++)
+  {
+    let character = key.charCodeAt(i);
+    keyint = ((keyint << 5) - keyint) + character;
+    keyint = keyint & keyint;
+  }
+
+  keyint = keyint%25;
+  if(keyint < 0){keyint = keyint*-1;}
+  return caesar.decrypt(password, keyint);
+}
+
+/**
+ * Functions the fee by simulating a transaction.
+ */
+async function formatFee(msgs : Array<MsgSendEncodeObject>, fromAddress : string, 
+  client : SigningStargateClient, memo : string, gasPrice : GasPrice) {
+  // Simulate the transaction
+  const gasEstimation = await client.simulate(fromAddress, msgs, memo);
+  const fee : StdFee = calculateFee(Math.round(gasEstimation * 1.3), gasPrice);
+
+  return fee
+}
+
+/**
+ * Gets the unique entropy value used to create the keys; use to encrypt data.
+ */
+async function bip32EntropyPrivateKey(){
+  const entropy : any = await wallet.request({
+    method: 'snap_getBip32Entropy',
+    params: {
+      path: ["m", "44'", "118'", "0'"],
+      curve: 'secp256k1',
+    },
+  })
+  return entropy.privateKey;
+}
+
+/**
+ * Adds a new address to the dictionary.
+ */
+async function addAddress(name : string, address : string) {
+  if(name == null || name == '') {
+    return {msg : "Name Required." , added : false}
+  }
+  if(address == null || address == '') {
+    return {msg : "Address Required." , added : false}
+  }
+  const currentState : any = await getPluginState();
+  // if this name already exists
+  const dictionary : Array<DictionaryAccount> = currentState.dictionary;
+  for(let i = 0; i < dictionary.length; i ++) {
+    if(dictionary[i].name == name) {
+      return {msg : "Name already used." , added : false}
+    }
+  }
+
+  // Otherwise, add the new pairing
+  currentState.dictionary.push({name : name, address : address});
+  await updatePluginState(currentState);
+  return {msg : name + "-" + address + " was added to the dictionary." , added : true}
+}
+
+/**
+ * Retrieves the current currencies associated with the account, with the currency specified in the configuration.
+ */
+async function getAccountInfo() {
+  try {
+    // Get the wallet (keys) object
+    const currentState : any = await getPluginState();
+    const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+    
+    // If the nodeUrl has not been set
+    if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+      return {msg : "Node URL required.", accountRetrieved : false}
+    }
+
+    // Get the client object to interact with the blockchain
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    
+    // Get the public address of the account
+    const accountData : AccountData = (await wallet.getAccounts())[0];
+
+    // If there is no default denom
+    if(currentState.denom == null || currentState.denom == '') {
+      return {msg : "Default denom required.", accountRetrieved : false}
+    }
+
+    // Return result
+    let result : any = await client.getBalance(accountData.address, currentState.denom);
+    assertIsDeliverTxSuccess(result);
+    result['Account'] = accountData.address;
+    result['msg'] = "Account Details."
+    result['accountRetrieved'] = true;
+    return result; 
+  }
+  catch(error) {
+    console.log("COSMOS-SNAP: " , error);
+    return {msg : error.toString()};
+  }
+}
+
+/**
+ * Returns the balance at -address-
+ */
+async function getAccountInfoGeneral(address : string) {
+  try {
+    // Get the wallet (keys) object
+    const currentState : any = await getPluginState();
+    const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+    
+    // If the nodeUrl has not been set
+    if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+      return {msg : "Node URL required.", accountRetrieved : false}
+    }
+    // Get the client object to interact with the blockchain
+    const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet);
+    
+    // If the denom is empty
+    if(currentState.denom == null || currentState.denom == '') {
+      return {msg : "Denom Required.", accountRetrieved : false}
+    }
+
+    // If the address is empty
+    if(address == null || address == '') {
+      return {msg : "Address Required.", accountRetrieved : false}
+    }
+
+    // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
+    let searchAddress : string = address;
+    const possiblePairing : any  = (await getAddressFromName(searchAddress))
+    if(possiblePairing.pairing) {
+      searchAddress = possiblePairing.address;
+    }
+    
+    // Return result
+    let result : any = await client.getBalance(searchAddress, currentState.denom);
+    assertIsDeliverTxSuccess(result);
+    result['Account'] = address;
+    result['accountRetrieved'] = true;
+    return result; 
+  }
+  catch(error) {
+    console.log("COSMOS-SNAP: " , error);
+    return {msg : error.toString()};
+  }
+}
+
+/**
+ * Sends a transaction request with reciepient, amount and denom.
+ */
+async function createSend(transactionRequest : any) {
+  try {
+    // Confirm the transaction request with the user.
+    let confirmed = await confirmRequest(transactionRequest, 'createSend');
+    if (!confirmed) {
+      console.log("COSMOS-SNAP: Transaction Rejected By User");
+      return {msg : "Transaction Not Confirmed", transactionSent : false}
+    }
+    
+    // Get the wallet (keys) object
+    const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+    
+    // Get the client object to interact with the blockchain
+    const currentState : any = await getPluginState();
+    
+    // Get the gas price
+    if(currentState.gas == null || currentState.gas == '') {
+      return {msg : "Gas not set.", transactionSent : false}
+    }
+    const gasPrice : GasPrice = GasPrice.fromString(currentState.gas);
+
+    // If the nodeUrl has not been set
+    if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+      return {msg : "Node URL required.", transactionSent : false}
+    }
+    const client : SigningStargateClient = await SigningStargateClient
+      .connectWithSigner(
+        currentState.nodeUrl, 
+        wallet, 
+        {gasPrice : gasPrice}
+      );
+    
+    // Get the public address of the account
+    const accountData : AccountData = (await wallet.getAccounts())[0];
+    
+    // If the recipient address, amount, or denom is missing
+    if(transactionRequest.recipientAddress == null || transactionRequest.recipientAddress == '') {
+      return {msg : "Recpient Address Required.", transactionSent : false}
+    }
+    if(currentState.denom == null || currentState.denom == '') {
+      return {msg : "Denom Required.", transactionSent : false}
+    }
+    if(transactionRequest.amount == null || transactionRequest.amount == '') {
+      return {msg : "Amount Required.", transactionSent : false}
+    }
+    if(transactionRequest.memo == null || transactionRequest.memo == '') {
+      return {msg : "Memo Required.", transactionSent : false}
+    }
+
+    // Format the amount
+    const amount : Coin[] = [{denom : currentState.denom, amount: transactionRequest.amount}];
+    
+    // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
+    let recipientAddress : string = transactionRequest.recipientAddress;
+    const possiblePairing : any  = (await getAddressFromName(recipientAddress))
+    if(possiblePairing.pairing) {
+      recipientAddress = possiblePairing.address;
+    }
+
+    // Format the fee
+    const fee : StdFee = await formatFee(
+      [{
+        typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+        value: {
+          fromAddress: accountData.address,
+          toAddress: recipientAddress,
+          amount: amount
+            }
+      }],
+      accountData.address,
+      client,
+      transactionRequest.memo,
+      gasPrice
+    );
+
+    // Make the transaction request to the network.
+    const response : any  = await client.sendTokens(
+      accountData.address,
+      recipientAddress,
+      amount, 
+      fee,
+      transactionRequest.memo
+    );
+    assertIsDeliverTxSuccess(response);
+    return {
+      msg : transactionRequest.amount + " " + currentState.denom + " sent to " + transactionRequest.recipientAddress,
+      transactionSent : true
+    };
+  }
+  catch(error) {
+    console.log("COSMOS-SNAP ", error);
+    return {msg : error.toString()};
+  } 
+}
+
+/**
+ * Creates a multi-send transaction (multiple recipients and or multiple denoms). 
+ */
+async function createMultiSend(transactionRequest : any) {
+    try {
+      // Get the wallet (keys) object
+      const wallet : DirectSecp256k1HdWallet = await getCosmosWallet();
+    
+      // Confirm the transaction with the user
+      if(! (await confirmRequest(transactionRequest, 'createMultiSend'))) {
+        return {msg : "Transaction Denied by user.", transactionSent : false}
+      }
+
+      // Get the client object to interact with the blockchain
+      const currentState : any = await getPluginState();
+      if(currentState.gas == null || currentState.gas == '') {
+        return {msg : "Gas not set.", transactionSent : false}
+      }
+      if(currentState.nodeUrl == null || currentState.nodeUrl == '') {
+        return {msg : "Node URL required.", transactionSent : false}
+      }
+      const gasPrice : GasPrice = GasPrice.fromString(currentState.gas);
+      const client : SigningStargateClient = await SigningStargateClient.connectWithSigner(currentState.nodeUrl, wallet, {gasPrice : gasPrice});
+      
+      // Get the public address of the account
+      const accountData : AccountData = (await wallet.getAccounts())[0];
+      
+      // Format the multiple transactions
+      const messages : Array<MsgSendEncodeObject> = [];
+      const transactions : string[] = transactionRequest.inputs.split(" ");
+      let content = "";
+      
+      for (let i = 0; i < transactions.length; i ++) {
+        // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
+        const transaction : string[] = transactions[i].split("-");
+        
+        // If the address sent by the user is a short-hand name in the dictionary, replace it with the actual address for the transaction.
+        let recipientAddress : string = transaction[0];
+        const possiblePairing : any  = (await getAddressFromName(recipientAddress))
+        if(possiblePairing.pairing) {
+          recipientAddress = possiblePairing.address;
+        }
+
+        let newMessage : MsgSendEncodeObject = {
+          typeUrl : "/cosmos.bank.v1beta1.MsgSend",
+          value : {
+            fromAddress : accountData.address,
+            toAddress : recipientAddress,
+            amount : [{amount : transaction[1], denom : transaction[2]}]
+          }
+        };
+        messages.push(newMessage);
+        content += "\n" + transaction[1] + " " + transaction[2] + " sent to " + transaction[0] + "\n";
+      }
+      
+      // Get the fee.
+      const fee : StdFee = await formatFee(
+        messages,
+        accountData.address,
+        client,
+        transactionRequest.memo,
+        gasPrice
+      );
+
+      // Send the transaction.
+      const response : any = client.signAndBroadcast(
+        accountData.address,
+        messages,
+        fee,
+        transactionRequest.memo
+      );
+      assertIsDeliverTxSuccess(response);
+      
+      return  {
+        msg  : "Multi-Send Executed:" + "\n" + content,
+        transactionSent : true
+      }
+    }
+    catch(error) {
+      console.log("COSMOS-SNAP ", error);
+      return {msg : error.toString()};
+    } 
+}
+
+/**
+ * Gets the data persisted by MetaMask.
+ */
+async function getPluginState()
+{
+    const currentState : any =  await wallet.request({
+    method: 'snap_manageState',
+    params: ['get'],
+    });
+
+    // If null return blank object.
+    if(currentState == null) {
+      return {}
+    } 
+    return currentState;
+}
+
+/**
+ * Updates the data persisted by MetaMask.
+ */
 async function updatePluginState(state: unknown)
 {
   return await wallet.request({
   method: 'snap_manageState',
   params: ['update', state],
     });
+}
+
+/**
+ * Clear the configuration data. Also used to initialize it.
+ */
+async function clearConfigData() {
+  const currentState : any = await getPluginState();
+  currentState.nodeUrl  = "";
+  currentState.denom = "";
+  currentState.gas = ""
+  currentState.dictionary = new Array<DictionaryAccount>();
+  await updatePluginState(currentState);
+
+  return {dataCleared : true};
+}
+
+/**
+ * Filters the mnemonic and password from the response.
+ */
+function filterResponse(currentState : any) {
+  let filtered : any = Object.assign({}, ...
+    Object.entries(currentState).filter(([k,v]) => k != 'mnemonic').map(([k,v]) => ({[k]:v}))
+  );
+
+  let filtered2 = Object.assign({}, ...
+    Object.entries(filtered).filter(([k,v]) => k != 'password').map(([k,v]) => ({[k]:v}))
+  );
+
+  let filtered3 = Object.assign({}, ...
+    Object.entries(filtered2).filter(([k,v]) => k != 'dictionary').map(([k,v]) => ({[k]:v}))
+  );
+  return filtered3;
+}
+
+/**
+ * Seaches the dictionary for a name match, returns the address.
+ */
+async function getAddressFromName(name : string) {
+  const currentState : any = await getPluginState();
+  const dictionary : Array<DictionaryAccount> = currentState.dictionary;
+  for(let i = 0; i < dictionary.length; i ++) {
+    if(dictionary[i].name == name) {
+      return {address : dictionary[i].address, pairing : true}
+    }
+  }
+  return {pairing : false}
+}
+
+/**
+ * Allows for dynamic updating using setConfig method.
+ */
+async function updateConfiguration(request : any) {
+  const updates  : any = request.params[0];
+  const currentState : any = await getPluginState();
+  if((updates.nodeUrl === null || updates.nodeUrl === '') && currentState.nodeUrl !== null) {
+    updates.nodeUrl = currentState.nodeUrl;
+  }
+  if((updates.denom === null || updates.denom === '') && currentState.denom !== null) {
+    updates.denom = currentState.denom;
+  }
+  if((updates.gas === null || updates.gas === '') && currentState.gas !== null) {
+    updates.gas = currentState.gas;
+  }
+
+  return updates;
 }
 
 //this function will also require its own endowment in the manifest...
@@ -257,6 +788,7 @@ async function getPubKey () {
   return bytesToHex(publicKeyCreate(prikeyArr, true))
 }
 
+// Deprecated
 async function getAccount (pubkey: any) {
   const currentPluginState : any = await getPluginState()
   const address = await getAddress(hexToBytes(pubkey))
@@ -292,8 +824,8 @@ async function getStatus() {
     console.error(error)
   }
 }
-
-async function getAccountInfo(address: any) {
+// Deprecated
+async function getAccountInfoDeprecated(address: any) {
   const currentPluginState : any = await getPluginState()
   try {
     const response = await fetch(`${currentPluginState.nodeUrl}/api/account?address="${address}"`, {
@@ -390,7 +922,7 @@ async function getRewards(address: any) {
   }
 }
 
-function createSend(txContext : any, recipient : any, amount : any, denom :any) {
+function createSendDeprecated(txContext : any, recipient : any, amount : any, denom :any) {
   const txSkeleton = createSkeleton(txContext, denom);
 
   const txMsg = {
@@ -412,12 +944,12 @@ function createSend(txContext : any, recipient : any, amount : any, denom :any) 
   return txSkeleton;
 }
 
-
-async function createSendTx(subjectTo : any, amount :  any) {
+// Deprecated
+async function createSendDeprecatedTx(subjectTo : any, amount :  any) {
   const txContext = await createTxContext()
   const currentPluginState : any = await getPluginState()
 
-  const tx = await createSend(
+  const tx = await createSendDeprecated(
     txContext,
     subjectTo,
     amount,
@@ -431,7 +963,7 @@ async function createSendTx(subjectTo : any, amount :  any) {
 async function createTxContext() {
   const pubKey = await getPubKey()
   const account = getAccount(pubKey)
-  const accountInfo = await getAccountInfo(account)
+  const accountInfo = await getAccountInfoDeprecated(account)
 
   const currentPluginState : any = await getPluginState();
 
@@ -523,7 +1055,7 @@ async function txSubmit(signedTx : any) {
   return result
 }
 
-function createMultiSend(txContext : any, inputs : any, outputs : any, denom : any) {
+function createMultiSendDeprecated(txContext : any, inputs : any, outputs : any, denom : any) {
   const txSkeleton = createSkeleton(txContext, denom);
 
   const txMsg = {
@@ -539,54 +1071,17 @@ function createMultiSend(txContext : any, inputs : any, outputs : any, denom : a
   return txSkeleton;
 }
 
-async function createMultiSendTx(inputs : any, outputs : any) {
+async function createMultiSendDeprecatedTx(inputs : any, outputs : any) {
   const txContext = await createTxContext()
   const currentPluginState : any = await getPluginState()
 
-  const tx = await createMultiSend(
+  const tx = await createMultiSendDeprecated(
     txContext,
     JSON.parse(inputs),
     JSON.parse(outputs),
     currentPluginState.denom
   );
 }
-
-function createCyberlink(txContext : any, objectFrom : any, objectTo : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cyberd/Link',
-    value: {
-      address: txContext.bech32,
-      links: [
-        {
-          from: objectFrom,
-          to: objectTo,
-        },
-      ],
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createCyberlinkTx (objectFrom :any, objectTo : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createCyberlink(
-    txContext,
-    objectFrom,
-    objectTo,
-    currentPluginState.denom
-  );
-
-  const signedTx = await sign(tx, txContext);
-  return await txSubmit(signedTx)
-  // return signedTx
-};
 
 function createDelegate(txContext : any, validatorBech32 : any, amount : any, denom : any) {
   const txSkeleton = createSkeleton(txContext, denom);

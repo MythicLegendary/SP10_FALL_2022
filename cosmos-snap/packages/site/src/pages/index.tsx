@@ -278,8 +278,8 @@ const Index = () => {
               content={{
                 title: 'GET ACCOUNT GENERAL',
                 description:
-                  'Retrieve the balance of a partiuclar coin at a particular address.',
-                inputs: ['denom', 'address'],
+                  'Retrieve the balance at a particular address.',
+                inputs: ['address'],
                 rpcRequest: 'getAccountGeneral'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
@@ -344,31 +344,11 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'SET FEE PARAMETERS',
+                title: 'SET THE GAS',
                 description:
-                  'Set the parameters for formatting transaction fees.',
+                  'Set as <amount><denom>.',
                 inputs: [
-                  "feeDenom",
-                  "feeAmount",
                   "gas"
-                ],
-                rpcRequest: 'setConfig'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'SET MEMO AND PREFIX',
-                description:
-                  '',
-                inputs: [
-                  "memo",
-                  "prefix"
                 ],
                 rpcRequest: 'setConfig'
               }}
@@ -407,7 +387,7 @@ const Index = () => {
                 title: 'Create Send',
                 description:
                   '',
-                inputs: ['recipientAddress', 'amount', 'denom', 'memo'],
+                inputs: ['recipientAddress', 'amount', 'memo'],
                 rpcRequest: 'createSend'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}

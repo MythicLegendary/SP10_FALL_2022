@@ -57,58 +57,256 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
 };
 
 /**
- * Invoke the "hello" method from the example snap.
+ * Sends a transaction request with reciepient, amount and denom.
  */
-export const sendHello = async () => {
-
-  await window.ethereum.request({
+async function sendRequest(payload : any, method : string) {
+  return await window.ethereum.request({
     method: 'wallet_invokeSnap',
     params: [
       defaultSnapOrigin,
       {
-        method: 'hello'
+        method: method,
+        params: [payload]
       },
     ],
   });
-};
+}
+
+async function sendNotification(methodName : string, response : any) {
+  let content : any = {}
+  switch(methodName) {
+    case 'login': 
+    {
+      if(!response.loginSuccessful) {
+        content = {
+          prompt: "Login Unsuccessful",
+          description : "Response For The Login Attempt",
+          textAreaContent : response.msg
+          };
+      }
+      else {
+        content = {
+          prompt: "Login Successful!",
+          description : "Response For The Login Attempt",
+          textAreaContent : response.msg
+          };
+      }
+      break;
+    }
+    case 'setupPassword': {
+      if(response.setup) {
+        content = {
+          prompt: "Setting Up Password",
+          description : "Response From Setup : " + response.msg,
+          textAreaContent : "Password and Mnemonic Stored."
+          };
+      }
+      else {
+        content = {
+          prompt: "Setup Failed",
+          description : "",
+          textAreaContent : response.msg
+          };
+      }
+      break;
+    }
+    case 'getSnapState': {
+      let display = ""
+      for (const property in response) {
+        if (Object.prototype.hasOwnProperty.call(response, property)) {
+          display += `${property}: ${response[property]}`
+          display += '\n'
+        }
+      }
+      content = {
+        prompt: "Configuration Data",
+        description : "",
+        textAreaContent : display
+        };
+      break;
+    }
+    case 'setConfig': {
+      let display = ""
+      for (const property in response) {
+        if (Object.prototype.hasOwnProperty.call(response, property)) {
+          display += `${property}: ${response[property]}`
+          display += '\n'
+        }
+      }
+      content = {
+        prompt: "Updated Configuration Data",
+        description : "",
+        textAreaContent : display
+        };
+      break;
+    }
+    case 'getAccountInfo': {
+        if(response.accountRetrieved) {
+          content = {
+            prompt: "Account Information",
+            description : "Account Information for : " + response.Account,
+            textAreaContent : "Amount of " + response.denom + ": " + response.amount
+            };
+        }
+        else {
+          content = {
+            prompt: "Account Retrieval failed",
+            description : "",
+            textAreaContent : response.msg
+            };
+        }
+        break;
+    }
+    case 'getAccountGeneral': {
+      if(response.accountRetrieved) {
+        content = {
+          prompt: "Account Information",
+          description : "Account Information for : " + response.Account,
+          textAreaContent : "Amount of " + response.denom + ": " + response.amount
+          };
+      }
+      else {
+        content = {
+          prompt: "Account Retrieval failed",
+          description : "",
+          textAreaContent : response.msg
+          };
+      }
+      break;
+    }
+    case 'createSend': {
+      if(response.transactionSent) {
+        response['rawLog'] = "[REMOVED FOR LENGTH]"
+        content = {
+          prompt: "Transaction Sent",
+          description : "",
+          textAreaContent : response.msg
+          };
+      }
+      else {
+        content = {
+          prompt: "Transaction Not Sent",
+          description : "",
+          textAreaContent : response.msg
+          };
+      }
+      break;
+    }
+    case 'createMultiSend' : {
+        if(response.transactionSent) {
+          content = {
+            prompt: "Transaction Sent",
+            description : "",
+            textAreaContent : response.msg
+            };
+            break;
+        }
+        else {
+          content = {
+            prompt: "Transaction Failed",
+            description : "",
+            textAreaContent : response.msg
+            };
+            break;
+        }
+    }
+    case 'error': {
+      content = {
+        prompt: "Error Encountered During Request",
+        description : "Here is the error recieved:",
+        textAreaContent : JSON.stringify(response)
+        };
+        break;
+    }
+    case 'removeAccount' : {
+      content = {
+        prompt: "Keys Removed.",
+        description : "",
+        textAreaContent : response.message
+        };
+        break;
+    }
+    case 'logout' : {
+      content = {
+        prompt: "Logout Successful.",
+        description : "",
+        textAreaContent : ""
+        };
+        break;
+    }
+    case 'addAddress': {
+      if(response.added) {
+        content = {
+          prompt: "Address Added",
+          description : "",
+          textAreaContent : response.msg
+          };
+          break;
+      }
+      else {
+        content = {
+          prompt: "Address Not Added",
+          description : "",
+          textAreaContent : response.msg
+          };
+          break;
+      }
+    }
+
+    case 'viewAddresses': {
+      const dictionary : Array<any> = response.dictionary;
+      let msg = "";
+      for(let i = 0; i < dictionary.length; i ++) {
+        msg += dictionary[i].name + "-" + dictionary[i].address + "\n\n";
+      }
+      content = {
+        prompt: "Addresses",
+        description : "",
+        textAreaContent : msg
+        };
+        break;
+    }
+
+    case 'clearWalletData': {
+      content = {
+        prompt: "Wallet Data Cleared",
+        description : " ",
+        textAreaContent : ""
+        };
+        break;
+    }
+    default: {
+      content = {
+      prompt: "Response From "  + methodName,
+      description : " ",
+      textAreaContent : response.msg
+      };
+    }
+  }
+  await sendRequest(content, 'displayNotification');
+}
 
 /**
- * Invoke the "setConfig" method from the cosmos snap.
- */
-export const sendSetConfig = async () => {
-  let data : any = {}
-  data['nodeUrl'] = "https://random.getblock.io";
-  data['denom'] = "urand";
-  data['prefix'] = "cosmos";
-  data['memo'] = "SP-10-2023";
-  data['gas'] = 0;
-  const response : unknown = await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'setConfig',
-        params: [data]
-      },
-    ],
-  });
-};
-
-/**
- * Invoke the "getAccounts" method from the cosmos snap.
+ * This is a common method to send snap JSON RPC requests.
+ * Later there will be a different method for each request.
  */
 
-export const sendGetAccount = async () => {
+ export const sendSnapRPC = async (methodName:string, payload:any) => {
+  console.log('[',methodName,'] >>> SENDING >>>', payload);
+  let response : any = {}
+  try {
+    response = await sendRequest(payload, methodName);
+    console.log('[',methodName,'] <<< RECEIVING <<<', response);
+    await sendNotification(methodName, response);
+  }
+  catch(e) {
+    console.log("RUNTIME ERROR: " , e);
+    response = e;
+    await sendNotification('error', response);
+  }
 
-  await window.ethereum.request({
-    method: 'wallet_invokeSnap',
-    params: [
-      defaultSnapOrigin,
-      {
-        method: 'getAccount'
-      },
-    ],
-  });
+  // For functions that need it
+  return response;
 };
 
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');
