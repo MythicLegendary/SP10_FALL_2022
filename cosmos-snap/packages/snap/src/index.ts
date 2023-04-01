@@ -28,7 +28,7 @@ interface DictionaryAccount {
 
 interface Transaction {
   type : string, //Either "multisend" or "single"
-  time : string,
+  timeSent : Date,
   address : string,
   amount : string, 
   memo: string
@@ -222,8 +222,8 @@ async function createSendDummy(transactionRequest : any) {
     const currentState : any = await getPluginState();
 
     currentState.transactionHistory.push({
-      type : "single",
-      time : new Date(),
+      type : "Singlular",
+      timeSent : new Date(),
       address : transactionRequest.recipientAddress, 
       amount : transactionRequest.amount, 
       memo : transactionRequest.memo, 
@@ -257,8 +257,8 @@ async function createMultiSendDummy(transactionRequest : any) {
        content += "\n" + transaction[1] + " " + transaction[2] + " sent to " + transaction[0] + "\n";
 
        currentState.transactionHistory.push({
-        type: "multisend",
-        date : currentTime,
+        type: "Multisend",
+        timeSent : currentTime,
         address : transaction[0], 
         amount : transaction[1], 
         memo : transactionRequest.memo,
@@ -821,6 +821,11 @@ function filterResponse(currentState : any) {
   let filtered3 = Object.assign({}, ...
     Object.entries(filtered2).filter(([k,v]) => k != 'dictionary').map(([k,v]) => ({[k]:v}))
   );
+
+  let filtered4 = Object.assign({}, ...
+    Object.entries(filtered3).filter(([k,v]) => k != 'transactionHistory').map(([k,v]) => ({[k]:v}))
+  );
+
   return filtered3;
 }
 
