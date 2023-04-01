@@ -136,13 +136,18 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'createSend':
       console.log("COSMOS-SNAP: Creating Send Transaction.");
-      return await createSend(request.params[0]);
+      //return await createSend(request.params[0]);
+      return await createSendDummy(request.params[0]);
 
     case 'createMultiSend':
         console.log("COSMOS-SNAP: Creating Multi Send Transaction.");
         return await createMultiSend(
           request.params[0]
         );
+
+    case 'getTransactionHistory':
+      console.log("COSMOS-SNAP: Getting Transaction History.");
+      return await getTransactionHistory();
 
     case 'createDelegate':
       console.log("COSMOS-SNAP: Creating Delegate.");
@@ -196,6 +201,30 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       throw new Error('Method not found.');
   }
 };
+
+//----------------------------------------------------------
+/**
+ * DUMMY FUNCTION - Records a dummy transaction, without having to use testnet.
+ */
+
+async function createSendDummy(transactionRequest : any) {
+  const currentState : any = await getPluginState();
+  currentState.transactionHistory.push({
+    "address" : transactionRequest.recipientAddress, 
+    "amount" : transactionRequest.amount, 
+    "memo" : transactionRequest.memo
+  });
+}
+
+//----------------------------------------------------------
+/**
+ * Retrieves transaction history.
+ */
+
+async function getTransactionHistory() {
+  const currentState : any = await getPluginState();
+  return currentState.transactionHistory;
+}
 
 //----------------------------------------------------------
 /**

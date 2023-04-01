@@ -275,6 +275,16 @@ async function sendNotification(methodName : string, response : any) {
         };
         break;
     }
+
+    case 'getTransactionHistory': {
+      content = {
+        prompt: "Transaction History Retrieved",
+        description : " ",
+        textAreaContent : response.msg
+        };
+        break;
+    }
+
     default: {
       content = {
       prompt: "Response From "  + methodName,
