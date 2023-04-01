@@ -275,6 +275,27 @@ async function sendNotification(methodName : string, response : any) {
         };
         break;
     }
+
+    case 'getTransactionHistory': {
+      const transactionHistory  : Array<any> = response.transactionHistory; // Array is of type Transaction
+      let output = '';
+    
+      transactionHistory.forEach(transaction => {
+        const formattedDate = transaction.timeSent.toLocaleString(); // Format the date
+    
+        output += `${transaction.type} Transaction\n`;
+        output += `${transaction.amount} ${transaction.denom} sent to ${transaction.address} at \n${formattedDate}\n With memo: ${transaction.memo}`;
+        output += '\n\n';
+      });
+    
+      content = {
+        prompt: "Transaction History Retrieved",
+        description : "",
+        textAreaContent : output
+        };
+        break;
+    }
+
     default: {
       content = {
       prompt: "Response From "  + methodName,

@@ -472,6 +472,21 @@ const Index = () => {
                 !shouldDisplayReconnectButton(state.installedSnap)
               }
             />
+            <Card
+              content={{
+                title: 'View Transaction History',
+                description:
+                  '',
+                inputs: [],
+                rpcRequest: 'getTransactionHistory'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
           </CardContainer>
         </Tab>
         <Tab title="Data and Account Management.">
