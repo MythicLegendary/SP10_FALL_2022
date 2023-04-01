@@ -26,6 +26,15 @@ interface DictionaryAccount {
   name : string
 }
 
+interface Transaction {
+  type : string, //Either "multisend" or "single"
+  time : string,
+  address : string,
+  amount : string, 
+  memo: string
+  denom: string
+}
+
 /**
  * Get a message from the origin. For demonstration purposes only.
  *
@@ -141,9 +150,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'createMultiSend':
         console.log("COSMOS-SNAP: Creating Multi Send Transaction.");
-        return await createMultiSend(
+        /*return await createMultiSend(
           request.params[0]
-        );
+        );*/
+        return await createMultiSendDummy(request.params[0]);
 
     case 'getTransactionHistory':
       console.log("COSMOS-SNAP: Getting Transaction History.");
@@ -204,16 +214,67 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
 //----------------------------------------------------------
 /**
- * DUMMY FUNCTION - Records a dummy transaction, without having to use testnet.
+ * DUMMY FUNCTION - Records a dummy single transaction or multisend transaction, without having to use testnet.
  */
 
 async function createSendDummy(transactionRequest : any) {
-  const currentState : any = await getPluginState();
-  currentState.transactionHistory.push({
-    "address" : transactionRequest.recipientAddress, 
-    "amount" : transactionRequest.amount, 
-    "memo" : transactionRequest.memo
-  });
+  try {
+    const currentState : any = await getPluginState();
+
+    currentState.transactionHistory.push({
+      type : "single",
+      time : new Date(),
+      address : transactionRequest.recipientAddress, 
+      amount : transactionRequest.amount, 
+      memo : transactionRequest.memo, 
+      denom : currentState.denom
+    });
+    await updatePluginState(currentState);
+
+    return {
+      msg : transactionRequest.amount + " " + currentState.denom + " sent to " + transactionRequest.recipientAddress,
+      transactionSent : true
+    };
+  } catch(error) {
+    console.log("COSMOS-SNAP ", error);
+    return {msg : error.toString()};
+  } 
+}
+
+async function createMultiSendDummy(transactionRequest : any) {
+  try {
+     // Format the multiple transactions
+     const messages : Array<MsgSendEncodeObject> = [];
+     const transactions : string[] = transactionRequest.inputs.split(" ");
+     let content = "";
+
+     const currentState : any = await getPluginState();
+     const currentTime = new Date();
+     
+     for (let i = 0; i < transactions.length; i ++) {
+       // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
+       const transaction : string[] = transactions[i].split("-");
+       content += "\n" + transaction[1] + " " + transaction[2] + " sent to " + transaction[0] + "\n";
+
+       currentState.transactionHistory.push({
+        type: "multisend",
+        date : currentTime,
+        address : transaction[0], 
+        amount : transaction[1], 
+        memo : transactionRequest.memo,
+        denom : transaction[2]
+      });
+     }
+     await updatePluginState(currentState);
+
+     return  {
+      msg  : "Multi-Send Executed:" + "\n" + content,
+      transactionSent : true
+    }
+  } catch(error) {
+    console.log("COSMOS-SNAP ", error);
+    return {msg : error.toString()};
+  } 
 }
 
 //----------------------------------------------------------
@@ -223,7 +284,7 @@ async function createSendDummy(transactionRequest : any) {
 
 async function getTransactionHistory() {
   const currentState : any = await getPluginState();
-  return currentState.transactionHistory;
+  return {transactionHistory  : (await getPluginState()).transactionHistory}
 }
 
 //----------------------------------------------------------
@@ -739,6 +800,7 @@ async function clearConfigData() {
   currentState.denom = "";
   currentState.gas = ""
   currentState.dictionary = new Array<DictionaryAccount>();
+  currentState.transactionHistory = new Array<Transaction>();
   await updatePluginState(currentState);
 
   return {dataCleared : true};

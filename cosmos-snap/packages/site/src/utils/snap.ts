@@ -277,10 +277,29 @@ async function sendNotification(methodName : string, response : any) {
     }
 
     case 'getTransactionHistory': {
+      let msg = "";
+      let transactionHistory = response.transactionHistory;
+      for(let i = 0; i < transactionHistory.length; i++) {
+        if(transactionHistory[i].type == "single") {
+          msg += transactionHistory[i].amount + transactionHistory[i].denom +" sent to " + transactionHistory[i].address + "\n" + "\n";
+        } else if(transactionHistory[i].type == "multisend") {
+          let next = i+1;
+          if(i != transactionHistory.length-1){
+            if (transactionHistory[next].type == "single") {
+              msg += transactionHistory[i].amount + transactionHistory[i].denom +" sent to " + transactionHistory[i].address + "\n" + "\n";
+            } else {
+              msg += transactionHistory[i].amount + transactionHistory[i].denom +" sent to " + transactionHistory[i].address + "\n";
+            }
+          } else {
+            msg += transactionHistory[i].amount + transactionHistory[i].denom +" sent to " + transactionHistory[i].address + "\n";
+          }
+        }
+      }
+
       content = {
         prompt: "Transaction History Retrieved",
         description : " ",
-        textAreaContent : response.msg
+        textAreaContent : msg
         };
         break;
     }
