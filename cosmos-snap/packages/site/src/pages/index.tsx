@@ -203,10 +203,10 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'Setup Account',
+                title: 'Setup Wallet',
                 description:
-                  'Enter mnemonic and a new password to setup or reset your account.',
-                inputs: ["mnemonic", "password"],
+                  'Enter mnemonic and a new password to setup your cosmos wallet with a new account. The first account name will be "default."',
+                inputs: ["mnemonic", "password", "firstAccountName"],
                 rpcRequest: 'setupPassword'
               }}
               disabled={!state.installedSnap || state.isLoggedIn}
@@ -414,11 +414,11 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'Create Delegate',
+                title: 'View Transaction History.',
                 description:
                   '',
-                inputs: ['to', 'amount'],
-                rpcRequest: 'createDelegate'
+                inputs: [],
+                rpcRequest: 'getTransactionHistory'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={
@@ -427,63 +427,47 @@ const Index = () => {
                 !shouldDisplayReconnectButton(state.installedSnap)
               }
             />
-            <Card
-              content={{
-                title: 'Create Redelegate',
-                description:
-                  '',
-                inputs: ['from', 'to', 'amount'],
-                rpcRequest: 'createRedelegate'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Create Undelegate',
-                description:
-                  '',
-                inputs: ['from', 'amount'],
-                rpcRequest: 'createUndelegate'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-            <Card
-              content={{
-                title: 'Withdraw Delegation Reward',
-                description:
-                  '',
-                inputs: ['rewards'],
-                rpcRequest: 'withdrawDelegationReward'
-              }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
-              fullWidth={
-                state.isFlask &&
-                Boolean(state.installedSnap) &&
-                !shouldDisplayReconnectButton(state.installedSnap)
-              }
-            />
-          </CardContainer>
+      </CardContainer>
         </Tab>
         <Tab title="Data and Account Management.">
           <CardContainer>
-          <Card
+            <Card
               content={{
-                title: 'CLEAR DATA',
+                title: 'Add New Account',
                 description:
-                  'Clear all the configuration data.',
-                inputs: [
-                ],
-                rpcRequest: 'clearWalletData'
+                  'Adds a new account to the available accounts.',
+                inputs: ['accountName', 'mnemonic'],
+                rpcRequest: 'addNewAccount'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Set Active Account',
+                description:
+                  'Sets a different account to be the active account.',
+                inputs: ['accountName'],
+                rpcRequest: 'setActiveAccount'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'View Available Accounts',
+                description:
+                  'View the accounts that are available.',
+                inputs: [],
+                rpcRequest: 'viewAccounts'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={
@@ -496,9 +480,24 @@ const Index = () => {
               content={{
                 title: 'Remove Account',
                 description:
-                  'Deletes all data, including keys.',
-                inputs: [],
+                  'Deletes all data, including keys of the specified account.',
+                inputs: ['accountName'],
                 rpcRequest: 'removeAccount'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Delete Wallet',
+                description:
+                  'Deletes all data, including all keys.',
+                inputs: ['password'],
+                rpcRequest: 'deleteWallet'
               }}
               disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={

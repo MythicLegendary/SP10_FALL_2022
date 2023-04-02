@@ -115,7 +115,7 @@ async function sendNotification(methodName : string, response : any) {
       for (const property in response) {
         if (Object.prototype.hasOwnProperty.call(response, property)) {
           display += `${property}: ${response[property]}`
-          display += '\n'
+          display += '\n\n'
         }
       }
       content = {
@@ -130,7 +130,7 @@ async function sendNotification(methodName : string, response : any) {
       for (const property in response) {
         if (Object.prototype.hasOwnProperty.call(response, property)) {
           display += `${property}: ${response[property]}`
-          display += '\n'
+          display += '\n\n'
         }
       }
       content = {
@@ -218,13 +218,24 @@ async function sendNotification(methodName : string, response : any) {
         };
         break;
     }
+    
     case 'removeAccount' : {
-      content = {
-        prompt: "Keys Removed.",
-        description : "",
-        textAreaContent : response.message
-        };
-        break;
+      if(response.accountRemoved) {
+        content = {
+          prompt: "Keys Removed.",
+          description : "",
+          textAreaContent : response.msg
+          };
+          break;
+      }
+      else {
+        content = {
+          prompt: "Keys Not Removed.",
+          description : "",
+          textAreaContent : response.msg
+          };
+          break;
+      }
     }
     case 'logout' : {
       content = {
@@ -267,14 +278,78 @@ async function sendNotification(methodName : string, response : any) {
         break;
     }
 
-    case 'clearWalletData': {
+    case 'deleteWallet' : {
+      if(response.deleted) {
+        content = {
+          prompt: "Wallet Deleted",
+          description : "",
+          textAreaContent : ""
+          };
+          break;
+      }
+      else {
+        content = {
+          prompt: "Wallet Not Deleted.",
+          description : "",
+          textAreaContent : response.msg
+          };
+          break;
+      }
+    }
+
+    case 'getTransactionHistory': {
+      const transactionHistory  : Array<any> = response.transactionHistory; // Array is of type Transaction
+      let output = '';
+    
+      transactionHistory.forEach(transaction => {
+        const formattedDate = transaction.timeSent.toLocaleString(); // Format the date
+    
+        output += `${transaction.type} Transaction\n`;
+        output += `${transaction.amount} ${transaction.denom} sent to ${transaction.address} at \n${formattedDate}\n With memo: ${transaction.memo}`;
+        output += '\n\n';
+      });
+    
       content = {
-        prompt: "Wallet Data Cleared",
-        description : " ",
-        textAreaContent : ""
+        prompt: "Transaction History Retrieved",
+        description : "",
+        textAreaContent : output
         };
         break;
     }
+
+    case 'addNewAccount' : {
+      if(response.accountAdded) {
+        content = {
+          prompt: "Account Added",
+          description : "",
+          textAreaContent : ""
+          };
+          break;
+      }
+      else {
+        content = {
+          prompt: "Account not added.",
+          description : "",
+          textAreaContent : response.msg
+          };
+          break;
+      }
+    }
+
+    case 'viewAccounts' : {
+      let msg = "Active Account: \n\t" +  response.accounts[0].accountName +  "\n\nOther Acccounts: " + "\n\t";
+      for (let i =1; i < response.accounts.length; i ++) {
+        let account : any = response.accounts[i];
+        msg +=  account.accountName + '\n\t';
+      }
+      content = {
+        prompt: "Available Accounts",
+        description : "",
+        textAreaContent : msg
+        };
+      break;
+    }
+    
     default: {
       content = {
       prompt: "Response From "  + methodName,
