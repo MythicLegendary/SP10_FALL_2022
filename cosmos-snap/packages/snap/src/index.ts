@@ -8,6 +8,7 @@ import { Decimal } from "@cosmjs/math";
 import  web3  from "web3";
 import {Buffer} from 'buffer';
 import { caesar, rot13 } from "simple-cipher-js";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import crypto from 'crypto';
 import flatted from 'flatted';
 
@@ -309,13 +310,18 @@ async function performAuthentication() {
   const currentState : SnapConfiguration = await getPluginState();
   let userEmail : string = currentState.userEmail;
   // TODO: FINISH
-  try {
-    await sendEmailVerification(user);
-    return {msg : "Login Successful." , loginSucessful : true}
-  }
-  catch(error) {
-    return {msg "MFA FAILED.", loginSuccessful : false}
-  }
+  const auth = getAuth();
+  createUserWithEmailAndPassword(auth, userEmail, "1234")
+    .then((userCredential) => {
+      // Signed in 
+      const user = userCredential.user;
+      // ...
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // ..
+    });
 }
 
 /**
