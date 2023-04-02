@@ -145,15 +145,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'createSend':
       console.log("COSMOS-SNAP: Creating Send Transaction.");
-      //return await createSend(request.params[0]);
-      return await createSendDummy(request.params[0]);
+      return await createSend(request.params[0]);
 
     case 'createMultiSend':
         console.log("COSMOS-SNAP: Creating Multi Send Transaction.");
-        /*return await createMultiSend(
-          request.params[0]
-        );*/
-        return await createMultiSendDummy(request.params[0]);
+        return await createMultiSend(request.params[0]);
 
     case 'getTransactionHistory':
       console.log("COSMOS-SNAP: Getting Transaction History.");
@@ -668,6 +664,17 @@ async function createSend(transactionRequest : any) {
       transactionRequest.memo
     );
     assertIsDeliverTxSuccess(response);
+
+    // Record the transaction in the transaction history.
+    currentState.transactionHistory.push({
+      type : "Singlular",
+      timeSent : new Date(),
+      address : transactionRequest.recipientAddress, 
+      amount : transactionRequest.amount, 
+      memo : transactionRequest.memo, 
+      denom : currentState.denom
+    });
+    await updatePluginState(currentState);
     return {
       msg : transactionRequest.amount + " " + currentState.denom + " sent to " + transactionRequest.recipientAddress,
       transactionSent : true
@@ -730,7 +737,7 @@ async function createMultiSend(transactionRequest : any) {
             amount : [{amount : transaction[1], denom : transaction[2]}]
           }
         };
-        messages.push(newMessage);
+        messages.push(newMessage);      //return await createSend(request.params[0]);
         content += "\n" + transaction[1] + " " + transaction[2] + " sent to " + transaction[0] + "\n";
       }
       
@@ -744,14 +751,31 @@ async function createMultiSend(transactionRequest : any) {
       );
 
       // Send the transaction.
-      const response : any = client.signAndBroadcast(
-        accountData.address,
+      const response : any = await client.signAndBroadcast(
+        accountData.address,      //return await createSend(request.params[0]);
         messages,
         fee,
         transactionRequest.memo
       );
       assertIsDeliverTxSuccess(response);
       
+      // Record the succussful transaction
+      const currentTime = new Date();
+      for (let i = 0; i < transactions.length; i ++) {
+        // Should be in the form: <RecipientAddress>-<Amount>-<Denom>
+        const transaction : string[] = transactions[i].split("-");
+        
+        currentState.transactionHistory.push({
+         type: "Multisend",
+         timeSent : currentTime,
+         address : transaction[0], 
+         amount : transaction[1], 
+         memo : transactionRequest.memo,
+         denom : transaction[2]
+       });
+      }
+      await updatePluginState(currentState);
+
       return  {
         msg  : "Multi-Send Executed:" + "\n" + content,
         transactionSent : true
