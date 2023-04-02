@@ -40,7 +40,8 @@ interface Transaction {
 interface SnapConfiguration {
   otherAccounts : Array<CosmosAccount>,
   password : string,
-  activeAccount : CosmosAccount 
+  activeAccount : CosmosAccount,
+  userEmail : string 
 }
 
 interface CosmosAccount {
@@ -97,7 +98,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'login': {
       console.log("COSMOS-SNAP: Logging in user.");
-      return loginUser(request.params[0]['password']);
+      let loginResult : any = loginUser(request.params[0]['password']);
+      if(!loginResult.loginSuccessful) {
+        return loginResult;
+      }
+      let mfaResult : any = await performAuthentication()
+      return mfaResult;
     }
     
     case 'logout' : {
@@ -297,6 +303,22 @@ async function loginUser(password : string) {
 }
 
 /**
+ * Interface with firebase to perform 2fa.
+ */
+async function performAuthentication() {
+  const currentState : SnapConfiguration = await getPluginState();
+  let userEmail : string = currentState.userEmail;
+  // TODO: FINISH
+  try {
+    await sendEmailVerification(user);
+    return {msg : "Login Successful." , loginSucessful : true}
+  }
+  catch(error) {
+    return {msg "MFA FAILED.", loginSuccessful : false}
+  }
+}
+
+/**
  * Sets the active account parameter in the configuration.
  */
 async function setActiveAccount(accountName : string) {
@@ -463,9 +485,10 @@ async function setupWallet() {
       denom : "",
       gas : "",
       nodeUrl : "",
-      transactionHistory : new Array<Transaction>()
+      transactionHistory : new Array<Transaction>(),
     },
-    password : ""
+    password : "",
+    userEmail : ""
   }
 
   return newConfig;
