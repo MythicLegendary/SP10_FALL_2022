@@ -323,7 +323,7 @@ async function loginUser(password : string) {
 
 /**
  * Interface with firebase to perform 2fa.
- */
+ 
 async function performAuthentication() {
   const currentState : SnapConfiguration = await getPluginState();
   let userEmail : string = currentState.userEmail;
@@ -341,13 +341,13 @@ async function performAuthentication() {
       // ..
     });
 }
-
+*/
 /**
  * Functions to interact with firebase
  */
 export const auth: Auth = getAuth(app)
 
-export async function signInWithGoogle(): Promise<any> {
+async function signInWithGoogle(): Promise<any> {
   try {
       await signInWithPopup(auth, new GoogleAuthProvider());
       return true;
@@ -356,7 +356,7 @@ export async function signInWithGoogle(): Promise<any> {
   }
 }
 
-export async function signUp(email: string, password: string): Promise<boolean> {
+async function signUp(email: string, password: string): Promise<boolean> {
   try {
       await createUserWithEmailAndPassword(auth, email, password);
       return true;
@@ -365,7 +365,7 @@ export async function signUp(email: string, password: string): Promise<boolean> 
   }
 }
 
-export async function login(email: string, password: string): Promise<any> {
+async function login(email: string, password: string): Promise<any> {
   try {
       await signInWithEmailAndPassword(auth, email, password);
       return true;
@@ -374,7 +374,7 @@ export async function login(email: string, password: string): Promise<any> {
   }
 }
 
-export async function logout(): Promise<boolean> {
+async function logout(): Promise<boolean> {
   try {
       await signOut(auth);
       return true;
@@ -383,12 +383,12 @@ export async function logout(): Promise<boolean> {
   }
 }
 
-export function verifyIfUserIsEnrolled(user: User) {
+function verifyIfUserIsEnrolled(user: User) {
   const enrolledFactors = multiFactor(user).enrolledFactors;
   return enrolledFactors.length > 0;
 }
 
-export async function verifyPhoneNumber(
+async function verifyPhoneNumber(
   user: User,
   phoneNumber: string,
   recaptchaVerifier: ApplicationVerifier
@@ -407,7 +407,7 @@ export async function verifyPhoneNumber(
   }
 }
 
-export async function enrollUser(
+async function enrollUser(
   user: User,
   verificationCodeId: string,
   verificationCode: string
@@ -423,7 +423,7 @@ export async function enrollUser(
   }
 }
 
-export async function verifyUserMFA(
+async function verifyUserMFA(
   error: MultiFactorError,
   recaptchaVerifier: ApplicationVerifier,
   selectedIndex: number
@@ -446,7 +446,7 @@ export async function verifyUserMFA(
   }
 }
 
-export async function verifyUserEnrolled(
+async function verifyUserEnrolled(
   verificationMFA: {verificationId: string, resolver: MultiFactorResolver},
   verificationCode: string
 ) {
@@ -462,7 +462,7 @@ export async function verifyUserEnrolled(
   }
 }
 
-export async function verifyUserEmail(user: User): Promise<boolean> {
+async function verifyUserEmail(user: User): Promise<boolean> {
   try {
       await sendEmailVerification(user);
       return true;
