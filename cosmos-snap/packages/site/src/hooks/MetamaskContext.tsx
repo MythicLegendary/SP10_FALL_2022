@@ -14,12 +14,14 @@ export type MetamaskState = {
   installedSnap?: Snap;
   error?: Error;
   isLoggedIn: boolean;
+  uid : string;
 };
 
 const initialState: MetamaskState = {
   isFlask: false,
   error: undefined,
-  isLoggedIn: false
+  isLoggedIn: false,
+  uid : ""
 };
 
 type MetamaskDispatch = { type: MetamaskActions; payload: any };

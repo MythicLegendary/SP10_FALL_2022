@@ -40,7 +40,9 @@ interface Transaction {
 interface SnapConfiguration {
   otherAccounts : Array<CosmosAccount>,
   password : string,
-  activeAccount : CosmosAccount 
+  activeAccount : CosmosAccount,
+  mfaEnabled : boolean,
+  uid : string
 }
 
 interface CosmosAccount {
@@ -79,7 +81,7 @@ const getMessage = (originString: string): string =>
 
 export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {origin : string, request : any}) => {
   let pubKey, account;
-  console.log("COSMOS-SNAP: Snap RPC Handler invoked. Request: ", request);
+  console.log("COSMOS-SNAP: Snap RPC Handler invoked.");
   switch (request.method) {
 
     case 'getSnapState':
@@ -91,7 +93,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       console.log("COSMOS-SNAP: Setting up new password for key encryption.");
       return setupPassword(request.params[0]['password'], 
         request.params[0]['mnemonic'], 
-        request.params[0]['firstAccountName']
+        request.params[0]['firstAccountName'],
+        request.params[0].uid
       );
     }
 
@@ -100,6 +103,26 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       return loginUser(request.params[0]['password']);
     }
     
+    case 'validateUID' : {
+      console.log("COSMOS-SNAP: Validating UID");
+      const currentState : SnapConfiguration = await getPluginState();
+      console.log(currentState.uid, request.params[0].uid)
+      return {isValid : currentState.uid == request.params[0].uid}
+    }
+
+    case 'isMFAEnabled' :{
+      console.log("COSMOS-SNAP: Checking if the user has MFA_ENABLED")
+      const currentState : SnapConfiguration = await getPluginState();
+      return {mfaEnabled : currentState.mfaEnabled}
+    }
+
+    case 'setMFAEnabled' : {
+      const currentState : SnapConfiguration = await getPluginState();
+      currentState.mfaEnabled = true;
+      await updatePluginState(currentState);
+      return {}
+    }
+
     case 'logout' : {
       console.log("COSMOS-SNAP: Logging out user- no backend run.");
       return {}
@@ -124,6 +147,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'deleteWallet': {
       console.log("COSMOS-SNAP: Attempting wallet deletion.");
+      // If this is a firebase error
+      if(request.params[0].firebaseDelete) {
+        // Clear all data in the configuration
+        await updatePluginState(await setupWallet());
+        return {deleted : true}
+      }
       return await deleteWallet(request);
     }
 
@@ -171,16 +200,23 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       return await getTransactionHistory();
 
     case 'displayNotification':
-      return wallet.request({
-        method: 'snap_confirm',
-        params: [
-          {
-            prompt: request.params[0].prompt,
-            description: request.params[0].description,
-            textAreaContent: request.params[0].textAreaContent,
-          },
-        ],
-      });
+      try {
+        await wallet.request({
+          method: 'snap_confirm',
+          params: [
+            {
+              prompt: request.params[0].prompt,
+              description: request.params[0].description,
+              textAreaContent: request.params[0].textAreaContent,
+            },
+          ],
+        });
+        return {}
+      }
+      catch (error) {
+        console.error(error);
+        return {}
+      }
 
     default:
       throw new Error('Method not found.');
@@ -463,9 +499,11 @@ async function setupWallet() {
       denom : "",
       gas : "",
       nodeUrl : "",
-      transactionHistory : new Array<Transaction>()
+      transactionHistory : new Array<Transaction>(),
     },
-    password : ""
+    password : "",
+    mfaEnabled : false,
+    uid : ""
   }
 
   return newConfig;
@@ -475,7 +513,7 @@ async function setupWallet() {
  * Sets up the new password used for verification
  * Initializes wallet with a single account.
  */
-async function setupPassword(password : string, mnemonic : string, accountName : string) {
+async function setupPassword(password : string, mnemonic : string, accountName : string, uid : string) {
   try {
     // If the password is empty or null
     if(password == null || password === '') {
@@ -493,7 +531,19 @@ async function setupPassword(password : string, mnemonic : string, accountName :
     if(accountName == null || accountName == '') {
       return {msg : "Account name is required." , setup : false}
     }
-    
+
+    // If the uid is empty or null.
+    if(uid == null || uid == '') {
+      return {msg : "UID is required." , setup : false}
+    }
+
+    const currentState : SnapConfiguration = await getPluginState();
+
+    // If the user already has an account/wallet
+    // if(currentState.activeAccount != null  && currentState.activeAccount.accountName != '') {
+    //   return {msg : "Wallet already setup." , setup : false}
+    // }
+
     // Get the blank configuration 
     let newConfig : SnapConfiguration = await setupWallet();
     
@@ -509,6 +559,10 @@ async function setupPassword(password : string, mnemonic : string, accountName :
     // Setup the password
     newConfig.password = await encrypt(password, await bip32EntropyPrivateKey());
     
+    // Set the user id
+    console.log(uid);
+    newConfig.uid = uid;
+
     // Store the new configuration
     await updatePluginState(newConfig);
 
@@ -555,16 +609,21 @@ async function confirmRequest(params: any, method : string) {
       break;
     }
   }
-  return wallet.request({
-    method: 'snap_confirm',
-    params: [
-      {
-        prompt: prompt,
-        description: "",
-        textAreaContent: content,
-      },
-    ],
-  });
+  try {
+    return await wallet.request({
+      method: 'snap_confirm',
+      params: [
+        {
+          prompt: prompt,
+          description: "",
+          textAreaContent: content,
+        },
+      ],
+    });
+  }
+  catch(error) {
+    return false;
+  }
 }
 
 /**
@@ -1020,8 +1079,9 @@ function filterResponse(currentState : SnapConfiguration) {
   );
   
   let filtered3 = Object.assign({}, ...
-    Object.entries(filtered).filter(([k,v]) => k != 'transactionHistory').map(([k,v]) => ({[k]:v}))
+    Object.entries(filtered2).filter(([k,v]) => k != 'transactionHistory').map(([k,v]) => ({[k]:v}))
   );
+  
   return filtered3;
 }
 

@@ -1,6 +1,9 @@
 import React, { FunctionComponent, ReactNode, useContext } from 'react';
 import styled from 'styled-components';
 import { MetamaskActions, MetaMaskContext } from '../hooks';
+import {RecaptchaVerifier} from "firebase/auth"
+import {auth} from "../utils"
+
 import {
   sendSnapRPC
 } from '../utils';
@@ -74,8 +77,21 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
   }
 
   const submitButtonClicked = async () => {
-    let response = await sendSnapRPC(content.rpcRequest, gatherInputs());
-        
+    const container = document.createElement('div');
+    container.id = 'recaptcha-container';
+    document.body.appendChild(container);
+    const recaptchaVerifier= new RecaptchaVerifier(container, {
+      size: "invisible",
+      callback: (response: any) => {
+        console.log("reCaptcha Solved!");
+      },
+    }, auth);
+
+    let response = await sendSnapRPC(content.rpcRequest, 
+      gatherInputs(), 
+      recaptchaVerifier
+    );
+    
     if (response==null) return;
     
     if (content.rpcRequest=='login') {
@@ -107,7 +123,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
       )}
 
       <Description>{content.description}</Description>
-
+      <div id="recaptcha-container"></div>
       <div ref={inputDivRef}>
         {/* Display a list of input fields (it's messy but works :/ - blame Abhijay ) */
           (
