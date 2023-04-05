@@ -1,4 +1,5 @@
-import React from 'react'
+import React from 'react';
+import {Row} from 'antd';
 
 type Props = {
   title: string
@@ -6,7 +7,11 @@ type Props = {
 }
 
 const Tab: React.FC<Props> = ({ children }) => {
-  return <div>{children}</div>
+  return (
+    <Row gutter={[16, 16]}>
+      {children}
+    </Row>
+  );
 }
 
 export default Tab
