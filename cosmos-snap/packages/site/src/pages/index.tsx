@@ -227,11 +227,26 @@ const Index = () => {
               content={{
                 title: 'Setup Wallet',
                 description:
-                  'Enter mnemonic and a new password to setup your cosmos wallet with a new account. The first account name will be "default."',
+                  'Stores your keys and configures a single factor login regime.',
                 inputs: ["mnemonic", "password", "firstAccountName"],
                 rpcRequest: 'setupPassword'
               }}
               disabled={!state.installedSnap || state.isLoggedIn || state.inProgress}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
+                title: 'Enroll Phone Number For Authentication',
+                description:
+                  'For increased security use your phone number to authenticate yourself.',
+                inputs: ["phoneNumber"],
+                rpcRequest: 'enrollUserPhoneNumber'
+              }}
+              disabled={!state.installedSnap || !state.isLoggedIn}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -270,7 +285,7 @@ const Index = () => {
             )}
             <Card
               content={{
-                title: 'GET SNAP STATE',
+                title: 'Get Account Information',
                 description:
                   '',
                 inputs: [],
@@ -286,7 +301,7 @@ const Index = () => {
 
             <Card
               content={{
-                title: 'GET ACCOUNT INFO',
+                title: 'Retrieve Account Balance',
                 description:
                   'Retrieve the balance of the default coin for your account.',
                 inputs: [],
@@ -302,7 +317,7 @@ const Index = () => {
 
             <Card
               content={{
-                title: 'GET ACCOUNT GENERAL',
+                title: 'Retrieve Another Account Balance',
                 description:
                   'Retrieve the balance at a particular address.',
                 inputs: ['address'],
@@ -317,7 +332,7 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'VIEW ADDRESSES',
+                title: 'View Addresses',
                 description:
                   'View the addresses saved',
                 inputs: [],
@@ -346,7 +361,7 @@ const Index = () => {
             )}
             <Card
               content={{
-                title: 'SET NODE URL',
+                title: 'Set Node URL',
                 description:
                   'Set the URL for the Cosmos Blockchain Host.',
                 inputs: [
@@ -363,7 +378,7 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'SET DEFAULT DENOM',
+                title: 'Set Default Denom',
                 description:
                   'Set the default denom used for your account balance.',
                 inputs: [
@@ -380,7 +395,7 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'SET THE GAS',
+                title: 'Set Gas',
                 description:
                   'Set as <amount><denom>.',
                 inputs: [
@@ -397,7 +412,7 @@ const Index = () => {
             />
             <Card
               content={{
-                title: 'ADD ADDRESSES',
+                title: 'Add Addresses',
                 description:
                   'Add user addresses to make sending transactions simpler.',
                 inputs: [

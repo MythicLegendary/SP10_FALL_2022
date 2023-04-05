@@ -15,7 +15,8 @@ export type MetamaskState = {
   error?: Error;
   isLoggedIn: boolean;
   inProgressMethod ?: string;
-  inProgress : boolean
+  inProgress : boolean;
+  uid : string;
 };
 
 const initialState: MetamaskState = {
@@ -23,7 +24,8 @@ const initialState: MetamaskState = {
   error: undefined,
   isLoggedIn: false,
   inProgress : false,
-  inProgressMethod : ""
+  inProgressMethod : "",
+  uid : ""
 };
 
 type MetamaskDispatch = { type: MetamaskActions; payload: any };

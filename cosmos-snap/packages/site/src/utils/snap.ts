@@ -1,5 +1,36 @@
+import { parseLog } from '@cosmjs/stargate/build/logs';
 import { defaultSnapOrigin } from '../config';
 import { GetSnapsResponse, Snap } from '../types';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  multiFactor,
+  PhoneAuthProvider,
+  PhoneMultiFactorGenerator,
+  signInWithPopup,
+  RecaptchaVerifier,
+  getMultiFactorResolver,
+  MultiFactorError
+} from "@firebase/auth";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, getDoc, addDoc, collection } from "firebase/firestore";
+// Initalize the firebase configurations for user authentication.
+const firebaseConfig = {
+  apiKey: "AIzaSyAASQSP0TlnzxvP-9CUnmMNKTVZVDhVTDc",
+  authDomain: "metamask-cosmos-2.firebaseapp.com",
+  projectId: "metamask-cosmos-2",
+  storageBucket: "metamask-cosmos-2.appspot.com",
+  messagingSenderId: "49395411522",
+  appId: "1:49395411522:web:0c1d20617aaaa36436dbdb",
+  measurementId: "G-H3LKT5N381"
+};
+// Initialization necesary for firebase
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const firestore = getFirestore(app);
+
+const authenticationMethods = new Set<string>();
+['setupPassword', 'login', 'addNewAccount', 'deleteWallet', 'removeAccount', 'enrollUserPhoneNumber'].forEach((method) => {authenticationMethods.add(method)})
 
 /**
  * Get the installed snaps in MetaMask.
@@ -97,8 +128,8 @@ async function sendNotification(methodName : string, response : any) {
       if(response.setup) {
         content = {
           prompt: "Setting Up Password",
-          description : "Response From Setup : " + response.msg,
-          textAreaContent : "Password and Mnemonic Stored."
+          description : "Response From Setup : " + response.msg ,
+          textAreaContent : "Password and Mnemonic Stored.",
           };
       }
       else {
@@ -349,7 +380,24 @@ async function sendNotification(methodName : string, response : any) {
         };
       break;
     }
-    
+    case 'enrollUserPhoneNumber' : {
+      if(response.enrolled) {
+        content = {
+          prompt: "Phone Number Auth Enrolled",
+          description : "",
+          textAreaContent : response.msg
+          };
+        break;
+      }
+      else {
+        content = {
+          prompt: "Phone Number Not Enrolled",
+          description : "",
+          textAreaContent : response.msg
+          };
+        break;
+      }
+    }
     default: {
       content = {
       prompt: "Response From "  + methodName,
@@ -362,16 +410,281 @@ async function sendNotification(methodName : string, response : any) {
 }
 
 /**
- * This is a common method to send snap JSON RPC requests.
- * Later there will be a different method for each request.
+ * Attempts to create a new firebase user.
  */
+async function createNewFirebaseUser(password : string) {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    // Store the user_id in the state variable
+    return user.uid
+}
 
- export const sendSnapRPC = async (methodName:string, payload:any) => {
-  console.log('[',methodName,'] >>> SENDING >>>', payload);
+/**
+ * Execute google login.
+ */async function googleLogin() {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider)
+    const user = result.user;
+    // Get permission for the user state_id
+    if(!(await checkUID(user.uid))) {
+      throw new Error("Email not associated with wallet.")
+    }
+}
+
+
+/**
+ * Enrolls the user's phone number as a second factor for authentication.
+ */
+ async function enrollSecondFactorFirebaseUser( phoneNumber : string, recaptchaVerifier : RecaptchaVerifier) {
+    // Enroll the user for SMS MFA
+    const user = auth.currentUser;
+    if (user == null) {
+      throw new Error("Null User in Auth");
+    }
+    const multiFactorSession = await multiFactor(user).getSession()
+
+    // Specify the phone number and pass the MFA session.
+    const phoneInfoOptions = {
+      phoneNumber: phoneNumber,
+      session: multiFactorSession
+    };
+
+    const phoneAuthProvider = new PhoneAuthProvider(auth);
+
+    // Send SMS verification code.
+    const verificationId =  await phoneAuthProvider.verifyPhoneNumber(phoneInfoOptions, recaptchaVerifier);
+     // Ask user for the verification code. Then:
+     const verificationCode = window.prompt("Enter the verification code: ");
+     if(verificationCode == null) {
+       throw new Error("Verification Code is NULL");
+     }
+     const cred = PhoneAuthProvider.credential(verificationId, verificationCode);
+     const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
+     
+      // Complete enrollment.
+      await multiFactor(user).enroll(multiFactorAssertion, user.email);
+}
+
+/**
+ * Sends an SMS code to verified users.
+ */
+async function sendSMSCode(recaptchaVerifier : RecaptchaVerifier, error : MultiFactorError) {
+    const resolver = getMultiFactorResolver(auth, error);
+
+    const phoneInfoOptions = { 
+      multiFactorHint: resolver.hints[0],
+      session: resolver.session
+    };
+
+    const phoneAuthProvider = new PhoneAuthProvider(auth);
+
+    // Send SMS verification code.
+    const verificationId =  await phoneAuthProvider.verifyPhoneNumber(phoneInfoOptions, recaptchaVerifier);
+
+    // Ask user for the verification code. Then:
+    const verificationCode = window.prompt("Enter the verification code: ");
+    if(verificationCode == null) {
+      throw new Error("Verification Code is NULL");
+    }
+    const cred = PhoneAuthProvider.credential(verificationId, verificationCode);
+    const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
+
+    await resolver.resolveSignIn(multiFactorAssertion)
+}
+
+/**
+ * Delete the user in firebase. 
+ */
+async function deleteFirebaseUser() {
+  let user = auth.currentUser  
+  user?.delete()
+  .then(() => {
+    // User deleted successfully
+  })
+  .catch((error : any) => {
+    console.error(error);
+  });
+}
+
+/**
+ * Checks if the user has mfaEnabled.
+ */
+async function isMFAUser() {
+  const response : any = await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'isMFAEnabled',
+        params: []
+      },
+    ],
+  });
+  return response.mfaEnabled;
+}
+
+/**
+ * Set mfaEnabled in the backend.
+ */
+async function setMFAEnabled() {
+  const response : any = await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'setMFAEnabled',
+        params: []
+      },
+    ],
+  });
+  return response.mfaEnabled;
+}
+
+/**
+ * Checks if the current UID produced by the sign-in is correct.
+ */
+async function checkUID(uid : string) {
+  const result : any = await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'validateUID',
+        params: [{uid}]
+      },
+    ],
+  });
+  
+  return result.isValid;
+}
+
+/**
+ * Handles the authentication methods in firebase.
+ */
+async function handleAuthentication(methodName:string, payload:any, recaptchaVerifier : RecaptchaVerifier) {
+  // Handle the authentication method
+  switch(methodName) {
+    case 'setupPassword' : {
+      // Enroll a new user using google sign-in
+      try {
+        const resultID = await createNewFirebaseUser(payload.password)
+        return {proceed : true, uid : resultID}
+      }
+      catch(error) {
+        return {proceed : false, response : {msg : "Firebase User not created, wallet not setup.\n" + error.toString(), setup : false}}
+      }
+    }
+    case 'login' : {
+      try {
+        // Execute google login
+        await googleLogin();
+        return {proceed : true}
+      }
+      catch(error) {
+        if(error.code == 'auth/multi-factor-auth-required') {
+          try {
+            await sendSMSCode(recaptchaVerifier, error);
+            return {proceed : true}
+          }
+          catch(secondError){
+            return {proceed : false, response : {msg : "Firebase Login Failed with: " + secondError.toString(), loginSuccessful : false}}
+          }
+        }
+        return {proceed : false, response : {msg : "Firebase Login Failed with: " + error.toString(), loginSuccessful : false}}
+      }
+    } 
+    case 'addNewAccount' : {
+      return {proceed : true}
+    }
+    case 'deleteWallet' : {
+      try {
+        await googleLogin()
+        return {proceed : true}
+      }
+      catch(error) {
+        if(error.code == 'auth/multi-factor-auth-required') {
+          try {
+            await sendSMSCode(recaptchaVerifier, error);
+            return {proceed : true}
+          }
+          catch(secondError){
+            return {proceed : false, response : {msg : "Firebase Login Failed with: " + secondError.toString(), loginSuccessful : false}}
+          }
+        }
+        return {proceed : false, response : {msg : "Wallet removal failure: " + error.toString(), deleted : false}}
+      }
+    }
+    case 'removeAccount' : {
+      try{
+        // Execute google login
+        const provider = new GoogleAuthProvider();
+        await googleLogin()
+        return {proceed : true}
+      }
+      catch(error) {
+        if(error.code == 'auth/multi-factor-auth-required') {
+          try {
+            await sendSMSCode(recaptchaVerifier, error);
+            return {proceed : true}
+          }
+          catch(secondError){
+            return {proceed : false, response : {msg : "Firebase Login Failed with: " + secondError.toString(), loginSuccessful : false}}
+          }
+        }
+        return {proceed : false, response : {msg : "Account removal failure: " + error.toString(), accountRemoved : false}}
+      }
+    }
+    case 'enrollUserPhoneNumber' : {
+      try {
+        await enrollSecondFactorFirebaseUser(payload.phoneNumber, recaptchaVerifier);
+        return {proceed : false, response : {msg : "Enrollment Succeeded", enrolled : true}}
+      }
+      catch(error) {
+        return {proceed : false, response : {msg : "Enrollment failure: " + error.toString(), enrolled : false}}
+      }
+    }
+  }
+}
+
+/**
+ * Handles snapRPC requests to and from the backend, and also authentication flow.
+ */
+ export const sendSnapRPC = async (methodName:string, payload:any, recaptchaVerifier : RecaptchaVerifier) => {
+  if(authenticationMethods.has(methodName)) {
+    console.log('[',methodName,'] >>> SENDING >>>', "[hidden]");
+    const result : any = await handleAuthentication(methodName, payload, recaptchaVerifier);
+    // If firebase authentication failed, do not bother with the backend
+    if(!result.proceed) {
+      await sendNotification(methodName, result.response)
+      return result.response
+    }
+    else if(methodName == 'setupPassword'){
+      payload.uid = result.uid
+    }
+  }else {
+    console.log('[',methodName,'] >>> SENDING >>>', payload);
+  }
+
   let response : any = {}
   try {
     response = await sendRequest(payload, methodName);
     console.log('[',methodName,'] <<< RECEIVING <<<', response);
+    // Backend check for authentication methods
+    switch(methodName) {
+      case 'setupPassword' : {
+        // Wallet not serialized, but account was created->delete the firebase account.
+        if(!response.setup) {
+          await deleteFirebaseUser();
+        }
+      }
+      case 'deleteWallet' : {
+        if(response.deleted) {
+          // Only delete the firebase account if successful
+          await deleteFirebaseUser();
+        } 
+      }
+    }
     await sendNotification(methodName, response);
   }
   catch(e) {
