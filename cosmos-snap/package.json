@@ -66,10 +66,14 @@
     "bech32": "^2.0.0",
     "crypto": "^1.0.1",
     "crypto-js": "^4.1.1",
+    "react-particles": "^2.9.3",
+    "react-tsparticles": "^2.9.3",
     "ripemd160": "^2.0.2",
     "secp256k1": "^5.0.0",
     "sha256": "^0.2.0",
     "simple-cipher-js": "^0.0.7",
+    "tsparticles": "^2.9.3",
+    "tsparticles-engine": "^2.9.3",
     "web3": "^1.8.2"
   }
 }

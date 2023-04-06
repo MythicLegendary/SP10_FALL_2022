@@ -109,7 +109,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
   }
 
   return (
-    <Col span={16} offset={4}>
+    <Col span={24}>
       <AntdCard ref={inputDivRef}>
         <Space direction="vertical" size="small">
           <AntdCard.Meta description={content.description} title={content.title}/>

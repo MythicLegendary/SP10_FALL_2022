@@ -8,7 +8,7 @@ type Props = {
 
 const Tab: React.FC<Props> = ({ children }) => {
   return (
-    <Row gutter={[16, 16]}>
+    <Row gutter={[16, 16]} style={{maxHeight: '75vh', overflowY: 'scroll', opacity: .97}}>
       {children}
     </Row>
   );

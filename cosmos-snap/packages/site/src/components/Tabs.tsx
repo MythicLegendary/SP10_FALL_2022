@@ -1,8 +1,9 @@
 import React, { ReactElement, useState } from "react"
 import styled from 'styled-components';
 import TabTitle from "./TabTitle"
-import {Tabs as AntdTabs, Row, Col} from 'antd';
+import {Tabs as AntdTabs, Row, Col, Layout} from 'antd';
 import type { TabsProps } from 'antd';
+import { Header } from "antd/es/layout/layout";
 
 type Props = {
   children: ReactElement[]
@@ -24,14 +25,18 @@ const Tabs: React.FC<Props> = ({ children }) => {
   };
 
   return (
-    <div>
-      <Row gutter={[16, 16]}>
+    <Layout style={{backgroundColor: 'inherit'}}>
+      <Row>
         <Col offset={4} span={16}>
-          <AntdTabs defaultActiveKey="0" items={tabItems} onChange={onChange}/>
+          <Row gutter={[16, 16]}>
+            <Col span={24}>
+              <AntdTabs defaultActiveKey="0" items={tabItems} onChange={onChange} />
+            </Col>
+          </Row>
+          {children[selectedTab]}
         </Col>
       </Row>
-      {children[selectedTab]}
-    </div>
+    </Layout>
   );
 }
 
