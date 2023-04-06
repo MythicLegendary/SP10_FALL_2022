@@ -79,7 +79,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
       let input = inputFields[i];      
       res[input.id] = input.value;
     }
-    
+
     return res;
   }
 
@@ -100,7 +100,6 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
         payload: !response.deleted
       });
     }
-
     if(content.rpcRequest == 'logout') {
       dispatch({
         type: MetamaskActions.SetLogin,
@@ -111,7 +110,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
 
   return (
     <Col span={16} offset={4}>
-      <AntdCard>
+      <AntdCard ref={inputDivRef}>
         <Space direction="vertical" size="small">
           <AntdCard.Meta description={content.description} title={content.title}/>
           {
