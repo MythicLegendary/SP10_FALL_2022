@@ -17,6 +17,7 @@ import {
   Input
 } from 'antd';
 import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
+import './CardWrapper.css';
 
 type CardProps = {
   content: {
@@ -29,40 +30,6 @@ type CardProps = {
   disabled: boolean;
   fullWidth?: boolean;
 };
-
-// const CardWrapper = styled.div<{ fullWidth?: boolean; disabled: boolean }>`
-//   display: flex;
-//   flex-direction: column;
-//   width: ${({ fullWidth }) => (fullWidth ? '100%' : '250px')};
-//   background-color: ${({ theme }) => theme.colors.card.default};
-//   margin-top: 2.4rem;
-//   margin-bottom: 2.4rem;
-//   padding: 2.4rem;
-//   border: 1px solid ${({ theme }) => theme.colors.border.default};
-//   border-radius: ${({ theme }) => theme.radii.default};
-//   box-shadow: ${({ theme }) => theme.shadows.default};
-//   filter: opacity(${({ disabled }) => (disabled ? '.4' : '1')});
-//   align-self: stretch;
-//   ${({ theme }) => theme.mediaQueries.small} {
-//     width: 100%;
-//     margin-top: 1.2rem;
-//     margin-bottom: 1.2rem;
-//     padding: 1.6rem;
-//   }
-// `;
-
-const Title = styled.h2`
-  font-size: ${({ theme }) => theme.fontSizes.large};
-  margin: 0;
-  ${({ theme }) => theme.mediaQueries.small} {
-    font-size: ${({ theme }) => theme.fontSizes.text};
-  }
-`;
-
-const Description = styled.div`
-  margin-top: 5px;
-  margin-bottom: 5px;
-`;
 
 export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth}) => {
   const inputDivRef = React.createRef<HTMLInputElement>();
@@ -110,7 +77,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
 
   return (
     <Col span={24}>
-      <AntdCard ref={inputDivRef}>
+      <AntdCard ref={inputDivRef} style={{backgroundColor: 'rgb(28 22 44 / 94%)', boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgb(225 225 225 / 13%) 0px 0px 0px 1px'}} bordered={false}>
         <Space direction="vertical" size="small">
           <AntdCard.Meta description={content.description} title={content.title}/>
           {
@@ -129,6 +96,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
                     id={inputPlaceholder}
                     key={i}
                     iconRender={(visible) => (isSensitive ? (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />) : (null) )}
+                    style={{backgroundColor: 'transparent'}}
                   />
                   );
                 }

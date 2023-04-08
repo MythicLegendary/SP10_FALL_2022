@@ -46,7 +46,7 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
               "autoPlay": true,
               "background": {
                 "color": {
-                  "value": "#fff"
+                  "value": "#4e3d7c"
                 },
                 
                 "position": "50% 50%",
