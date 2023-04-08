@@ -74,8 +74,28 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
   }
 
   const submitButtonClicked = async () => {
+    // Submit In Progress
+    dispatch({
+      type: MetamaskActions.SetInProgress,
+      payload: true
+    });
+    dispatch({
+      type: MetamaskActions.SetInProgressMethod,
+      payload: content.rpcRequest
+    });
+
     let response = await sendSnapRPC(content.rpcRequest, gatherInputs());
-        
+    
+    // Submit Not In Progress
+    dispatch({
+      type: MetamaskActions.SetInProgress,
+      payload: false
+    });
+    dispatch({
+      type: MetamaskActions.SetInProgressMethod,
+      payload: ""
+    });
+
     if (response==null) return;
     
     if (content.rpcRequest=='login') {

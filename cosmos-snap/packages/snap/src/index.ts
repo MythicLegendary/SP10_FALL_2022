@@ -171,16 +171,23 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       return await getTransactionHistory();
 
     case 'displayNotification':
-      return wallet.request({
-        method: 'snap_confirm',
-        params: [
-          {
-            prompt: request.params[0].prompt,
-            description: request.params[0].description,
-            textAreaContent: request.params[0].textAreaContent,
-          },
-        ],
-      });
+        try {
+          await wallet.request({
+            method: 'snap_confirm',
+            params: [
+              {
+                prompt: request.params[0].prompt,
+                description: request.params[0].description,
+                textAreaContent: request.params[0].textAreaContent,
+              },
+            ],
+          });
+          return {}
+        }
+        catch (error) {
+          console.error(error);
+          return {}
+        }
 
     default:
       throw new Error('Method not found.');

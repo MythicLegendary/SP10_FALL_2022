@@ -101,6 +101,23 @@ const ErrorMessage = styled.div`
   }
 `;
 
+  const InProgressBar = styled.div`
+  border: 1px solid ${(props) => props.theme.colors.primary.default};
+  color: ${(props) => props.theme.colors.primary.default};};
+  border-radius: ${({ theme }) => theme.radii.default};
+  padding: 2.4rem;
+  margin-bottom: 2.4rem;
+  margin-top: 2.4rem;
+  max-width: 60rem;
+  width: 100%;
+  ${({ theme }) => theme.mediaQueries.small} {
+    padding: 1.6rem;
+    margin-bottom: 1.2rem;
+    margin-top: 1.2rem;
+    max-width: 100%;
+  }
+  `;
+
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
@@ -135,6 +152,11 @@ const Index = () => {
               <ErrorMessage>
                 <b>An error happened:</b> {state.error.message}
               </ErrorMessage>
+            )}            
+            {state.inProgress && (
+              <InProgressBar>
+                <b>Please Wait, Method In Progress:</b> {state.inProgressMethod}
+              </InProgressBar>
             )}
             {!state.isFlask && (
               <Card
@@ -179,7 +201,7 @@ const Index = () => {
                   button: (
                     <ReconnectButton
                       onClick={handleConnectClick}
-                      disabled={!state.installedSnap}
+                      disabled={!state.installedSnap || state.inProgress}
                     />
                   ),
                 }}
@@ -194,7 +216,7 @@ const Index = () => {
                 inputs: ["password"],
                 rpcRequest: 'login'
               }}
-              disabled={!state.installedSnap || state.isLoggedIn}
+              disabled={!state.installedSnap || state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -209,7 +231,7 @@ const Index = () => {
                 inputs: ["mnemonic", "password", "firstAccountName"],
                 rpcRequest: 'setupPassword'
               }}
-              disabled={!state.installedSnap || state.isLoggedIn}
+              disabled={!state.installedSnap || state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -224,7 +246,7 @@ const Index = () => {
                 inputs: [],
                 rpcRequest: 'logout'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -240,8 +262,12 @@ const Index = () => {
               <ErrorMessage>
                 <b>An error happened:</b> {state.error.message}
               </ErrorMessage>
+            )}            
+            {state.inProgress && (
+              <InProgressBar>
+                <b>Please Wait, Method In Progress:</b> {state.inProgressMethod}
+              </InProgressBar>
             )}
-
             <Card
               content={{
                 title: 'GET SNAP STATE',
@@ -250,7 +276,7 @@ const Index = () => {
                 inputs: [],
                 rpcRequest: 'getSnapState'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -266,7 +292,7 @@ const Index = () => {
                 inputs: [],
                 rpcRequest: 'getAccountInfo'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -282,7 +308,7 @@ const Index = () => {
                 inputs: ['address'],
                 rpcRequest: 'getAccountGeneral'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -297,7 +323,7 @@ const Index = () => {
                 inputs: [],
                 rpcRequest: 'viewAddresses'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -308,6 +334,16 @@ const Index = () => {
         </Tab>
         <Tab title="Configurations">
           <CardContainer>
+            {state.error && (
+              <ErrorMessage>
+                <b>An error happened:</b> {state.error.message}
+              </ErrorMessage>
+            )}            
+            {state.inProgress && (
+              <InProgressBar>
+                <b>Please Wait, Method In Progress:</b> {state.inProgressMethod}
+              </InProgressBar>
+            )}
             <Card
               content={{
                 title: 'SET NODE URL',
@@ -318,7 +354,7 @@ const Index = () => {
                 ],
                 rpcRequest: 'setConfig'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -335,7 +371,7 @@ const Index = () => {
                 ],
                 rpcRequest: 'setConfig'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -352,7 +388,7 @@ const Index = () => {
                 ],
                 rpcRequest: 'setConfig'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -370,7 +406,7 @@ const Index = () => {
                 ],
                 rpcRequest: 'addAddress'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -382,6 +418,16 @@ const Index = () => {
 
         <Tab title="Transactions and Delegations">
           <CardContainer>
+            {state.error && (
+              <ErrorMessage>
+                <b>An error happened:</b> {state.error.message}
+              </ErrorMessage>
+            )}            
+            {state.inProgress && (
+              <InProgressBar>
+                <b>Please Wait, Method In Progress:</b> {state.inProgressMethod}
+              </InProgressBar>
+            )}
             <Card
               content={{
                 title: 'Create Send',
@@ -390,7 +436,7 @@ const Index = () => {
                 inputs: ['recipientAddress', 'amount', 'memo'],
                 rpcRequest: 'createSend'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -405,7 +451,7 @@ const Index = () => {
                 inputs: ['inputs', 'memo'],
                 rpcRequest: 'createMultiSend'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -420,7 +466,7 @@ const Index = () => {
                 inputs: [],
                 rpcRequest: 'getTransactionHistory'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -431,6 +477,16 @@ const Index = () => {
         </Tab>
         <Tab title="Data and Account Management.">
           <CardContainer>
+            {state.error && (
+              <ErrorMessage>
+                <b>An error happened:</b> {state.error.message}
+              </ErrorMessage>
+            )}            
+            {state.inProgress && (
+              <InProgressBar>
+                <b>Please Wait, Method In Progress:</b> {state.inProgressMethod}
+              </InProgressBar>
+            )}
             <Card
               content={{
                 title: 'Add New Account',
@@ -439,7 +495,7 @@ const Index = () => {
                 inputs: ['accountName', 'mnemonic'],
                 rpcRequest: 'addNewAccount'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -454,7 +510,7 @@ const Index = () => {
                 inputs: ['accountName'],
                 rpcRequest: 'setActiveAccount'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -469,7 +525,7 @@ const Index = () => {
                 inputs: [],
                 rpcRequest: 'viewAccounts'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -484,7 +540,7 @@ const Index = () => {
                 inputs: ['accountName'],
                 rpcRequest: 'removeAccount'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
@@ -499,7 +555,7 @@ const Index = () => {
                 inputs: ['password'],
                 rpcRequest: 'deleteWallet'
               }}
-              disabled={!state.installedSnap || !state.isLoggedIn}
+              disabled={!state.installedSnap || !state.isLoggedIn || state.inProgress}
               fullWidth={
                 state.isFlask &&
                 Boolean(state.installedSnap) &&
