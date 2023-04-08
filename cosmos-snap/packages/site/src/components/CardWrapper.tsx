@@ -77,7 +77,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
 
   return (
     <Col span={24}>
-      <AntdCard ref={inputDivRef} style={{backgroundColor: 'rgb(28 22 44 / 94%)', boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgb(225 225 225 / 13%) 0px 0px 0px 1px'}} bordered={false}>
+      <AntdCard ref={inputDivRef} style={{backgroundColor: 'rgb(28 22 44 / 94%)', boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px'}} bordered={false}>
         <Space direction="vertical" size="small">
           <AntdCard.Meta description={content.description} title={content.title}/>
           {
@@ -96,7 +96,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
                     id={inputPlaceholder}
                     key={i}
                     iconRender={(visible) => (isSensitive ? (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />) : (null) )}
-                    style={{backgroundColor: 'transparent'}}
+                    style={{backgroundColor: 'transparent', borderColor: '#4e3d7c'}}
                   />
                   );
                 }
