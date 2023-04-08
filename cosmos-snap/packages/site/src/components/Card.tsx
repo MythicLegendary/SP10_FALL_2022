@@ -87,8 +87,13 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
       },
     }, auth);
 
+    // If not a login or setupPassword call
+    const inputs : any = gatherInputs();
+    if(content.rpcRequest != 'login' && content.rpcRequest != 'setupPassword') {
+      inputs.uid = state.uid
+    }
     let response = await sendSnapRPC(content.rpcRequest, 
-      gatherInputs(), 
+      inputs, 
       recaptchaVerifier
     );
     
@@ -98,6 +103,13 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
       dispatch({
         type: MetamaskActions.SetLogin,
         payload: response.loginSuccessful
+      });
+    }
+    // if login_successful, then set UID
+    if(response.loginSuccessful) {
+      dispatch({
+        type: MetamaskActions.SetUID,
+        payload: response.uid
       });
     }
     if (content.rpcRequest=='deleteWallet') {

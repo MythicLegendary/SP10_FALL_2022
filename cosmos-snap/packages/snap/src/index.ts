@@ -86,6 +86,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       const filteredState =  filterResponse(await getPluginState());
       return filteredState;
 
@@ -130,16 +134,28 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
     
     case 'setConfig':
       console.log("COSMOS-SNAP: Attempting to update configuration.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       await updatePluginState(await updateConfiguration(request));
       return filterResponse(await getPluginState());
     
     case 'addAddress': {
       console.log("COSMOS-SNAP: Adding a new name-address pair to the dictionary");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       return await addAddress(request.params[0].name, request.params[0].address);
     }
 
     case 'viewAddresses' : {
       console.log("COSMOS-SNAP: Return the dictionary of addresses set by the user.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       const currentState : SnapConfiguration = await getPluginState();
 
       return {dictionary : currentState.activeAccount.addresses}
@@ -147,6 +163,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'deleteWallet': {
       console.log("COSMOS-SNAP: Attempting wallet deletion.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       // If this is a firebase error
       if(request.params[0].firebaseDelete) {
         // Clear all data in the configuration
@@ -158,11 +178,19 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'removeAccount' : {
       console.log("COSMOS_SNAP: Attempting to remove an account.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       return await removeAccount(request);
     }
 
     case 'viewAccounts' : {
       console.log("COSMOS-SNAP:  Retrieving Accounts");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       const currentState : SnapConfiguration = await getPluginState();
       const accounts : CosmosAccount[] = currentState.otherAccounts;
       accounts.unshift(currentState.activeAccount);
@@ -171,32 +199,60 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
 
     case 'setActiveAccount' : {
       console.log("COSMOS-SNAP: Setting the active account.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       return await setActiveAccount(request.params[0].accountName);
     }
 
     case 'addNewAccount' : {
       console.log("COSMOS-SNAP: Adding a new account to the accounts list.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       return await addNewAccount(request.params[0].accountName, request.params[0].mnemonic);  
     }
 
     case 'getAccountInfo':
       console.log("COSMOS-SNAP: Getting Account Info.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       return await getAccountInfo();
 
     case 'getAccountGeneral':
       console.log("COSMOS-SNAP: Getting Account Info General");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       return await getAccountInfoGeneral(request.params[0].address);
 
     case 'createSend':
       console.log("COSMOS-SNAP: Creating Send Transaction.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       return await createSend(request.params[0]);
 
     case 'createMultiSend':
         console.log("COSMOS-SNAP: Creating Multi Send Transaction.");
+        // Ensure this is a valid request.
+        if(await checkUID(request.params[0].uid)) {
+          return {}
+        }
         return await createMultiSend(request.params[0]);
 
     case 'getTransactionHistory':
       console.log("COSMOS-SNAP: Getting Transaction History.");
+      // Ensure this is a valid request.
+      if(await checkUID(request.params[0].uid)) {
+        return {}
+      }
       return await getTransactionHistory();
 
     case 'displayNotification':
@@ -463,7 +519,7 @@ async function deleteWallet(request : any) {
     // Check the login
     const passwordCheck : any = await loginUser(request.params[0].password);
     if(!passwordCheck.loginSuccessful) {
-      return {msg : "Authentication failed", deleted : false}
+      return {msg : "Invalid Password.", deleted : false}
     }
 
     // Clear all data in the configuration
@@ -1129,779 +1185,11 @@ async function updateConfiguration(request : any) {
   return updatedState;
 }
 
-//this function will also require its own endowment in the manifest...
-
-async function getAppKey()
-{
-  const bip44Node = (await wallet.request({
-    method: "snap_getBip44Entropy",
-    params: {
-      coinType: 118 //this cointype hardcoded is for ATOM. May need a better way of getting it to be more dynamic!
-    },
-  })) as JsonBIP44CoinTypeNode;
-
-  return bip44Node.privateKey?.slice(0, 63);
-}
-
-//----------------------------------------------------------
-
-async function getPubKey () {
-  const PRIV_KEY = await getAppKey()
-  const prikeyArr = new Uint8Array(hexToBytes(PRIV_KEY));
-  return bytesToHex(publicKeyCreate(prikeyArr, true))
-}
-
-// Deprecated
-async function getAccount (pubkey: any) {
-  const currentPluginState : any = await getPluginState()
-  const address = await getAddress(hexToBytes(pubkey))
-  return toBech32(currentPluginState.prefix, address)
-}
-
-async function getAddress(pubkey: any) {
-  if (pubkey.length > 33) {
-    pubkey = pubkey.slice(5, pubkey.length);
-  }
-  const hmac = Sha256WithX2(pubkey);
-  const b = Buffer.from(hexToBytes(hmac));
-  const addr = new RIPEMD160Static().update(b);
-
-  return addr.digest('hex').toUpperCase();
-}
-
-async function getStatus() {
-  const currentPluginState : any = await getPluginState();
-  try {
-    const response = await fetch(`${currentPluginState.nodeUrl}/api/status`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
-    const data = await response.json();
-    if(!data.result.node_info) { throw new Error("node_info not present") };
-
-    return data.result;
-  } catch (error) {
-    console.error(error)
-  }
-}
-// Deprecated
-async function getAccountInfoDeprecated(address: any) {
-  const currentPluginState : any = await getPluginState()
-  try {
-    const response = await fetch(`${currentPluginState.nodeUrl}/api/account?address="${address}"`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });  
-    
-  async function getNetworkId() {
-      const data = await getStatus();
-      return data.node_info.network;
-    }
-
-    const accountInfo = await response.json();
-    if(!accountInfo.result) { throw new Error ("Result not present in accountInfo.")};
-
-    let account = accountInfo.result.account;
-    if(!account) { throw Error };
-
-    const chainId = await getNetworkId();
-    account.chainId = chainId;
-
-    return account
-  } catch (error) {
-      console.error(error);
-  }
-}
-
-async function getAccountBandwidth(address : any) {
-  const currentPluginState : any = await getPluginState()
-  try {
-    const bandwidth = {
-      remained: 0,
-      max_value: 0,
-    };
-
-    const response = await fetch(
-      `${currentPluginState.nodeUrl}/api/account_bandwidth?address="${address}"`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-    const data = await response.json();
-
-    bandwidth.remained = data.result.remained;
-    bandwidth.max_value = data.result.max_value;
-
-    return bandwidth
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-async function getIndexStats() {
-  const currentPluginState : any = await getPluginState()
-  try {
-    const response = await fetch(`${currentPluginState.nodeUrl}/api/index_stats`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
-    const data = await response.json();
-    if(!data.result) { throw new Error("Result not present.") };
-
-    return data.result;
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-async function getRewards(address: any) {
-  const currentPluginState : any = await getPluginState()
-  try {
-    const response = await fetch(`${currentPluginState.nodeUrl}/lcd/distribution/delegators/${address}/rewards`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
-    const data = await response.json();
-    if(!data.result.rewards) { throw new Error("Rewards not present in result or result not generated.") };
-
-    return data.result.rewards;
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-function createSendDeprecated(txContext : any, recipient : any, amount : any, denom :any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgSend',
-    value: {
-      amount: [
-        {
-          amount: amount.toString(),
-          denom: denom,
-        },
-      ],
-      from_address: txContext.bech32,
-      to_address: recipient,
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-// Deprecated
-async function createSendDeprecatedTx(subjectTo : any, amount :  any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createSendDeprecated(
-    txContext,
-    subjectTo,
-    amount,
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx);
-};
-
-async function createTxContext() {
-  const pubKey = await getPubKey()
-  const account = getAccount(pubKey)
-  const accountInfo = await getAccountInfoDeprecated(account)
-
-  const currentPluginState : any = await getPluginState();
-
-  const txContext = {
-    accountNumber: accountInfo.account_number,
-    chainId: accountInfo.chainId,
-    sequence: accountInfo.sequence,
-    bech32: account,
-    memo: currentPluginState.memo,
-    pk: pubKey,
-  };
-  
-  return txContext
-}
-
-// TODO refactor to universal skeleton
-const createSkeleton = (txContext : any, denom : any) => {
-  if (typeof txContext === 'undefined') {
-    throw new Error('undefined txContext');
-  }
-  if (typeof txContext.accountNumber === 'undefined') {
-    throw new Error('txContext does not contain the accountNumber');
-  }
-  if (typeof txContext.sequence === 'undefined') {
-    throw new Error('txContext does not contain the sequence value');
-  }
-  const currentPluginState : any = getPluginState()
-  const txSkeleton = {
-    type: 'auth/StdTx',
-    value: {
-      msg: [], // messages
-      fee: '',
-      memo: currentPluginState.memo,
-      signatures: [
-        {
-          signature: 'N/A',
-          account_number: txContext.accountNumber.toString(),
-          sequence: txContext.sequence.toString(),
-          pub_key: {
-            type: 'tendermint/PubKeySecp256k1',
-            value: 'PK',
-          },
-        },
-      ],
-    },
-  };
-  return applyGas(txSkeleton, currentPluginState.gas, denom);
-};
-
-function applyGas(unsignedTx : any, gas : any, denom : any) {
-  if (typeof unsignedTx === 'undefined') {
-    throw new Error('undefined unsignedTx');
-  }
-  if (typeof gas === 'undefined') {
-    throw new Error('undefined gas');
-  }
-
-  unsignedTx.value.fee = {
-    amount: [
-      {
-        amount: '0', // TODO apply fee for cosmos support
-        denom: denom,
-      },
-    ],
-    gas: gas.toString(),
-  };
-
-  return unsignedTx;
-}
-
-async function txSubmit(signedTx : any) {
-  const txBody = {
-    tx: signedTx.value,
-    mode: 'sync',
-  };
-  const currentPluginState : any = await getPluginState()
-  const url = `${currentPluginState.nodeUrl}/lcd/txs`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(txBody),
-  })
-  const result = await response.json()
-  if (result.error) {
-    throw new Error(result.error)
-  }
-  return result
-}
-
-function createMultiSendDeprecated(txContext : any, inputs : any, outputs : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgMultiSend',
-    value: {
-      inputs: inputs,
-      outputs: outputs,
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createMultiSendDeprecatedTx(inputs : any, outputs : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createMultiSendDeprecated(
-    txContext,
-    JSON.parse(inputs),
-    JSON.parse(outputs),
-    currentPluginState.denom
-  );
-}
-
-function createDelegate(txContext : any, validatorBech32 : any, amount : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgDelegate',
-    value: {
-      amount: {
-        amount: amount.toString(),
-        denom: denom,
-      },
-      delegator_address: txContext.bech32,
-      validator_address: validatorBech32,
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createDelegateTx(validatorTo : any, amount : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createDelegate(
-    txContext,
-    validatorTo,
-    amount,
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx)
-  // return signedTx
-};
-
-function createRedelegate(txContext : any, validatorSourceBech32 : any, validatorDestBech32 : any, amount : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgBeginRedelegate',
-    value: {
-      amount: {
-        amount: amount.toString(),
-        denom: denom,
-      },
-      delegator_address: txContext.bech32,
-      validator_src_address: validatorSourceBech32,
-      validator_dst_address: validatorDestBech32,
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function  createRedelegateTx(validatorFrom : any, validatorTo : any, amount : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createRedelegate(
-    txContext,
-    validatorFrom,
-    validatorTo,
-    amount,
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx)
-  // return signedTx
-};
-
-function createUndelegate(txContext : any, validatorBech32 : any, amount : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgUndelegate',
-    value: {
-      amount: {
-        amount: amount.toString(),
-        denom: denom,
-      },
-      delegator_address: txContext.bech32,
-      validator_address: validatorBech32,
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createUndelegateTx(validatorFrom : any, amount : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createUndelegate(
-    txContext,
-    validatorFrom,
-    amount,
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx)
-  // return signedTx
-};
-
-function createWithdrawDelegationReward(txContext : any, rewards : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-  txSkeleton.value.msg = [];
-
-  Object.keys(rewards).forEach(key => {
-    txSkeleton.value.msg.push({
-      type: 'cosmos-sdk/MsgWithdrawDelegationReward',
-      value: {
-        delegator_address: txContext.bech32,
-        validator_address: rewards[key].validator_address,
-      },
-    });
-  });
-
-  return txSkeleton;
-}
-
-async function createWithdrawDelegationRewardTx(rewards : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createWithdrawDelegationReward(
-    txContext,
-    JSON.parse(rewards),
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx)
-  // return signedTx
-}
-
-function createTextProposal(txContext : any, title : any, description : any, deposit : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgSubmitProposal',
-    value: {
-      content: {
-        type: 'cosmos-sdk/TextProposal',
-        value: {
-          title: title,
-          description: description,
-        },
-      },
-      initial_deposit: [{
-        amount: deposit.toString(),
-        denom: denom,
-      }],
-      proposer: txContext.bech32,
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createTextProposalTx(title : any, description : any, deposit : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createTextProposal(
-    txContext,
-    title,
-    description,
-    deposit,
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx)
-  // return signedTx
-};
-
-function createCommunityPoolSpendProposal(txContext : any, title: any, description : any, recipient : any, deposit : any, amount : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgSubmitProposal',
-    value: {
-      content: {
-        type: 'cosmos-sdk/CommunityPoolSpendProposal',
-        value: {
-          title: title,
-          description: description,
-          recipient: recipient,
-          amount: [{
-            amount: amount.toString(),
-            denom: denom,
-          }],
-        },
-      },
-      initial_deposit: [{
-        amount: deposit.toString(),
-        denom: denom,
-      }],
-      proposer: txContext.bech32,
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createCommunityPoolSpendProposalTx(title : any, description : any, recipient : any, deposit : any, amount : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createCommunityPoolSpendProposal(
-    txContext,
-    title,
-    description,
-    recipient,
-    deposit,
-    amount,
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx)
-  // return signedTx
-};
-
-function createParamsChangeProposal(txContext: any, title: any, description: any, changes: any, deposit: any, denom: any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgSubmitProposal',
-    value: {
-      content: {
-        type: 'cosmos-sdk/ParameterChangeProposal',
-        value: {
-          title: title,
-          description: description,
-          changes: changes,
-        },
-      },
-      initial_deposit: [{
-        amount: deposit.toString(),
-        denom: denom,
-      }],
-      proposer: txContext.bech32,
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createParamsChangeProposalTx(title : any, description : any, changes : any, deposit : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createParamsChangeProposal(
-    txContext,
-    title,
-    description,
-    JSON.parse(changes),
-    deposit,
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx)
-  // return signedTx
-};
-
-function createDeposit(txContext : any, proposalId : any, amount : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgDeposit',
-    value: {
-      proposal_id: proposalId,
-      depositor: txContext.bech32,
-      amount: [{
-        amount: amount.toString(),
-        denom: denom,
-    }],
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createDepositTx(proposalId : any, amount : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createDeposit(
-    txContext,
-    proposalId,
-    amount,
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx)
-  // return signedTx
-};
-
-function createVote(txContext :any, proposalId : any, option : any, denom : any) {
-  const txSkeleton = createSkeleton(txContext, denom);
-
-  const txMsg = {
-    type: 'cosmos-sdk/MsgVote',
-    value: {
-      proposal_id: proposalId,
-      voter: txContext.bech32,
-      option: option,
-    },
-  };
-
-  txSkeleton.value.msg = [txMsg];
-
-  return txSkeleton;
-}
-
-async function createVoteTx(proposalId : any, option : any) {
-  const txContext = await createTxContext()
-  const currentPluginState : any = await getPluginState()
-
-  const tx = await createVote(
-    txContext,
-    proposalId,
-    option,
-    currentPluginState.denom
-  );
-  
-  const signedTx = await sign(tx, txContext);
-  return txSubmit(signedTx)
-  // return signedTx
-};
-
-
-//----------------------------------------------------------
-
-function hexToBytes(hex: any) {
-  const bytes = [];
-  for (let c = 0; c < hex.length; c += 2) {
-      bytes.push(parseInt(hex.substr(c, 2), 16));
-  }
-  return bytes;
-}
-
-function toBech32(prefix: any, str: any) {
-  const strByte = bech32.toWords(Buffer.from(str, 'hex'));
-
-  return bech32.encode(prefix, strByte);
-}
-
-function bytesToHex(bytes: any) {
-  const hex = [];
-
-  for (let i = 0; i < bytes.length; i++) {
-      hex.push((bytes[i] >>> 4).toString(16));
-      hex.push((bytes[i] & 0xF).toString(16));
-  }
-  return hex.join('').toUpperCase();
-}
-
-//----------------------------------------------------------
-
-async function sign(unsignedTx:any, txContext:any) {
-  const bytesToSign = getBytesToSign(unsignedTx, txContext);
-  const PRIV_KEY = await getAppKey()
-  
-  const hash = new Uint8Array(Sha256WithX2(Buffer.from(bytesToSign), {
-    asBytes: true 
-  }));
-  const prikeyArr = new Uint8Array(hexToBytes(PRIV_KEY));
-  const sig = ecdsaSign(hash, prikeyArr);
-
-  return applySignature(unsignedTx, txContext, Array.from(sig.signature));
-}
-
-function getBytesToSign(tx:any, txContext:any) {
-  if (typeof txContext === 'undefined') {
-    throw new Error('txContext is not defined');
-  }
-  if (typeof txContext.chainId === 'undefined') {
-    throw new Error('txContext does not contain the chainId');
-  }
-  if (typeof txContext.accountNumber === 'undefined') {
-    throw new Error('txContext does not contain the accountNumber');
-  }
-  if (typeof txContext.sequence === 'undefined') {
-    throw new Error('txContext does not contain the sequence value');
-  }
-
-  const txFieldsToSign = {
-    account_number: txContext.accountNumber.toString(),
-    chain_id: txContext.chainId,
-    fee: tx.value.fee,
-    memo: tx.value.memo,
-    msgs: tx.value.msg,
-    sequence: txContext.sequence.toString(),
-  };
-
-  return JSON.stringify(removeEmptyProperties(txFieldsToSign));
-}
-
-function removeEmptyProperties (jsonTx:any) : any {
-  if (Array.isArray(jsonTx)) {
-    return jsonTx.map(removeEmptyProperties)
-  }
-
-  if (typeof jsonTx !== `object`) {
-    return jsonTx
-  }
-}
-
-function applySignature(unsignedTx:any, txContext:any, secp256k1Sig:any) {
-  if (typeof unsignedTx === 'undefined') {
-    throw new Error('undefined unsignedTx');
-  }
-  if (typeof txContext === 'undefined') {
-    throw new Error('undefined txContext');
-  }
-  if (typeof txContext.pk === 'undefined') {
-    throw new Error('txContext does not contain the public key (pk)');
-  }
-  if (typeof txContext.accountNumber === 'undefined') {
-    throw new Error('txContext does not contain the accountNumber');
-  }
-  if (typeof txContext.sequence === 'undefined') {
-    throw new Error('txContext does not contain the sequence value');
-  }
-
-  const tmpCopy = Object.assign({}, unsignedTx, {});
-
-  tmpCopy.value.signatures = [
-    {
-      signature: Buffer.from(secp256k1Sig).toString('base64'),
-      account_number: txContext.accountNumber.toString(),
-      sequence: txContext.sequence.toString(),
-      pub_key: {
-        type: 'tendermint/PubKeySecp256k1',
-        value: Buffer.from(hexToBytes(txContext.pk)).toString('base64'),
-      },
-    },
-  ];
-  return tmpCopy;
+/**
+ * Ensures that the request is legitimate.
+ */
+async function checkUID(uid : string) {
+  const currentState : SnapConfiguration = await getPluginState();
+  console.log("CHECKING ID")
+  return currentState.uid !== uid;
 }

@@ -39,7 +39,8 @@ export enum MetamaskActions {
   SetInstalled = 'SetInstalled',
   SetFlaskDetected = 'SetFlaskDetected',
   SetError = 'SetError',
-  SetLogin = 'SetLogin'
+  SetLogin = 'SetLogin',
+  SetUID = 'SetUID'
 }
 
 const reducer: Reducer<MetamaskState, MetamaskDispatch> = (state, action) => {
@@ -49,7 +50,11 @@ const reducer: Reducer<MetamaskState, MetamaskDispatch> = (state, action) => {
         ...state,
         installedSnap: action.payload,
       };
-
+      case MetamaskActions.SetUID:
+        return {
+          ...state,
+          uid: action.payload,
+        };
     case MetamaskActions.SetFlaskDetected:
       return {
         ...state,
