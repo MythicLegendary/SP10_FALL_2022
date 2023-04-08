@@ -1,6 +1,7 @@
 import { parseLog } from '@cosmjs/stargate/build/logs';
 import { defaultSnapOrigin } from '../config';
 import { GetSnapsResponse, Snap } from '../types';
+
 import {
   getAuth,
   GoogleAuthProvider,
@@ -14,15 +15,17 @@ import {
 } from "@firebase/auth";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, addDoc, collection } from "firebase/firestore";
+
 // Initalize the firebase configurations for user authentication.
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyAASQSP0TlnzxvP-9CUnmMNKTVZVDhVTDc",
-  authDomain: "metamask-cosmos-2.firebaseapp.com",
-  projectId: "metamask-cosmos-2",
-  storageBucket: "metamask-cosmos-2.appspot.com",
-  messagingSenderId: "49395411522",
-  appId: "1:49395411522:web:0c1d20617aaaa36436dbdb",
-  measurementId: "G-H3LKT5N381"
+  apiKey: "AIzaSyC-zSupcef4CUhkTAzFdKJZCsg9tOYyTQo",
+  authDomain: "senior-design-project-metamask.firebaseapp.com",
+  projectId: "senior-design-project-metamask",
+  storageBucket: "senior-design-project-metamask.appspot.com",
+  messagingSenderId: "370823076952",
+  appId: "1:370823076952:web:71a7baf249e1c7a840be2d",
+  measurementId: "G-21GKM1HQST"
 };
 // Initialization necesary for firebase
 export const app = initializeApp(firebaseConfig);
@@ -430,6 +433,7 @@ async function createNewFirebaseUser(password : string) {
     if(!(await checkUID(user.uid))) {
       throw new Error("Email not associated with wallet.")
     }
+    return user.uid
 }
 
 
@@ -497,7 +501,7 @@ async function sendSMSCode(recaptchaVerifier : RecaptchaVerifier, error : MultiF
  * Delete the user in firebase. 
  */
 async function deleteFirebaseUser() {
-  let user = auth.currentUser  
+  let user = await auth.currentUser  
   user?.delete()
   .then(() => {
     // User deleted successfully
@@ -578,8 +582,8 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
     case 'login' : {
       try {
         // Execute google login
-        await googleLogin();
-        return {proceed : true}
+        const uid = await googleLogin();
+        return {proceed : true, uid : uid}
       }
       catch(error) {
         if(error.code == 'auth/multi-factor-auth-required') {
@@ -659,7 +663,7 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
       await sendNotification(methodName, result.response)
       return result.response
     }
-    else if(methodName == 'setupPassword'){
+    else if(methodName == 'setupPassword' || methodName == 'login'){
       payload.uid = result.uid
     }
   }else {
@@ -683,6 +687,12 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
           // Only delete the firebase account if successful
           await deleteFirebaseUser();
         } 
+      }
+      case 'login' : {
+        // If login was successful, then we will return the uid to be stored in the state.
+        if(response.loginSuccessful) {
+          response.uid = payload.uid
+        }
       }
     }
     await sendNotification(methodName, response);
