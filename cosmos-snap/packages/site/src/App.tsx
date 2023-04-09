@@ -7,7 +7,7 @@ import { ToggleThemeContext } from './Root';
 import {Layout, theme} from 'antd';
 const { Header, Footer, Sider, Content } = Layout;
 
-import logo from './assets/metamask-cosmos-logo.png';
+import logo from './assets/cosmos-high-res.png';
 
 import {Col, Row} from 'antd';
 
