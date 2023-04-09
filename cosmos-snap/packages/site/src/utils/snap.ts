@@ -1,4 +1,3 @@
-import { parseLog } from '@cosmjs/stargate/build/logs';
 import { defaultSnapOrigin } from '../config';
 import { GetSnapsResponse, Snap } from '../types';
 
@@ -14,7 +13,7 @@ import {
   MultiFactorError
 } from "@firebase/auth";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, addDoc, collection } from "firebase/firestore";
+import { getFirestore} from "firebase/firestore";
 
 // Initalize the firebase configurations for user authentication.
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -32,8 +31,7 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const firestore = getFirestore(app);
 
-const authenticationMethods = new Set<string>();
-['setupPassword', 'login', 'addNewAccount', 'deleteWallet', 'removeAccount', 'enrollUserPhoneNumber'].forEach((method) => {authenticationMethods.add(method)})
+const authenticationMethods : Set<string> = new Set<string>(['setupPassword', 'restoreWallet','login', 'addNewAccount', 'deleteWallet', 'removeAccount', 'enrollUserPhoneNumber']);
 
 /**
  * Get the installed snaps in MetaMask.
@@ -401,6 +399,24 @@ async function sendNotification(methodName : string, response : any) {
         break;
       }
     }
+    case 'restoreWallet' : {
+      if(response.setup) {
+        content = {
+          prompt: "Password Reset.",
+          description : "",
+          textAreaContent : response.msg
+          };
+        break;
+      }
+      else {
+        content = {
+          prompt: "Password Not Reset.",
+          description : "",
+          textAreaContent : response.msg
+          };
+        break;
+      }
+    }
     default: {
       content = {
       prompt: "Response From "  + methodName,
@@ -621,8 +637,6 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
     }
     case 'removeAccount' : {
       try{
-        // Execute google login
-        const provider = new GoogleAuthProvider();
         await googleLogin()
         return {proceed : true}
       }
@@ -647,6 +661,25 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
       catch(error) {
         return {proceed : false, response : {msg : "Enrollment failure: " + error.toString(), enrolled : false}}
       }
+
+    }
+    case 'restoreWallet' : {
+      try {
+        const uid = await googleLogin()
+        return {proceed : true, uid : uid}
+      }
+      catch(error) {
+        if(error.code == 'auth/multi-factor-auth-required') {
+          try {
+            await sendSMSCode(recaptchaVerifier, error);
+            return {proceed : true}
+          }
+          catch(secondError){
+            return {proceed : false, response : {msg : "Firebase Login Failed with: " + secondError.toString(), setup : false}}
+          }
+        }
+        return {proceed : false, response : {msg : "Wallet restoration failed. " + error.toString(), setup : false}}
+      }
     }
   }
 }
@@ -663,7 +696,7 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
       await sendNotification(methodName, result.response)
       return result.response
     }
-    else if(methodName == 'setupPassword' || methodName == 'login'){
+    else if(methodName == 'setupPassword' || methodName == 'login' || methodName == 'restoreWallet'){
       payload.uid = result.uid
     }
   }else {
@@ -676,12 +709,13 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
     console.log('[',methodName,'] <<< RECEIVING <<<', response);
     // Backend check for authentication methods
     switch(methodName) {
-      case 'setupPassword' : {
-        // Wallet not serialized, but account was created->delete the firebase account.
-        if(!response.setup) {
-          await deleteFirebaseUser();
-        }
-      }
+      // DO NOT DELETE FIREBASE USER- RESETS THE UID EVERY TIME
+      // case 'setupPassword' : {
+      //   // Wallet not serialized, but account was created->delete the firebase account.
+      //   if(!response.setup) {
+      //     await deleteFirebaseUser();
+      //   }
+      // }
       case 'deleteWallet' : {
         if(response.deleted) {
           // Only delete the firebase account if successful

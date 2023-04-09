@@ -86,6 +86,14 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
       callback: (response: any) => {
         console.log("reCaptcha Solved!");
       },
+      "expired-callback": () => {
+        console.log("reCaptcha Expired. Please try again.");
+        // Display an error message to the user or retry the reCAPTCHA verification
+      },
+      "error-callback": () => {
+        console.log("reCaptcha Error. Please try again.");
+        // Display an error message to the user or retry the reCAPTCHA verification
+      },
     }, auth);
 
     // Submit In Progress

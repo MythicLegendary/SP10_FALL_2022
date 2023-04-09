@@ -255,6 +255,21 @@ const Index = () => {
             />
             <Card
               content={{
+                title: 'Reset Password',
+                description:
+                  'Restore the wallet and reset the password by entering a valid mnemonic for the stored wallet.',
+                inputs: ["mnemonic", "password"],
+                rpcRequest: 'restoreWallet'
+              }}
+              disabled={!state.installedSnap || state.isLoggedIn || state.inProgress}
+              fullWidth={
+                state.isFlask &&
+                Boolean(state.installedSnap) &&
+                !shouldDisplayReconnectButton(state.installedSnap)
+              }
+            />
+            <Card
+              content={{
                 title: 'Logout',
                 description:
                   'Logout of the snap.',
