@@ -1,27 +1,9 @@
-import { OnRpcRequestHandler, OnCronjobHandler, OnTransactionHandler} from '../../../node_modules/@metamask/snap-types';
-import detectEthereumProvider from '@metamask/detect-provider';
-import { JsonBIP44CoinTypeNode, SLIP10Node, SLIP10Path } from "@metamask/key-tree";
-import { hasProperty, isObject, Json } from '@metamask/utils';
-import { assert, BytesLike, ethers, parseUnits } from "ethers";
-import { Web3Provider } from "@ethersproject/providers";
-import { Decimal } from "@cosmjs/math";
-import  web3  from "web3";
-import {Buffer} from 'buffer';
-import { caesar, rot13 } from "simple-cipher-js";
-import crypto from 'crypto';
-import flatted from 'flatted';
+import { OnRpcRequestHandler,} from '../../../node_modules/@metamask/snap-types';
+import { caesar} from "simple-cipher-js";
 
-import { CosmWasmClient} from "@cosmjs/cosmwasm-stargate";
-import { AccountData, coins} from "@cosmjs/launchpad";
-import { Coin, DirectSecp256k1HdWallet, makeAuthInfoBytes } from "@cosmjs/proto-signing";
-import { SigningStargateClient, StargateClientOptions, SigningStargateClientOptions, GasPrice, StdFee, MsgSendEncodeObject, calculateFee, assertIsDeliverTxSuccess } from "@cosmjs/stargate";
-//will need further imports to ensure!
-
-import { publicKeyCreate, ecdsaSign } from 'secp256k1';
-import { bech32 } from 'bech32'
-import Sha256WithX2 from "sha256";
-import RIPEMD160Static from "ripemd160";
-import { SnapControllerActions } from '@metamask/snap-controllers';
+import { AccountData} from "@cosmjs/launchpad";
+import { Coin, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import { SigningStargateClient, GasPrice, StdFee, MsgSendEncodeObject, calculateFee, assertIsDeliverTxSuccess } from "@cosmjs/stargate";
 
 interface DictionaryAddress {
   address : string,
@@ -57,20 +39,10 @@ interface CosmosAccount {
 }
 
 /**
- * Get a message from the origin. For demonstration purposes only.
- *
- * @param originString - The origin string.
- * @returns A message based on the origin.
- */
-const getMessage = (originString: string): string =>
-  `Hello, ${originString}!`;
-
-  
-/**s
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
  * @param args - The request handler args as object.
- * @param args.origin - The origin of the request, e.g., the website that
+ * @param args.origin- The origin of the request, e.g., the website that
  * invoked the snap.
  * @param args.request - A validated JSON-RPC request object.
  * @returns `null` if the request succeeded.
@@ -80,10 +52,8 @@ const getMessage = (originString: string): string =>
 
 
 export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {origin : string, request : any}) => {
-  let pubKey, account;
   console.log("COSMOS-SNAP: Snap RPC Handler invoked.");
   switch (request.method) {
-
     case 'getSnapState':
       console.log("COSMOS-SNAP: Geting the Snap Plugin State.");
       // Ensure this is a valid request.
@@ -102,6 +72,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
       );
     }
 
+    case 'restoreWallet' : {
+      console.log("COSMOS-SNAP: Resetting the password, attempt.");
+      return await restoreWallet(
+        request.params[0].mnemonic,
+        request.params[0].password,
+        request.params[0].uid
+      );
+    }
+
     case 'login': {
       console.log("COSMOS-SNAP: Logging in user.");
       return loginUser(request.params[0]['password']);
@@ -110,7 +89,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({ origin, request } : {o
     case 'validateUID' : {
       console.log("COSMOS-SNAP: Validating UID");
       const currentState : SnapConfiguration = await getPluginState();
-      console.log(currentState.uid, request.params[0].uid)
+      // console.log("Current UID: ", currentState.uid, " Incoming UID: ", request.params[0].uid)
       return {isValid : currentState.uid == request.params[0].uid}
     }
 
@@ -374,7 +353,7 @@ async function loginUser(password : string) {
     const storedPassword : string = await decrypt(currentState.password, await bip32EntropyPrivateKey());
 
     // Compare the values
-    if(password === storedPassword) {
+    if(password.toLowerCase() === storedPassword) {
       return {loginSuccessful : true, msg : "Login Sucessful"}
     } 
     else {
@@ -593,11 +572,10 @@ async function setupPassword(password : string, mnemonic : string, accountName :
     }
 
     const currentState : SnapConfiguration = await getPluginState();
-
-    // If the user already has an account/wallet
-    // if(currentState.activeAccount != null  && currentState.activeAccount.accountName != '') {
-    //   return {msg : "Wallet already setup." , setup : false}
-    // }
+    // If there is a wallet already setup.
+    if(currentState.uid != '' && currentState.uid != null) {
+      return {msg : "There is an existing wallet setup. Restore the wallet.", setup : false}
+    }
 
     // Get the blank configuration 
     let newConfig : SnapConfiguration = await setupWallet();
@@ -615,7 +593,6 @@ async function setupPassword(password : string, mnemonic : string, accountName :
     newConfig.password = await encrypt(password, await bip32EntropyPrivateKey());
     
     // Set the user id
-    console.log(uid);
     newConfig.uid = uid;
 
     // Store the new configuration
@@ -628,6 +605,48 @@ async function setupPassword(password : string, mnemonic : string, accountName :
     console.log(error);
     return {msg : "Serialization not successful: " + error.toString(), setup : false}
   }
+}
+
+/**
+ * Restores the wallet by checking if the mnemonic matches any stored in the wallet.
+ */
+async function restoreWallet(mnemonic: string, password: string, uid : string) {
+  const currentState: SnapConfiguration = await getPluginState();
+  // If the password is empty or null
+  if (password == null || password === "") {
+    return { msg: "Password Required.", setup: false };
+  }
+  if (mnemonic == null || mnemonic === "") {
+    return { msg: "Mnemonic required", setup: false };
+  }
+  // If invalid length mnemonic
+  const length = mnemonic.split(" ").length;
+  if (length !== 12 && length !== 24 && length !== 25) {
+    return { msg: "Invalid Mnemonic Length", setup: false };
+  }
+
+  // If the mnemonic matches the one stored
+  if (
+    mnemonic ==
+    (await decrypt(currentState.activeAccount.mnemonic, await bip32EntropyPrivateKey()))
+  ) {
+    currentState.password = await encrypt(password, await bip32EntropyPrivateKey());
+    await updatePluginState(currentState);
+    return { msg: "Password Reset.", setup: true };
+  } else {
+    for (const account of currentState.otherAccounts) {
+      if (
+        mnemonic ==
+        (await decrypt(account.mnemonic, await bip32EntropyPrivateKey()))
+      ) {
+        currentState.password = await encrypt(password, await bip32EntropyPrivateKey());
+        await updatePluginState(currentState);
+        return { msg: "Password Reset.", setup: true };
+      }
+    }
+  }
+
+  return { msg: "Mnemonic does not match any in the stored wallet.", setup: false };
 }
 
 /**
