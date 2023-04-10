@@ -1,7 +1,7 @@
 import React, { ReactElement, useState } from "react"
 import styled from 'styled-components';
 import TabTitle from "./TabTitle"
-import {Tabs as AntdTabs, Row, Col, Layout} from 'antd';
+import {Tabs as AntdTabs, Row, Col, Layout, Radio, ConfigProvider, RadioChangeEvent} from 'antd';
 import type { TabsProps } from 'antd';
 import { Header } from "antd/es/layout/layout";
 
@@ -20,8 +20,8 @@ const Tabs: React.FC<Props> = ({ children }) => {
     });
   });
 
-  const onChange = (key: string) => {
-    setSelectedTab(parseInt(key));
+  const onTabSelect = (e: RadioChangeEvent) => {
+    setSelectedTab(parseInt(e.target.value));
   };
 
   return (
@@ -30,13 +30,44 @@ const Tabs: React.FC<Props> = ({ children }) => {
         <Col offset={4} span={16}>
           <Row gutter={[16, 16]}>
             <Col span={24}>
-              <AntdTabs
+            <ConfigProvider
+              theme={{
+                components: {
+                  Radio: {
+                    colorBgContainer: '#111',
+                    colorText: '#bbb',
+                    colorBorder: '#1c162c'
+                  },
+                },
+              }}
+            >
+              <Radio.Group defaultValue="0" buttonStyle="solid" onChange={onTabSelect}>
+              {
+                (
+                  ()=>{
+                    let inputs:any = [];
+                    tabItems.map((tab,index) => {
+                      inputs.push(
+                        <Radio.Button value={tab.key}>{tab.label}</Radio.Button>
+                      )
+                    })
+                    return inputs;
+                  }
+                )()
+              }
+                {/* <Radio.Button value="b">Shanghai</Radio.Button>
+                <Radio.Button value="c">Beijing</Radio.Button>
+                <Radio.Button value="d">Chengdu</Radio.Button> */}
+              </Radio.Group>
+            </ConfigProvider>
+              {/* <AntdTabs
               defaultActiveKey="0"
               items={tabItems}
               onChange={onChange} 
               type='card'
               tabBarStyle={{border: 'none'}}
-              />
+              animated={{ inkBar: false, tabPane: false }}
+              /> */}
             </Col>
           </Row>
           {children[selectedTab]}

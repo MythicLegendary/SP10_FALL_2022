@@ -191,10 +191,6 @@ export const GlobalStyle = createGlobalStyle`
     color: #bbb !important;
   }
 
-  .ant-tabs-tab {
-    border-color: rgb(28 22 44 / 94%) !important;
-  }
-
   div.ant-card-meta-description {
     color: #bbb !important;
   }
@@ -228,4 +224,30 @@ export const GlobalStyle = createGlobalStyle`
       background-color: transparent !important;
       border-color: #4e3d7c !important;
   }
+  .ant-radio-button-wrapper:hover {
+    color: #fff !important;
+  }
+
+  .ant-radio-button-wrapper-checked {
+    color: #fff !important;
+    background-color: rgba(28, 22, 44, 0.94) !important;
+    border-color: #4e3d7c !important;
+  }
+
+  .ant-radio-button-wrapper-checked::before {
+    background-color: #4e3d7c !important;
+  }
+
+  .ant-row::-webkit-scrollbar-thumb {
+      background-color: #222 !important;
+      border-radius: 16px !important;
+  }
+  .ant-row::-webkit-scrollbar {
+      background-color: transparent !important;
+  }
+
+  .ant-row::-webkit-scrollbar {
+      width: 10px;
+  }
+
 `;

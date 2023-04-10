@@ -46,7 +46,7 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
               "autoPlay": true,
               "background": {
                 "color": {
-                  "value": "#4e3d7c"
+                  "value": "#111"
                 },
                 
                 "position": "50% 50%",
@@ -241,7 +241,7 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
                   }
                 },
                 "color": {
-                  "value": "#000",
+                  "value": "#4e3d7c",
                   "animation": {
                     "h": {
                       "count": 0,
@@ -386,8 +386,8 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
                     "minimumValue": 1
                   },
                   "value": {
-                    "min": 1,
-                    "max": 3
+                    "min": 5,
+                    "max": 10
                   },
                   "animation": {
                     "count": 0,
