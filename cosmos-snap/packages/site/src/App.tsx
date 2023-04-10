@@ -1,10 +1,11 @@
 import { FunctionComponent, ReactNode, useContext } from 'react';
 import styled from 'styled-components';
+import { SearchOutlined } from '@ant-design/icons';
 
 import { GlobalStyle } from './config/theme';
 import { ToggleThemeContext } from './Root';
 
-import {Layout, theme} from 'antd';
+import {Button, Layout, theme} from 'antd';
 const { Header, Footer, Sider, Content } = Layout;
 
 import logo from './assets/metamask-cosmos-logo.png';
@@ -58,8 +59,12 @@ export const App: FunctionComponent<AppProps> = ({ children }) => {
           <Col offset={6} span={12}>
             <img src={logo} style={{maxWidth: '100%', maxHeight: '100%'}}></img>
           </Col>
-          <Col offset={3} span={3}>
+          <Col offset={1} span={1}>
             <HeaderButtons state={state} onConnectClick={handleConnectClick} />
+          </Col>
+
+          <Col offset={1} span={1}>
+            <Button style={{borderRadius:'50%'}}>☀️</Button>
           </Col>
         </Row>
         <Content style={{background: colorBgContainer}}>
