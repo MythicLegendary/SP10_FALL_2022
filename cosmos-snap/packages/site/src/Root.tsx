@@ -5,6 +5,7 @@ import { dark, light } from './config/theme';
 import { MetaMaskProvider } from './hooks';
 import Particles from "react-tsparticles";
 import { loadFull } from "tsparticles";
+import { PageThemeContext, ThemeContract } from './utils/ThemeContract';
 
 export type RootProps = {
   children: ReactNode;
@@ -18,6 +19,7 @@ export const ToggleThemeContext = createContext<ToggleTheme>(
 
 export const Root: FunctionComponent<RootProps> = ({ children }) => {
   const [darkTheme, setDarkTheme] = useState(getThemePreference());
+  const [pageTheme, setPageTheme] = useState(ThemeContract.Dark);
 
   const toggleTheme: ToggleTheme = () => {
     setLocalStorage('theme', darkTheme ? 'light' : 'dark');
@@ -37,7 +39,10 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
   }, []);
 
   return (
-    <>
+    <PageThemeContext.Provider value={{
+      theme: pageTheme,
+      setTheme: (newTheme) => {setPageTheme(newTheme)}
+      }}>
       <Particles
             id="tsparticles"
             init={particlesInit}
@@ -591,6 +596,6 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
           <MetaMaskProvider>{children}</MetaMaskProvider>
         </ThemeProvider>
       </ToggleThemeContext.Provider>
-    </>
+    </PageThemeContext.Provider>
   );
 };

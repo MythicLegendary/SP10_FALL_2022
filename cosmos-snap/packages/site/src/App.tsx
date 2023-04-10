@@ -17,6 +17,8 @@ import { Toggle } from './components/Toggle';
 import { HeaderButtons } from './components/Buttons';
 import { MetamaskActions, MetaMaskContext } from './hooks';
 import { connectSnap, getThemePreference, getSnap } from './utils';
+import { DarkLightButton } from './components/DarkLightButton';
+import { ThemeContract } from './utils/ThemeContract';
 
 const Wrapper = styled.div`
   display: flex;
@@ -58,14 +60,14 @@ export const App: FunctionComponent<AppProps> = ({ children }) => {
       <Layout style={{background: colorBgContainer}} >
         <Row style={{marginBottom: '20px', marginTop: '20px'}}>
           <Col offset={6} span={12}>
-            <img src={logo} style={{maxWidth: '100%', maxHeight: '100%'}}></img>
+            <img src={darkLogo} style={{maxWidth: '100%', maxHeight: '100%'}}></img>
           </Col>
           <Col offset={1} span={1}>
             <HeaderButtons state={state} onConnectClick={handleConnectClick} />
           </Col>
 
           <Col offset={1} span={1}>
-            <Button style={{borderRadius:'50%'}}>☀️</Button>
+            <DarkLightButton/>
           </Col>
         </Row>
         <Content style={{background: colorBgContainer}}>
