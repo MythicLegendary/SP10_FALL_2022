@@ -41,7 +41,7 @@ const Tabs: React.FC<Props> = ({ children }) => {
                 },
               }}
             >
-              <Radio.Group defaultValue="0" buttonStyle="solid" onChange={onTabSelect}>
+              <Radio.Group defaultValue="0" buttonStyle="solid" onChange={onTabSelect} style={{marginBottom: '10px'}}>
               {
                 (
                   ()=>{
