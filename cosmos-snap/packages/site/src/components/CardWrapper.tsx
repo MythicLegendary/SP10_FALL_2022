@@ -16,8 +16,7 @@ import {
   Typography,
   Input
 } from 'antd';
-import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
-import './CardWrapper.css';
+import { EyeInvisibleOutlined, EyeTwoTone, EyeOutlined } from '@ant-design/icons';
 
 type CardProps = {
   content: {
@@ -95,8 +94,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
                     placeholder={inputPlaceholder}
                     id={inputPlaceholder}
                     key={i}
-                    iconRender={(visible) => (isSensitive ? (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />) : (null) )}
-                    style={{backgroundColor: 'transparent', borderColor: '#4e3d7c'}}
+                    iconRender={(visible) => (isSensitive ? (visible ? <EyeOutlined style={{color: '#bbb'}}/> : <EyeInvisibleOutlined style={{color: '#bbb'}}  />) : (null) )}
                   />
                   );
                 }

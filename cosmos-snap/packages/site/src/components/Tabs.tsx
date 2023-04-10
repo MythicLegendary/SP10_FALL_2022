@@ -30,7 +30,13 @@ const Tabs: React.FC<Props> = ({ children }) => {
         <Col offset={4} span={16}>
           <Row gutter={[16, 16]}>
             <Col span={24}>
-              <AntdTabs defaultActiveKey="0" items={tabItems} onChange={onChange} />
+              <AntdTabs
+              defaultActiveKey="0"
+              items={tabItems}
+              onChange={onChange} 
+              type='card'
+              tabBarStyle={{border: 'none'}}
+              />
             </Col>
           </Row>
           {children[selectedTab]}

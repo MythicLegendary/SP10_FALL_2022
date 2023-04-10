@@ -167,7 +167,8 @@ export const GlobalStyle = createGlobalStyle`
     &:hover {
       background-color: transparent;
       border: 1px solid ${(props) => props.theme.colors.background.inverse};
-      color: ${(props) => props.theme.colors.text.default};
+      // color: ${(props) => props.theme.colors.text.default};
+      color: #eee;
     }
 
     &:disabled,
@@ -182,5 +183,49 @@ export const GlobalStyle = createGlobalStyle`
       color: ${(props) => props.theme.colors.text.inverse};
       border: 1px solid ${(props) => props.theme.colors.background.inverse};
     }
+  }
+
+  .ant-tabs-tab-active {
+    background-color: rgb(28 22 44 / 94%) !important;
+    border-color: rgb(28 22 44 / 94%) !important;
+    color: #bbb !important;
+  }
+
+  .ant-tabs-tab {
+    border-color: rgb(28 22 44 / 94%) !important;
+  }
+
+  div.ant-card-meta-description {
+    color: #bbb !important;
+  }
+  div.ant-card-meta-title {
+      color: #fff !important;
+  }
+
+  input {
+      background-color: transparent !important;
+      color: #bbb !important;
+  }
+
+  input::placeholder {
+      color: #4e3d7c !important;
+  }
+
+  .ant-input-password {
+      box-shadow: none !important;
+      background-color: transparent !important;
+      border-color: #4e3d7c !important;
+  }
+
+  .ant-btn {
+      background-color: #000 !important;
+      color: #bbb !important;
+      border-color: transparent !important;
+      font-weight: bold !important;
+  }
+
+  .ant-btn:hover {
+      background-color: transparent !important;
+      border-color: #4e3d7c !important;
   }
 `;
