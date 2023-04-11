@@ -31,7 +31,7 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
       theme: pageTheme,
       setTheme: (newTheme) => {setPageTheme(newTheme)}
       }}>
-      <BackgroundAnimation/>
+        <BackgroundAnimation/>
       <ToggleThemeContext.Provider value={toggleTheme}>
         <ThemeProvider theme={darkTheme ? dark : light}>
           <MetaMaskProvider>{children}</MetaMaskProvider>
