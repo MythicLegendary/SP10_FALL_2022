@@ -182,6 +182,7 @@ export const App: FunctionComponent<AppProps> = ({ children }) => {
         <Content style={{background: colorBgContainer}}>
           {children}
         </Content>
+
       </Layout>
       </Wrapper>
     </>
