@@ -29,16 +29,6 @@ const Wrapper = styled.div`
     switch (props.$mode) {
       case "dark": {
         return css`
-        * {
-          transition: background-color .1s linear;
-          }
-          
-          .ant-tabs-tab-active {
-          background-color: rgb(28 22 44 / 94%) !important;
-          border-color: rgb(28 22 44 / 94%) !important;
-          color: #bbb !important;
-          }
-          
           div.ant-card-meta-description {
           color: #bbb !important;
           }
@@ -96,6 +86,47 @@ const Wrapper = styled.div`
           
           .ant-row::-webkit-scrollbar {
               width: 10px;
+          }
+
+          .ant-card {
+            background-color: rgb(28 22 44 / 94%);
+            box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px;
+          }
+        `;
+      }
+
+      case "light": {
+        return css`
+          .ant-radio-button-wrapper-checked {
+            color: #fff !important;
+            background-color: #000 !important;
+            border-color: #000 !important;
+          }
+
+          .ant-radio-button-wrapper-checked::before {
+            background-color: #000 !important;
+            }
+
+          .ant-radio-button-wrapper {
+            background-color: #fff;
+            color: #555;
+          }
+
+          .ant-radio-button-wrapper:hover {
+            color: #000;
+          }
+
+          .ant-row::-webkit-scrollbar {
+              background-color: transparent !important;
+          }
+          
+          .ant-row::-webkit-scrollbar {
+              width: 10px;
+          }
+
+          .ant-row::-webkit-scrollbar-thumb {
+              background-color: #555 !important;
+              border-radius: 16px !important;
           }
         `;
       }

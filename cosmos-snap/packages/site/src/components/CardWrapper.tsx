@@ -76,7 +76,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
 
   return (
     <Col span={24}>
-      <AntdCard ref={inputDivRef} style={{backgroundColor: 'rgb(28 22 44 / 94%)', boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px 0px'}} bordered={false}>
+      <AntdCard ref={inputDivRef} bordered={false}>
         <Space direction="vertical" size="small">
           <AntdCard.Meta description={content.description} title={content.title}/>
           {

@@ -48,7 +48,7 @@ export const BackgroundAnimation = () => {
   },
   "detectRetina": true,
   "duration": 0,
-  "fpsLimit": 60,
+  "fpsLimit": 120,
   "interactivity": {
       "detectsOn": "window",
       "events": {
