@@ -1,5 +1,5 @@
 import { FunctionComponent, ReactNode, useContext } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { SearchOutlined } from '@ant-design/icons';
 
 import { GlobalStyle } from './config/theme';
@@ -20,17 +20,89 @@ import { connectSnap, getThemePreference, getSnap } from './utils';
 import { DarkLightButton } from './components/DarkLightButton';
 import { PageThemeContext, ThemeContract } from './utils/ThemeContract';
 
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-height: 100vh;
-  max-width: 100vw;
-`;
-
 export type AppProps = {
   children: ReactNode;
 };
+
+const Wrapper = styled.div`
+  ${(props) => {
+    switch (props.$mode) {
+      case "dark": {
+        return css`
+        * {
+          transition: background-color .1s linear;
+          }
+          
+          .ant-tabs-tab-active {
+          background-color: rgb(28 22 44 / 94%) !important;
+          border-color: rgb(28 22 44 / 94%) !important;
+          color: #bbb !important;
+          }
+          
+          div.ant-card-meta-description {
+          color: #bbb !important;
+          }
+          div.ant-card-meta-title {
+              color: #fff !important;
+          }
+          
+          input {
+              background-color: transparent !important;
+              color: #bbb !important;
+          }
+          
+          input::placeholder {
+              color: #4e3d7c !important;
+          }
+          
+          .ant-input-password {
+              box-shadow: none !important;
+              background-color: transparent !important;
+              border-color: #4e3d7c !important;
+          }
+          
+          .ant-btn {
+              background-color: #000 !important;
+              color: #bbb !important;
+              border-color: transparent !important;
+              font-weight: bold !important;
+          }
+          
+          .ant-btn:hover {
+              background-color: transparent !important;
+              border-color: #4e3d7c !important;
+          }
+          .ant-radio-button-wrapper:hover {
+          color: #fff !important;
+          }
+          
+          .ant-radio-button-wrapper-checked {
+          color: #fff !important;
+          background-color: rgba(28, 22, 44, 0.94) !important;
+          border-color: #4e3d7c !important;
+          }
+          
+          .ant-radio-button-wrapper-checked::before {
+          background-color: #4e3d7c !important;
+          }
+          
+          .ant-row::-webkit-scrollbar-thumb {
+              background-color: #222 !important;
+              border-radius: 16px !important;
+          }
+          .ant-row::-webkit-scrollbar {
+              background-color: transparent !important;
+          }
+          
+          .ant-row::-webkit-scrollbar {
+              width: 10px;
+          }
+        `;
+      }
+    }
+  }}
+  
+`;
 
 export const App: FunctionComponent<AppProps> = ({ children }) => {
 
@@ -59,8 +131,9 @@ export const App: FunctionComponent<AppProps> = ({ children }) => {
 
   return (
     <>
-      <GlobalStyle />
-      <Layout style={{background: colorBgContainer}} >
+      {/* <GlobalStyle /> */}
+      <Wrapper $mode={theme==ThemeContract.Dark?'dark':'light'}>
+      <Layout style={{background: colorBgContainer}}>
         <Row style={{marginBottom: '20px', marginTop: '20px'}}>
           <Col offset={6} span={12}>
             <img src={theme==ThemeContract.Dark?darkLogo:lightLogo} style={{maxWidth: '100%', maxHeight: '100%'}}></img>
@@ -77,6 +150,7 @@ export const App: FunctionComponent<AppProps> = ({ children }) => {
           {children}
         </Content>
       </Layout>
+      </Wrapper>
       {/* <Wrapper>
         <Header handleToggleClick={toggleTheme} />
         {children}
