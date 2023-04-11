@@ -17,6 +17,7 @@ import {
   Input
 } from 'antd';
 import { EyeInvisibleOutlined, EyeTwoTone, EyeOutlined } from '@ant-design/icons';
+import { PageThemeContext, ThemeContract } from '../utils/ThemeContract';
 
 type CardProps = {
   content: {
@@ -33,6 +34,7 @@ type CardProps = {
 export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth}) => {
   const inputDivRef = React.createRef<HTMLInputElement>();
   const [state, dispatch] = useContext(MetaMaskContext);
+  const {theme, setTheme} = useContext(PageThemeContext);
 
   const gatherInputs = () => {
     let inputDiv = inputDivRef.current;
@@ -76,7 +78,7 @@ export const Card: FunctionComponent<CardProps> = ({content, disabled, fullWidth
 
   return (
     <Col span={24}>
-      <AntdCard ref={inputDivRef} bordered={false}>
+      <AntdCard ref={inputDivRef} bordered={theme==ThemeContract.Dark?false:true}>
         <Space direction="vertical" size="small">
           <AntdCard.Meta description={content.description} title={content.title}/>
           {

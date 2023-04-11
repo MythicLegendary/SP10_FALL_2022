@@ -128,6 +128,9 @@ const Wrapper = styled.div`
               background-color: #555 !important;
               border-radius: 16px !important;
           }
+          .ant-btn {
+            box-shadow: none !important;
+          }
         `;
       }
     }
@@ -162,18 +165,17 @@ export const App: FunctionComponent<AppProps> = ({ children }) => {
 
   return (
     <>
-      {/* <GlobalStyle /> */}
       <Wrapper $mode={theme==ThemeContract.Dark?'dark':'light'}>
       <Layout style={{background: colorBgContainer}}>
         <Row style={{marginBottom: '20px', marginTop: '20px'}}>
           <Col offset={6} span={12}>
             <img src={theme==ThemeContract.Dark?darkLogo:lightLogo} style={{maxWidth: '100%', maxHeight: '100%'}}></img>
           </Col>
-          <Col offset={1} span={1}>
+          {/* <Col offset={1} span={1}>
             <HeaderButtons state={state} onConnectClick={handleConnectClick} />
-          </Col>
+          </Col> */}
 
-          <Col offset={1} span={1}>
+          <Col offset={4} span={2}>
             <DarkLightButton/>
           </Col>
         </Row>
@@ -182,11 +184,6 @@ export const App: FunctionComponent<AppProps> = ({ children }) => {
         </Content>
       </Layout>
       </Wrapper>
-      {/* <Wrapper>
-        <Header handleToggleClick={toggleTheme} />
-        {children}
-        <Footer />
-      </Wrapper> */}
     </>
   );
 };
