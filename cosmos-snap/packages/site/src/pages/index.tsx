@@ -490,6 +490,16 @@ const ErrorMessage = styled.div`
             />
         </Tab>
         <Tab title="Data and Account Management">
+            {state.error && (
+              <ErrorMessage>
+                <b>An error happened:</b> {state.error.message}
+              </ErrorMessage>
+            )}
+            {state.inProgress && (
+              <InProgressBar>
+                <b>Please Wait, Method In Progress:</b> {state.inProgressMethod}
+              </InProgressBar>
+            )}
         <Card
                 content={{
                   title: 'Add New Account',
