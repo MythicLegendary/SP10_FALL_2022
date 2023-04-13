@@ -510,7 +510,11 @@ async function sendSMSCode(recaptchaVerifier : RecaptchaVerifier, error : MultiF
     const cred = PhoneAuthProvider.credential(verificationId, verificationCode);
     const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
 
-    await resolver.resolveSignIn(multiFactorAssertion)
+    const result = await resolver.resolveSignIn(multiFactorAssertion)
+    if(!(await checkUID(result.user.uid))) {
+      throw new Error("Email not associated with wallet.")
+    }
+    return result.user.uid
 }
 
 /**
@@ -604,8 +608,8 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
       catch(error) {
         if(error.code == 'auth/multi-factor-auth-required') {
           try {
-            await sendSMSCode(recaptchaVerifier, error);
-            return {proceed : true}
+            const uid = await sendSMSCode(recaptchaVerifier, error);
+            return {proceed : true, uid : uid}
           }
           catch(secondError){
             return {proceed : false, response : {msg : "Firebase Login Failed with: " + secondError.toString(), loginSuccessful : false}}
@@ -674,8 +678,8 @@ async function handleAuthentication(methodName:string, payload:any, recaptchaVer
       catch(error) {
         if(error.code == 'auth/multi-factor-auth-required') {
           try {
-            await sendSMSCode(recaptchaVerifier, error);
-            return {proceed : true}
+            const uid = await sendSMSCode(recaptchaVerifier, error);
+            return {proceed : true, uid : uid}
           }
           catch(secondError){
             return {proceed : false, response : {msg : "Firebase Login Failed with: " + secondError.toString(), setup : false}}

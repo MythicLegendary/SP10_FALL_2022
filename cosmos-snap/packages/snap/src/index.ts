@@ -1209,5 +1209,6 @@ async function updateConfiguration(request : any) {
 async function checkUID(uid : string) {
   const currentState : SnapConfiguration = await getPluginState();
   console.log("CHECKING ID")
+  // console.log("Current: ", currentState.uid, "Incoming: ", uid)
   return currentState.uid !== uid;
 }
